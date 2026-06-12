@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getBrands, getFeaturedProducts } from '../data/mockDb';
-import ThreeHero from '../components/ThreeHero';
+import HeroLoader from '../components/HeroLoader';
 import { IconCheck, IconShieldCheck, IconMessageCircle, IconArrowRight } from '@tabler/icons-react';
+
+// Lazy load the heavy 3D component — reduces initial bundle load time significantly
+const ThreeHero = lazy(() => import('../components/ThreeHero'));
 
 const Home: React.FC = () => {
   const brands = getBrands();
@@ -12,7 +15,10 @@ const Home: React.FC = () => {
 
   return (
     <div className="w-full">
-      <ThreeHero />
+      {/* Suspense shows branded HeroLoader instantly while heavy 3D scene boots */}
+      <Suspense fallback={<HeroLoader />}>
+        <ThreeHero />
+      </Suspense>
 
       {/* Brands Section */}
       <section className="py-24 bg-light">

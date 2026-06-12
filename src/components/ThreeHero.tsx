@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 const MarbleSlab = ({ position, rotation, scale, color, roughness, metalness }: any) => {
   return (
     <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5} position={position}>
-      <RoundedBox args={[1, 1, 0.05]} radius={0.01} smoothness={4} scale={scale} rotation={rotation}>
+      <RoundedBox args={[1, 1, 0.05]} radius={0.01} smoothness={2} scale={scale} rotation={rotation}>
         <meshStandardMaterial 
           color={color}
           roughness={roughness}
@@ -29,11 +29,11 @@ const ThreeHero: React.FC = () => {
       
       {/* 3D Canvas wrapper - disabled pointer events on mobile to allow normal page scrolling */}
       <div className="absolute inset-0 z-0 opacity-90 pointer-events-none md:pointer-events-auto">
-        <Canvas camera={{ position: [0, 0, 8], fov: 35 }} dpr={[1, 2]}>
+        <Canvas camera={{ position: [0, 0, 8], fov: 35 }} dpr={[1, 1.5]} frameloop="demand">
           <ambientLight intensity={0.4} />
           <directionalLight position={[10, 10, 5]} intensity={1.2} color="#F7F5F2" />
           <directionalLight position={[-10, -10, -5]} color="#E8553A" intensity={0.3} />
-          <spotLight position={[0, 10, 0]} intensity={1.5} angle={0.6} penumbra={1} color="#F7F5F2" castShadow />
+          <spotLight position={[0, 10, 0]} intensity={1.5} angle={0.6} penumbra={1} color="#F7F5F2" />
           
           <Suspense fallback={null}>
             <PresentationControls 
@@ -77,7 +77,7 @@ const ThreeHero: React.FC = () => {
             </PresentationControls>
             
             {/* Studio lighting environment for premium reflections */}
-            <Environment preset="studio" />
+            <Environment preset="city" />
             <Preload all />
           </Suspense>
         </Canvas>
