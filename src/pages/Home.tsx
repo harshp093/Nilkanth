@@ -24,10 +24,11 @@ const Home: React.FC = () => {
       <section className="py-24 bg-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
+            <motion.h2
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="text-4xl md:text-5xl font-heading font-bold text-dark mb-4"
             >
               Brands We Carry
@@ -39,15 +40,16 @@ const Home: React.FC = () => {
             {brands.map((brand, index) => (
               <motion.div
                 key={brand.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.55, delay: index * 0.07, ease: [0.25, 0.46, 0.45, 0.94] }}
+                whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
                 onClick={() => navigate(`/brands/${brand.id}`)}
-                className={`cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center justify-center text-center group border-t-4 ${brand.id === 'kalingastone' ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-gray-300'}`}
+                className={`cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-300 p-6 flex flex-col items-center justify-center text-center group border-t-4 ${brand.id === 'kalingastone' ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-gray-300'}`}
                 style={{ borderTopColor: brand.colorAccent }}
               >
-                <div className="h-16 w-16 mb-4 rounded-full bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="h-16 w-16 mb-4 rounded-full bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <span className="font-heading font-bold text-2xl" style={{ color: brand.colorAccent }}>{brand.name.charAt(0)}</span>
                 </div>
                 <h3 className="font-semibold text-dark text-lg mb-1">{brand.name}</h3>
@@ -76,11 +78,12 @@ const Home: React.FC = () => {
             {featuredProducts.slice(0, 8).map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="group cursor-pointer rounded-2xl overflow-hidden bg-light shadow-sm hover:shadow-xl transition-all duration-500"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.55, delay: index * 0.06, ease: [0.25, 0.46, 0.45, 0.94] }}
+                whileHover={{ y: -5, transition: { duration: 0.25, ease: 'easeOut' } }}
+                className="group cursor-pointer rounded-2xl overflow-hidden bg-light shadow-sm hover:shadow-xl transition-shadow duration-300"
                 onClick={() => navigate(`/product/${product.id}`)}
               >
                 <div className="relative h-64 overflow-hidden">

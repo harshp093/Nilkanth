@@ -166,9 +166,11 @@ const Catalog: React.FC = () => {
                   return (
                     <motion.div
                       key={product.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+                      whileHover={{ y: -4, transition: { duration: 0.22, ease: 'easeOut' } }}
+                      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 group flex flex-col"
                     >
                       <Link to={`/product/${product.id}`} className="relative h-56 overflow-hidden block">
                         <img 
