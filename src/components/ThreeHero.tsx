@@ -95,8 +95,6 @@ const ThreeHero: React.FC = () => {
               rotation={[0, -Math.PI / 4, 0]}
               polar={[-0.1, Math.PI / 4]}
               azimuth={[-Math.PI / 4, Math.PI / 4]}
-              config={{ mass: 2, tension: 200, friction: 30 }}
-              snap={{ mass: 4, tension: 250, friction: 50 }}
             >
               {/* Main Premium Dark Slab */}
               <MarbleSlab
