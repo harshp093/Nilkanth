@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconSearch, IconX, IconArrowRight, IconMapPin, IconSparkles, IconArrowUp, IconArrowDown } from '@tabler/icons-react';
@@ -21,7 +21,6 @@ interface SearchOverlayProps {
 
 const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -32,9 +31,13 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   const allMarbles = getMarbleTypes();
   const allBrands = getBrands();
 
-  const search = useCallback((q: string) => {
-    if (!q.trim()) { setResults([]); return; }
-    const lower = q.toLowerCase();
+  /**
+   * ✅ FIX: Results are derived from query — use useMemo, not useEffect + setState.
+   * This computes synchronously during render with zero extra render cycles.
+   */
+  const results = useMemo<SearchResult[]>(() => {
+    if (!query.trim()) return [];
+    const lower = query.toLowerCase();
     const found: SearchResult[] = [];
 
     allProducts.forEach(p => {
@@ -93,13 +96,16 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
       }
     });
 
-    setResults(found.slice(0, 8));
-  }, []);
+    return found.slice(0, 8);
+  }, [query]);
 
+  /**
+   * ✅ Reset keyboard selection when results change — this IS a valid useEffect
+   * because it syncs activeIndex (UI state) to the new results set (derived data).
+   */
   useEffect(() => {
-    search(query);
     setActiveIndex(-1);
-  }, [query, search]);
+  }, [results]);
 
   /* ── Body scroll lock: freeze page behind search ── */
   useEffect(() => {
@@ -112,7 +118,6 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
       // Focus input
       setTimeout(() => inputRef.current?.focus(), 120);
       setQuery('');
-      setResults([]);
       setActiveIndex(-1);
     } else {
       // Restore scroll position exactly
