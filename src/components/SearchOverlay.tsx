@@ -33,9 +33,9 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
     onClose();
   }, [onClose]);
 
-  const allProducts = getProducts();
-  const allMarbles = getMarbleTypes();
-  const allBrands = getBrands();
+  const allProducts = useMemo(() => getProducts(), []);
+  const allMarbles = useMemo(() => getMarbleTypes(), []);
+  const allBrands = useMemo(() => getBrands(), []);
 
   /**
    * ✅ FIX: Results are derived from query — use useMemo, not useEffect + setState.
@@ -103,7 +103,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
     });
 
     return found.slice(0, 8);
-  }, [query]);
+  }, [query, allProducts, allMarbles, allBrands]);
 
   /* ── Body scroll lock: freeze page behind search ── */
   useEffect(() => {
