@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconSearch, IconX, IconArrowRight, IconMapPin, IconSparkles, IconArrowUp, IconArrowDown } from '@tabler/icons-react';
@@ -26,6 +26,12 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   const resultsRef = useRef<HTMLDivElement>(null);
   const activeItemRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+
+  const handleClose = useCallback(() => {
+    setQuery('');
+    setActiveIndex(-1);
+    onClose();
+  }, [onClose]);
 
   const allProducts = getProducts();
   const allMarbles = getMarbleTypes();
@@ -117,8 +123,6 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
       document.body.style.overflow = 'hidden';
       // Focus input
       setTimeout(() => inputRef.current?.focus(), 120);
-      setQuery('');
-      setActiveIndex(-1);
     } else {
       // Restore scroll position exactly
       const scrollY = document.body.style.top;
@@ -147,7 +151,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'Escape') { handleClose(); return; }
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         e.stopPropagation();
@@ -166,12 +170,11 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
     // useCapture=true so we intercept before any other handler
     window.addEventListener('keydown', handleKey, true);
     return () => window.removeEventListener('keydown', handleKey, true);
-  }, [isOpen, results, activeIndex]);
+  }, [isOpen, results, activeIndex, handleClose]);
 
   const goTo = (href: string) => {
     navigate(href);
-    onClose();
-    setQuery('');
+    handleClose();
   };
 
   const popular = ['Carrara White', 'Calacatta Gold', 'Nero Marquina', 'Statuario', 'Marble Tiles', 'Vitrified'];
@@ -188,7 +191,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.22 }}
             className="fixed inset-0 z-[200] bg-black/75 backdrop-blur-md"
-            onClick={onClose}
+            onClick={handleClose}
           />
 
           {/* Search Panel — scrollable INSIDE only */}
@@ -230,7 +233,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
                   </motion.button>
                 )}
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="text-stone-500 hover:text-white text-xs border border-white/10 hover:border-white/25 rounded-lg px-2.5 py-1.5 transition-all"
                 >
                   Esc
@@ -313,11 +316,10 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.035 }}
                           onClick={() => goTo(result.href)}
-                          className={`w-full flex items-center gap-4 px-5 py-3 text-left transition-all duration-120 group outline-none ${
-                            isActive
+                          className={`w-full flex items-center gap-4 px-5 py-3 text-left transition-all duration-120 group outline-none ${isActive
                               ? 'bg-amber-400/12 border-l-2 border-amber-400'
                               : 'hover:bg-white/5 border-l-2 border-transparent'
-                          }`}
+                            }`}
                         >
                           {/* Thumbnail */}
                           <div className={`w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-stone-800 border transition-all duration-200 ${isActive ? 'border-amber-400/50 scale-105' : 'border-white/5'}`}>
@@ -363,7 +365,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
 
               {/* ── Footer ── */}
               <div className="px-5 py-2.5 border-t border-white/5 flex items-center gap-4 text-xs text-stone-600 shrink-0 bg-stone-950">
-                <span className="flex items-center gap-1"><IconArrowUp size={10}/><IconArrowDown size={10}/> Navigate</span>
+                <span className="flex items-center gap-1"><IconArrowUp size={10} /><IconArrowDown size={10} /> Navigate</span>
                 <span>↵ Open</span>
                 <span>Esc Close</span>
                 <span className="ml-auto flex items-center gap-1">
