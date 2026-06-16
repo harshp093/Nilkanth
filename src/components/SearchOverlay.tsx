@@ -105,14 +105,6 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
     return found.slice(0, 8);
   }, [query]);
 
-  /**
-   * ✅ Reset keyboard selection when results change — this IS a valid useEffect
-   * because it syncs activeIndex (UI state) to the new results set (derived data).
-   */
-  useEffect(() => {
-    setActiveIndex(-1);
-  }, [results]);
-
   /* ── Body scroll lock: freeze page behind search ── */
   useEffect(() => {
     if (isOpen) {
@@ -139,6 +131,11 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
       document.body.style.overflow = '';
     };
   }, [isOpen]);
+
+  const goTo = useCallback((href: string) => {
+    navigate(href);
+    handleClose();
+  }, [navigate, handleClose]);
 
   /* ── Scroll active result into view inside the results panel ── */
   useEffect(() => {
@@ -170,12 +167,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
     // useCapture=true so we intercept before any other handler
     window.addEventListener('keydown', handleKey, true);
     return () => window.removeEventListener('keydown', handleKey, true);
-  }, [isOpen, results, activeIndex, handleClose]);
-
-  const goTo = (href: string) => {
-    navigate(href);
-    handleClose();
-  };
+  }, [isOpen, results, activeIndex, handleClose, goTo]);
 
   const popular = ['Carrara White', 'Calacatta Gold', 'Nero Marquina', 'Statuario', 'Marble Tiles', 'Vitrified'];
 
@@ -214,7 +206,10 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
                   ref={inputRef}
                   type="text"
                   value={query}
-                  onChange={e => setQuery(e.target.value)}
+                  onChange={e => {
+                    setQuery(e.target.value);
+                    setActiveIndex(-1);
+                  }}
                   placeholder="Search marble type, origin, brand, finish…"
                   className="flex-1 bg-transparent text-white text-base placeholder:text-stone-500 outline-none caret-amber-400"
                   id="global-search-input"
@@ -226,7 +221,10 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     whileTap={{ scale: 0.88 }}
-                    onClick={() => setQuery('')}
+                    onClick={() => {
+                      setQuery('');
+                      setActiveIndex(-1);
+                    }}
                     className="text-stone-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/8"
                   >
                     <IconX size={16} />
@@ -259,7 +257,10 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
                           key={term}
                           whileHover={{ scale: 1.05, y: -1 }}
                           whileTap={{ scale: 0.97 }}
-                          onClick={() => setQuery(term)}
+                          onClick={() => {
+                            setQuery(term);
+                            setActiveIndex(-1);
+                          }}
                           className="px-4 py-2 bg-white/5 hover:bg-amber-400/15 hover:text-amber-400 text-stone-300 rounded-full text-sm border border-white/8 transition-all duration-200"
                         >
                           {term}

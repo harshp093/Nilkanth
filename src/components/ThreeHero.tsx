@@ -5,8 +5,28 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 
+interface MarbleSlabProps {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale: [number, number, number] | number;
+  color: string;
+  roughness: number;
+  metalness: number;
+  driftSpeed?: number;
+  driftAmount?: number;
+}
+
 // Animated marble slab with smooth per-frame rotation drift
-const MarbleSlab = ({ position, rotation, scale, color, roughness, metalness, driftSpeed = 0.3, driftAmount = 0.04 }: any) => {
+const MarbleSlab = ({
+  position,
+  rotation,
+  scale,
+  color,
+  roughness,
+  metalness,
+  driftSpeed = 0.3,
+  driftAmount = 0.04,
+}: MarbleSlabProps) => {
   const meshRef = useRef<THREE.Mesh>(null!);
 
   useFrame((state) => {
