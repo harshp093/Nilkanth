@@ -24,10 +24,11 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-heading font-semibold mb-6 border-b border-gray-700 pb-2 inline-block">Quick Links</h3>
             <ul className="space-y-3">
-              <li><Link to="/" className="text-gray-400 hover:text-primary transition-colors">Home</Link></li>
-              <li><Link to="/brands" className="text-gray-400 hover:text-primary transition-colors">Brands We Carry</Link></li>
-              <li><Link to="/catalog" className="text-gray-400 hover:text-primary transition-colors">Product Catalog</Link></li>
-              <li><Link to="/contact" className="text-gray-400 hover:text-primary transition-colors">Contact Us</Link></li>
+              <li><Link to="/" className="text-gray-400 hover:text-amber-400 transition-colors">Home</Link></li>
+              <li><Link to="/brands" className="text-gray-400 hover:text-amber-400 transition-colors">Brands We Carry</Link></li>
+              <li><Link to="/catalog" className="text-gray-400 hover:text-amber-400 transition-colors">Product Catalog</Link></li>
+              <li><Link to="/gallery" className="text-gray-400 hover:text-amber-400 transition-colors">Marble Gallery</Link></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-amber-400 transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 

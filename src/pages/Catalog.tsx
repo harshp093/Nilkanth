@@ -1,46 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getProducts, getProductsByBrand, getBrandById, getBrands } from '../data/mockDb';
+import { getProducts, getBrandById, getBrands } from '../data/mockDb';
 import { IconFilter, IconX } from '@tabler/icons-react';
+import useSEO from '../hooks/useSEO';
 
 const Catalog: React.FC = () => {
   const { brandId } = useParams<{ brandId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const allBrands = getBrands();
-  
-  const [products, setProducts] = useState(brandId ? getProductsByBrand(brandId) : getProducts());
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Filters state
-  const [selectedBrand, setSelectedBrand] = useState<string>(brandId || searchParams.get('brand') || 'all');
+  // Filter state — initialised from URL params or route
+  const [selectedBrand,    setSelectedBrand]    = useState<string>(brandId || searchParams.get('brand')    || 'all');
   const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get('category') || 'all');
-  const [selectedFinish, setSelectedFinish] = useState<string>(searchParams.get('finish') || 'all');
+  const [selectedFinish,   setSelectedFinish]   = useState<string>(searchParams.get('finish')   || 'all');
 
   const brandInfo = brandId ? getBrandById(brandId) : null;
 
-  useEffect(() => {
+  useSEO({
+    title: brandInfo ? `${brandInfo.name} Tiles & Marble Collection` : 'Full Marble & Tiles Catalog — All Products',
+    description: brandInfo
+      ? `Browse ${brandInfo.name} ${brandInfo.category} products. ${brandInfo.description} Available at Nilkanth Marble, Nadiad.`
+      : 'Explore our full catalog of marble, vitrified tiles, ceramic tiles and stone products from KalingaStone, Donato, Colortile, Latigres and more at Nilkanth Marble Nadiad.',
+    keywords: `${brandInfo?.name ?? 'marble tiles'} catalog, tile showroom Nadiad, marble products Gujarat`,
+    url: brandId ? `/brands/${brandId}` : '/catalog',
+  });
+
+  /**
+   * ✅ FIX: Compute filtered products with useMemo instead of useEffect + setState.
+   *
+   * WHY: Filtering is pure derived data from existing state — it never needs
+   * to live in its own state variable. useMemo recomputes synchronously during
+   * render whenever its dependencies change, with zero extra render cycles.
+   *
+   * The old pattern (useEffect → setProducts) caused a cascading render:
+   *   render #1 → effect fires → setProducts → render #2 (unnecessary)
+   */
+  const products = useMemo(() => {
     let filtered = getProducts();
-    
-    if (selectedBrand !== 'all') {
-      filtered = filtered.filter(p => p.brandId === selectedBrand);
-    }
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(p => p.category === selectedCategory);
-    }
-    if (selectedFinish !== 'all') {
-      filtered = filtered.filter(p => p.finish === selectedFinish);
-    }
+    if (selectedBrand    !== 'all') filtered = filtered.filter(p => p.brandId  === selectedBrand);
+    if (selectedCategory !== 'all') filtered = filtered.filter(p => p.category === selectedCategory);
+    if (selectedFinish   !== 'all') filtered = filtered.filter(p => p.finish   === selectedFinish);
+    return filtered;
+  }, [selectedBrand, selectedCategory, selectedFinish]);
 
-    setProducts(filtered);
-
-    // Update URL params
+  /**
+   * ✅ Separate effect only for the URL side-effect (updating query params).
+   * This is the correct use of useEffect — syncing React state to an external system.
+   */
+  useEffect(() => {
     const params = new URLSearchParams();
-    if (selectedBrand !== 'all' && !brandId) params.set('brand', selectedBrand);
-    if (selectedCategory !== 'all') params.set('category', selectedCategory);
-    if (selectedFinish !== 'all') params.set('finish', selectedFinish);
+    if (selectedBrand    !== 'all' && !brandId) params.set('brand',    selectedBrand);
+    if (selectedCategory !== 'all')             params.set('category', selectedCategory);
+    if (selectedFinish   !== 'all')             params.set('finish',   selectedFinish);
     setSearchParams(params, { replace: true });
-
   }, [selectedBrand, selectedCategory, selectedFinish, brandId, setSearchParams]);
 
   const toggleFilter = () => setIsFilterOpen(!isFilterOpen);
@@ -49,7 +64,7 @@ const Catalog: React.FC = () => {
     <div className="bg-light min-h-screen pb-16">
       {/* Brand Banner (if specific brand route) */}
       {brandInfo && (
-        <div 
+        <div
           className="w-full py-16 px-4 text-center text-white relative overflow-hidden"
           style={{ backgroundColor: brandInfo.colorAccent }}
         >
@@ -63,14 +78,14 @@ const Catalog: React.FC = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Header & Mobile Filter Toggle */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-heading font-bold text-dark">
             {brandInfo ? 'Products' : 'Full Catalog'}
             <span className="text-lg font-sans font-normal text-gray-500 ml-3">({products.length} items)</span>
           </h1>
-          <button 
+          <button
             onClick={toggleFilter}
             className="lg:hidden flex items-center gap-2 btn-secondary px-4 py-2"
           >
@@ -91,7 +106,7 @@ const Catalog: React.FC = () => {
               {!brandId && (
                 <div className="mb-6">
                   <h4 className="font-semibold mb-3 text-dark">Brand</h4>
-                  <select 
+                  <select
                     className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 focus:ring-primary focus:border-primary"
                     value={selectedBrand}
                     onChange={(e) => setSelectedBrand(e.target.value)}
@@ -106,7 +121,7 @@ const Catalog: React.FC = () => {
 
               <div className="mb-6">
                 <h4 className="font-semibold mb-3 text-dark">Product Type</h4>
-                <select 
+                <select
                   className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 focus:ring-primary focus:border-primary"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -125,9 +140,9 @@ const Catalog: React.FC = () => {
                 <div className="space-y-2">
                   {['all', 'polished', 'matt', 'satin', 'structured', 'glossy'].map(finish => (
                     <label key={finish} className="flex items-center gap-3 cursor-pointer">
-                      <input 
-                        type="radio" 
-                        name="finish" 
+                      <input
+                        type="radio"
+                        name="finish"
                         value={finish}
                         checked={selectedFinish === finish}
                         onChange={() => setSelectedFinish(finish)}
@@ -139,7 +154,7 @@ const Catalog: React.FC = () => {
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={() => {
                   setSelectedBrand(brandId || 'all');
                   setSelectedCategory('all');
@@ -173,15 +188,15 @@ const Catalog: React.FC = () => {
                       className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 group flex flex-col"
                     >
                       <Link to={`/product/${product.id}`} className="relative h-56 overflow-hidden block">
-                        <img 
-                          src={product.imageUrl} 
-                          alt={product.name} 
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           loading="lazy"
                         />
                         {pBrand && (
                           <div className="absolute top-3 left-3">
-                            <span 
+                            <span
                               className="text-xs font-bold px-2 py-1 rounded text-white shadow-sm uppercase tracking-wide"
                               style={{ backgroundColor: pBrand.colorAccent }}
                             >
@@ -202,7 +217,7 @@ const Catalog: React.FC = () => {
                             <span className="text-xs capitalize bg-gray-100 text-gray-600 px-2 py-1 rounded">{product.finish}</span>
                           </div>
                         </div>
-                        <Link 
+                        <Link
                           to={`/product/${product.id}`}
                           className="w-full py-2 text-center text-primary font-medium border border-primary/20 rounded-lg hover:bg-primary hover:text-white transition-colors"
                         >
