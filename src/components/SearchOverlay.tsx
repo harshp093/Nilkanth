@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconSearch, IconX, IconArrowRight, IconMapPin, IconSparkles, IconArrowUp, IconArrowDown } from '@tabler/icons-react';
-import { getProducts, getMarbleTypes, getBrands } from '../data/mockDb';
+import { getProducts, getMarbleTypes, getBrands, getTileCollections, getGraniteVariants } from '../data/mockDb';
 
 interface SearchResult {
   id: string;
@@ -36,6 +36,8 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   const allProducts = useMemo(() => getProducts(), []);
   const allMarbles = useMemo(() => getMarbleTypes(), []);
   const allBrands = useMemo(() => getBrands(), []);
+  const allTileCollections = useMemo(() => getTileCollections(), []);
+  const allGranite = useMemo(() => getGraniteVariants(), []);
 
   /**
    * ✅ FIX: Results are derived from query — use useMemo, not useEffect + setState.
@@ -102,8 +104,63 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
       }
     });
 
-    return found.slice(0, 8);
-  }, [query, allProducts, allMarbles, allBrands]);
+    // Search tile collections & variants
+    allTileCollections.forEach(c => {
+      if (
+        c.name.toLowerCase().includes(lower) ||
+        c.tagline.toLowerCase().includes(lower) ||
+        c.description.toLowerCase().includes(lower) ||
+        c.finish.some(f => f.toLowerCase().includes(lower))
+      ) {
+        found.push({
+          id: `collection-${c.id}`,
+          title: c.name,
+          subtitle: `Tiles · ${c.size} · ${c.finish.join(', ')}`,
+          tag: 'Tile Collection',
+          tagColor: '#2E9E8A',
+          imageUrl: c.coverImage,
+          href: `/tiles/${c.brandId}/${c.id}`,
+        });
+      }
+      c.variants.forEach(v => {
+        if (v.name.toLowerCase().includes(lower) || v.colorDescription.toLowerCase().includes(lower)) {
+          found.push({
+            id: `variant-${v.id}`,
+            title: v.name,
+            subtitle: `${c.name} · Tile · ${v.surfaces.join(', ')}`,
+            tag: 'Tile Variant',
+            tagColor: '#2E9E8A',
+            imageUrl: v.imageHighGloss,
+            href: `/tiles/${c.brandId}/${c.id}`,
+          });
+        }
+      });
+    });
+
+    // Search granite
+    allGranite.forEach(g => {
+      if (
+        g.name.toLowerCase().includes(lower) ||
+        g.origin.toLowerCase().includes(lower) ||
+        g.description.toLowerCase().includes(lower) ||
+        g.color.toLowerCase().includes(lower) ||
+        (g.tag && g.tag.toLowerCase().includes(lower)) ||
+        g.subcategory.toLowerCase().includes(lower)
+      ) {
+        found.push({
+          id: `granite-${g.id}`,
+          title: g.name,
+          subtitle: `${g.subcategory === 'natural-stone' ? 'Natural Stone' : 'Artificial Stone'} · ${g.origin} · ${g.finishes[0]}`,
+          tag: g.subcategory === 'natural-stone' ? 'Natural Stone' : 'Artificial Stone',
+          tagColor: g.subcategory === 'natural-stone' ? '#1A5C38' : '#1B4CA8',
+          imageUrl: g.imageUrl,
+          href: `/granite/${g.id}`,
+        });
+      }
+    });
+
+    return found.slice(0, 10);
+  }, [query, allProducts, allMarbles, allBrands, allTileCollections, allGranite]);
 
   /* ── Body scroll lock: freeze page behind search ── */
   useEffect(() => {
@@ -318,8 +375,8 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
                           transition={{ delay: i * 0.035 }}
                           onClick={() => goTo(result.href)}
                           className={`w-full flex items-center gap-4 px-5 py-3 text-left transition-all duration-120 group outline-none ${isActive
-                              ? 'bg-amber-400/12 border-l-2 border-amber-400'
-                              : 'hover:bg-white/5 border-l-2 border-transparent'
+                            ? 'bg-amber-400/12 border-l-2 border-amber-400'
+                            : 'hover:bg-white/5 border-l-2 border-transparent'
                             }`}
                         >
                           {/* Thumbnail */}

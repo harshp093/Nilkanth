@@ -1,21 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconMenu2, IconX, IconSearch } from '@tabler/icons-react';
+import { IconMenu2, IconX, IconSearch, IconChevronDown, IconLeaf, IconAtom } from '@tabler/icons-react';
 import Logo from './Logo';
 import SearchOverlay from './SearchOverlay';
 
 const navLinks = [
   { to: '/brands', label: 'Brands' },
   { to: '/catalog', label: 'Catalog' },
+  { to: '/tiles', label: 'Tiles' },
   { to: '/gallery', label: 'Gallery' },
   { to: '/about', label: 'About' },
+];
+
+// Granite has a dropdown
+const graniteDropdown = [
+  { to: '/granite?type=natural-stone', label: 'Natural Stone', icon: IconLeaf, desc: 'Black Galaxy, Kashmir White & more' },
+  { to: '/granite?type=artificial-stone', label: 'Artificial Stone', icon: IconAtom, desc: 'Engineered quartz, zero-maintenance' },
 ];
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [graniteOpen, setGraniteOpen] = useState(false);
+  const [mobileGraniteOpen, setMobileGraniteOpen] = useState(false);
+  const graniteRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -24,10 +34,16 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on route change
+  // Close granite dropdown on outside click
   useEffect(() => {
-    setIsOpen(false);
-  }, [location.pathname]);
+    const handleClick = (e: MouseEvent) => {
+      if (graniteRef.current && !graniteRef.current.contains(e.target as Node)) {
+        setGraniteOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   // Global keyboard shortcut: Ctrl+K / Cmd+K opens search
   useEffect(() => {
@@ -40,6 +56,9 @@ const Navbar: React.FC = () => {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
+
+  const isGraniteActive =
+    location.pathname === '/granite' || location.pathname.startsWith('/granite/');
 
   return (
     <>
@@ -89,6 +108,76 @@ const Navbar: React.FC = () => {
                 );
               })}
 
+              {/* ── Granite Dropdown ── */}
+              <div ref={graniteRef} className="relative">
+                <button
+                  onClick={() => setGraniteOpen(!graniteOpen)}
+                  className={`relative flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition-colors group ${
+                    isGraniteActive ? 'text-amber-400' : 'text-stone-300 hover:text-white'
+                  }`}
+                >
+                  Granite
+                  <motion.div
+                    animate={{ rotate: graniteOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <IconChevronDown size={14} />
+                  </motion.div>
+                  {isGraniteActive && (
+                    <motion.div
+                      layoutId="navbar-indicator"
+                      className="absolute inset-0 bg-white/5 rounded-lg border border-amber-400/20"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {graniteOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                      transition={{ duration: 0.18 }}
+                      className="absolute top-full left-0 mt-2 w-72 bg-stone-900/98 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                    >
+                      <div className="p-2">
+                        {graniteDropdown.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link
+                              key={item.to}
+                              to={item.to}
+                              onClick={() => setGraniteOpen(false)}
+                              className="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-white/8 transition-colors group"
+                            >
+                              <div className="bg-white/10 rounded-lg p-1.5 mt-0.5 flex-shrink-0">
+                                <Icon size={15} className="text-amber-400" />
+                              </div>
+                              <div>
+                                <p className="text-white font-semibold text-sm group-hover:text-amber-400 transition-colors">
+                                  {item.label}
+                                </p>
+                                <p className="text-stone-400 text-xs mt-0.5">{item.desc}</p>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                        <div className="border-t border-white/8 mt-1 pt-1">
+                          <Link
+                            to="/granite"
+                            onClick={() => setGraniteOpen(false)}
+                            className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-stone-400 hover:text-amber-400 transition-colors"
+                          >
+                            View all granite →
+                          </Link>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* ── Search Button ── */}
               <motion.button
                 whileHover={{ scale: 1.04 }}
@@ -99,7 +188,7 @@ const Navbar: React.FC = () => {
                 id="navbar-search-btn"
               >
                 <IconSearch size={15} />
-                <span className="hidden lg:inline">Search marble…</span>
+                <span className="hidden lg:inline">Search…</span>
                 <kbd className="hidden lg:inline-flex items-center gap-0.5 bg-white/8 border border-white/10 rounded px-1.5 py-0.5 text-xs text-stone-500 font-mono">
                   ⌘K
                 </kbd>
@@ -167,6 +256,7 @@ const Navbar: React.FC = () => {
                   >
                     <Link
                       to={link.to}
+                      onClick={() => setIsOpen(false)}
                       className={`block px-4 py-3 rounded-xl font-medium transition-colors ${
                         location.pathname === link.to
                           ? 'text-amber-400 bg-amber-400/10'
@@ -177,9 +267,51 @@ const Navbar: React.FC = () => {
                     </Link>
                   </motion.div>
                 ))}
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="pt-2">
+
+                {/* Mobile Granite sub-section */}
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
+                  <button
+                    onClick={() => setMobileGraniteOpen(!mobileGraniteOpen)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${
+                      isGraniteActive ? 'text-amber-400 bg-amber-400/10' : 'text-stone-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    Granite
+                    <motion.div animate={{ rotate: mobileGraniteOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <IconChevronDown size={16} />
+                    </motion.div>
+                  </button>
+                  <AnimatePresence>
+                    {mobileGraniteOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden ml-4 mt-1 space-y-1"
+                      >
+                        {graniteDropdown.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link
+                              key={item.to}
+                              to={item.to}
+                              onClick={() => { setIsOpen(false); setMobileGraniteOpen(false); }}
+                              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-colors text-sm"
+                            >
+                              <Icon size={15} className="text-amber-400" />
+                              {item.label}
+                            </Link>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="pt-2">
                   <Link
                     to="/contact"
+                    onClick={() => setIsOpen(false)}
                     className="block text-center bg-gradient-to-r from-amber-500 to-amber-400 text-stone-900 px-6 py-3 rounded-xl font-bold"
                   >
                     Contact Us

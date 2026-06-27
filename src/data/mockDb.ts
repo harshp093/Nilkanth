@@ -431,3 +431,267 @@ export const getFeaturedProducts = () => products.filter(p => p.isFeatured);
 export const getProductsByBrand = (brandId: string) => products.filter(p => p.brandId === brandId);
 export const getProductById = (id: string) => products.find(p => p.id === id);
 export const getMarbleTypes = () => marbleTypes;
+
+// ── Tiles ────────────────────────────────────────────────────────────────
+export interface TileVariant {
+  id: string;
+  name: string;
+  colorDescription: string;
+  imageHighGloss: string;
+  imageHighGlossSinker?: string;
+  swatchColor: string;
+  surfaces: string[];
+  patterns: string;
+  priceLabel: string;
+  isFeatured?: boolean;
+}
+
+export interface TileCollection {
+  id: string;
+  brandId: string;
+  name: string;
+  tagline: string;
+  description: string;
+  size: string;
+  thickness?: string;
+  finish: string[];
+  coverImage: string;
+  variants: TileVariant[];
+  tag?: string;
+}
+
+const tileCollections: TileCollection[] = [
+  {
+    id: 'genesis',
+    brandId: 'colortile',
+    name: 'Genesis Collection',
+    tagline: 'GVT / PGVT',
+    description: 'A revolutionary premium high-gloss tile collection mimicking the finest global stones with cutting edge sinker technology.',
+    size: '600x1200mm',
+    thickness: '9mm',
+    finish: ['High Gloss', 'High Gloss Sinker'],
+    coverImage: '/tile-hero.png',
+    tag: 'New Arrival',
+    variants: [
+      { id: 'patagonia-cool', name: 'Patagonia Cool', colorDescription: 'Cool Grey & White', swatchColor: '#E2E8F0', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80', isFeatured: true },
+      { id: 'patagonia-warm', name: 'Patagonia Warm', colorDescription: 'Warm Beige & Gold', swatchColor: '#FDF6E3', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1596207198758-a89c3ecda842?auto=format&fit=crop&q=80' },
+      { id: 'diamond-jade', name: 'Diamond Grain Jade', colorDescription: 'Jade Green', swatchColor: '#A7F3D0', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80' },
+      { id: 'diamond-grey', name: 'Diamond Grain Grey', colorDescription: 'Silver Grey', swatchColor: '#CBD5E1', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1598928506311-c55dd713b1f5?auto=format&fit=crop&q=80' },
+      { id: 'midnight-nero', name: 'Midnight Stone Nero', colorDescription: 'Deep Black', swatchColor: '#1E293B', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 2', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80', isFeatured: true },
+      { id: 'neo-teal', name: 'Neo Amazonite Teal', colorDescription: 'Teal Blue', swatchColor: '#14B8A6', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1596207198758-a89c3ecda842?auto=format&fit=crop&q=80' },
+      { id: 'neo-cherry', name: 'Neo Amazonite Cherry', colorDescription: 'Cherry Red', swatchColor: '#F43F5E', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80' },
+      { id: 'fineflow-rust', name: 'Fineflow Rust', colorDescription: 'Rust Orange', swatchColor: '#EA580C', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1598928506311-c55dd713b1f5?auto=format&fit=crop&q=80' },
+      { id: 'fineflow-aqua', name: 'Fineflow Aqua', colorDescription: 'Aqua Blue', swatchColor: '#0EA5E9', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80' },
+      { id: 'ember-natural', name: 'Ember Natural', colorDescription: 'Earthy Brown', swatchColor: '#B45309', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1596207198758-a89c3ecda842?auto=format&fit=crop&q=80' }
+    ]
+  },
+  {
+    id: 'aurora',
+    brandId: 'donato',
+    name: 'Aurora Series',
+    tagline: 'Premium Slab',
+    description: 'Extra large slabs for seamless living spaces.',
+    size: '800x1600mm',
+    thickness: '9mm',
+    finish: ['Polished', 'Matt'],
+    coverImage: 'https://images.unsplash.com/photo-1582582494705-f8ce0b0c24f0?auto=format&fit=crop&q=80',
+    tag: 'Premium',
+    variants: [
+      { id: 'aurora-1', name: 'Aurora Bianco', colorDescription: 'White', swatchColor: '#FFFFFF', surfaces: ['Polished'], patterns: 'Random 4', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80', isFeatured: true }
+    ]
+  },
+  {
+    id: 'woodland',
+    brandId: 'latigres',
+    name: 'Woodland Collection',
+    tagline: 'Wood Look',
+    description: 'Natural wood aesthetics with the durability of porcelain.',
+    size: '200x1200mm',
+    thickness: '9mm',
+    finish: ['Matt'],
+    coverImage: 'https://images.unsplash.com/photo-1598928506311-c55dd713b1f5?auto=format&fit=crop&q=80',
+    tag: 'Bestseller',
+    variants: [
+      { id: 'wood-1', name: 'Oak Natural', colorDescription: 'Light Oak', swatchColor: '#D4A373', surfaces: ['Matt'], patterns: 'Random 6', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1582582494705-f8ce0b0c24f0?auto=format&fit=crop&q=80' }
+    ]
+  },
+  {
+    id: 'royal',
+    brandId: 'marfil',
+    name: 'Royal Essence Series',
+    tagline: 'Luxury Slabs',
+    description: 'Massive format tiles for elite commercial spaces.',
+    size: '1200x2400mm',
+    thickness: '9mm',
+    finish: ['High Gloss'],
+    coverImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80',
+    tag: 'Exclusive',
+    variants: [
+      { id: 'royal-1', name: 'Royal Gold', colorDescription: 'Gold', swatchColor: '#FACC15', surfaces: ['High Gloss'], patterns: 'Random 3', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1596207198758-a89c3ecda842?auto=format&fit=crop&q=80', isFeatured: true }
+    ]
+  }
+];
+
+export const getTileCollections = () => tileCollections;
+export const getTileCollectionById = (id: string) => tileCollections.find(c => c.id === id);
+
+
+// ── Granite ─────────────────────────────────────────────────────────────
+export type GraniteSubcategory = 'natural-stone' | 'artificial-stone';
+
+export interface GraniteVariant {
+  id: string;
+  name: string;
+  subcategory: GraniteSubcategory;
+  origin: string;
+  color: string;
+  swatchColor: string;
+  description: string;
+  imageUrl: string;
+  finishes: string[];
+  thickness: string;
+  sizes: string[];
+  usage: string[];
+  priceLabel: string;
+  pricePerSqFt?: string;
+  tag?: string;
+}
+
+const graniteVariants: GraniteVariant[] = [
+  // Natural Stones
+  {
+    id: 'black-galaxy',
+    name: 'Black Galaxy',
+    subcategory: 'natural-stone',
+    origin: 'India',
+    color: 'Deep Black with Golden Flecks',
+    swatchColor: '#1A1A1A',
+    description: 'A highly durable and stain-resistant black granite with golden specks, perfect for countertops.',
+    imageUrl: '/natural-stone-hero.png',
+    finishes: ['Polished', 'Leathered'],
+    thickness: '18mm - 20mm',
+    sizes: ['10ft x 3ft', 'Custom'],
+    usage: ['countertop', 'floor', 'wall'],
+    priceLabel: 'Get Best Price',
+    pricePerSqFt: '₹ 120–180/sq ft',
+    tag: 'Bestseller'
+  },
+  {
+    id: 'kashmir-white',
+    name: 'Kashmir White',
+    subcategory: 'natural-stone',
+    origin: 'India',
+    color: 'White & Grey',
+    swatchColor: '#E2E8F0',
+    description: 'Elegant white granite with subtle grey and garnet veining.',
+    imageUrl: 'https://images.unsplash.com/photo-1596207198758-a89c3ecda842?auto=format&fit=crop&q=80',
+    finishes: ['Polished'],
+    thickness: '18mm',
+    sizes: ['8ft x 3ft'],
+    usage: ['countertop', 'floor'],
+    priceLabel: 'Get Best Price',
+    pricePerSqFt: '₹ 95–140/sq ft'
+  },
+  {
+    id: 'tan-brown',
+    name: 'Tan Brown',
+    subcategory: 'natural-stone',
+    origin: 'India',
+    color: 'Brown & Black',
+    swatchColor: '#8B4513',
+    description: 'Dark brown background with black and red flecks, very popular globally.',
+    imageUrl: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80',
+    finishes: ['Polished', 'Flamed'],
+    thickness: '18mm',
+    sizes: ['9ft x 3ft'],
+    usage: ['outdoor', 'countertop'],
+    priceLabel: 'Get Best Price',
+    pricePerSqFt: '₹ 80–120/sq ft'
+  },
+  {
+    id: 'absolute-black',
+    name: 'Absolute Black',
+    subcategory: 'natural-stone',
+    origin: 'India',
+    color: 'Solid Black',
+    swatchColor: '#000000',
+    description: 'Pure, pitch-black granite that offers a sleek, modern look.',
+    imageUrl: 'https://images.unsplash.com/photo-1598928506311-c55dd713b1f5?auto=format&fit=crop&q=80',
+    finishes: ['Polished', 'Honed', 'Leathered'],
+    thickness: '20mm',
+    sizes: ['10ft x 3ft'],
+    usage: ['countertop', 'floor', 'bathroom'],
+    priceLabel: 'Get Best Price',
+    pricePerSqFt: '₹ 150–220/sq ft',
+    tag: 'Premium'
+  },
+  // Artificial Stones
+  {
+    id: 'calacatta-quartz',
+    name: 'Calacatta Quartz',
+    subcategory: 'artificial-stone',
+    origin: 'Engineered',
+    color: 'White with Grey Veins',
+    swatchColor: '#F8FAFC',
+    description: 'Stunning artificial quartz designed to mimic the luxurious Calacatta marble with zero maintenance.',
+    imageUrl: '/artificial-stone-hero.png',
+    finishes: ['Polished'],
+    thickness: '15mm - 20mm',
+    sizes: ['10ft x 4ft', 'Jumbo'],
+    usage: ['countertop', 'vanity', 'feature'],
+    priceLabel: 'Get Best Price',
+    pricePerSqFt: '₹ 250–400/sq ft',
+    tag: 'Luxury'
+  },
+  {
+    id: 'statuario-quartz',
+    name: 'Statuario Quartz',
+    subcategory: 'artificial-stone',
+    origin: 'Engineered',
+    color: 'White with Fine Veins',
+    swatchColor: '#F1F5F9',
+    description: 'Elegant white quartz with subtle, striking veins.',
+    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80',
+    finishes: ['Polished'],
+    thickness: '20mm',
+    sizes: ['10ft x 4ft'],
+    usage: ['countertop', 'bathroom'],
+    priceLabel: 'Get Best Price',
+    pricePerSqFt: '₹ 280–450/sq ft'
+  },
+  {
+    id: 'nero-black',
+    name: 'Nero Black Quartz',
+    subcategory: 'artificial-stone',
+    origin: 'Engineered',
+    color: 'Solid Black',
+    swatchColor: '#171717',
+    description: 'A deep, consistent black engineered stone that is highly resistant to stains and scratches.',
+    imageUrl: 'https://images.unsplash.com/photo-1596207198758-a89c3ecda842?auto=format&fit=crop&q=80',
+    finishes: ['Polished', 'Suede'],
+    thickness: '20mm',
+    sizes: ['10ft x 4ft'],
+    usage: ['countertop', 'wall'],
+    priceLabel: 'Get Best Price',
+    pricePerSqFt: '₹ 200–350/sq ft'
+  },
+  {
+    id: 'vanilla-beige',
+    name: 'Vanilla Beige Quartz',
+    subcategory: 'artificial-stone',
+    origin: 'Engineered',
+    color: 'Beige',
+    swatchColor: '#FEF3C7',
+    description: 'Warm, neutral tones perfect for creating an inviting, airy space.',
+    imageUrl: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80',
+    finishes: ['Polished'],
+    thickness: '15mm',
+    sizes: ['10ft x 4ft'],
+    usage: ['countertop', 'floor'],
+    priceLabel: 'Get Best Price',
+    pricePerSqFt: '₹ 180–300/sq ft'
+  }
+];
+
+export const getGraniteVariants = () => graniteVariants;
+export const getGraniteById = (id: string) => graniteVariants.find(g => g.id === id);

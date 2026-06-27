@@ -272,6 +272,106 @@ const Home: React.FC = () => {
       </motion.section>
 
 
+      {/* ── Product Categories ── */}
+      <section className="py-24 bg-light">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.7 }}
+            className="text-center mb-14"
+          >
+            <span className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 mb-4">
+              <IconSparkles size={14} className="text-primary" />
+              <span className="text-primary text-xs font-bold tracking-widest uppercase">Product Range</span>
+            </span>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-stone-900 mb-4">
+              Tiles & Granite
+            </h2>
+            <p className="text-stone-500 max-w-xl mx-auto">
+              From premium high-gloss tiles to natural granite slabs — everything for your dream space under one roof.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Tiles Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0 }}
+              whileHover={{ y: -6, transition: { duration: 0.25 } }}
+              className="group relative rounded-3xl overflow-hidden shadow-lg cursor-pointer col-span-1"
+              onClick={() => navigate('/tiles')}
+              style={{ minHeight: '320px' }}
+            >
+              <img src="/tile-hero.png" alt="Premium Tiles" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+              <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                <span className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">4 Brands · 20+ Collections</span>
+                <h3 className="text-3xl font-heading font-bold text-white mb-2">Premium Tiles</h3>
+                <p className="text-white/70 text-sm mb-5">Colortile Genesis, Donato Aurora, Latigres Woodland & Marfil Royal Essence. High Gloss, Matt, Satin finishes.</p>
+                <div className="flex items-center gap-2 text-white font-semibold text-sm group-hover:gap-4 transition-all">
+                  <span>Explore Tiles</span>
+                  <IconArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Natural Stone Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              whileHover={{ y: -6, transition: { duration: 0.25 } }}
+              className="group relative rounded-3xl overflow-hidden shadow-lg cursor-pointer"
+              onClick={() => navigate('/granite?type=natural-stone')}
+              style={{ minHeight: '320px' }}
+            >
+              <img src="/natural-stone-hero.png" alt="Natural Granite" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Natural · Unique Slabs</span>
+                <h3 className="text-3xl font-heading font-bold text-white mb-2">Natural Granite</h3>
+                <p className="text-white/70 text-sm mb-5">Black Galaxy, Kashmir White, Tan Brown, Absolute Black & more premium Indian granites.</p>
+                <div className="flex items-center gap-2 text-white font-semibold text-sm group-hover:gap-4 transition-all">
+                  <span>Explore Natural Stone</span>
+                  <IconArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Artificial Stone Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              whileHover={{ y: -6, transition: { duration: 0.25 } }}
+              className="group relative rounded-3xl overflow-hidden shadow-lg cursor-pointer"
+              onClick={() => navigate('/granite?type=artificial-stone')}
+              style={{ minHeight: '320px' }}
+            >
+              <img src="/artificial-stone-hero.png" alt="Artificial Stone" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 to-transparent" />
+              <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                <span className="text-xs font-bold uppercase tracking-widest text-blue-300 mb-2">Engineered · Zero Maintenance</span>
+                <h3 className="text-3xl font-heading font-bold text-white mb-2">Artificial Stone</h3>
+                <p className="text-white/70 text-sm mb-5">Calacatta, Statuario & Nero engineered quartz. Non-porous, stain-proof, consistent colour.</p>
+                <div className="flex items-center gap-2 text-white font-semibold text-sm group-hover:gap-4 transition-all">
+                  <span>Explore Artificial Stone</span>
+                  <IconArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Marble Types Carousel with Arrow Navigation ── */}
       <section ref={marbleSectionRef} className="relative py-20 bg-stone-950 overflow-hidden">
         {/* Parallax background orbs */}
@@ -442,10 +542,10 @@ const Home: React.FC = () => {
                       {brands.find(b => b.id === product.brandId)?.name || 'Brand'}
                     </span>
                   </div>
-                  {(product as any).origin && (
+                  {product.origin && (
                     <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <span className="bg-amber-400/90 text-stone-900 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                        <IconMapPin size={10} /> {(product as any).origin}
+                        <IconMapPin size={10} /> {product.origin}
                       </span>
                     </div>
                   )}
