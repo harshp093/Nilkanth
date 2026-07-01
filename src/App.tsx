@@ -1,39 +1,51 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
-import Brands from './pages/Brands';
-import Catalog from './pages/Catalog';
+import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
-import Contact from './pages/Contact';
-import Gallery from './pages/Gallery';
-import Tiles from './pages/Tiles';
-import TileCollectionDetail from './pages/TileCollectionDetail';
+import Marble from './pages/Marble';
 import Granite from './pages/Granite';
-import GraniteDetail from './pages/GraniteDetail';
+import KotaStone from './pages/KotaStone';
+import SanitaryWare from './pages/SanitaryWare';
+import TilesCatalog from './pages/TilesCatalog';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Admin from './pages/Admin';
 
 function App() {
   return (
     <Router>
-      {/* Fixes "page opens from bottom" — scrolls to top on every route change */}
-      <ScrollToTop />
       <Routes>
+        {/* Admin — full-screen, no layout navbar/footer */}
+        <Route path="/admin" element={<Admin />} />
+
+        {/* Main website with Layout (navbar + footer) */}
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="brands" element={<Brands />} />
-          <Route path="brands/:brandId" element={<Catalog />} />
-          <Route path="catalog" element={<Catalog />} />
-          <Route path="product/:productId" element={<ProductDetail />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="gallery" element={<Gallery />} />
-          {/* ── Tiles ────────────────────────────────────────────────────────── */}
-          <Route path="tiles" element={<Tiles />} />
-          <Route path="tiles/:brandId/:collectionId" element={<TileCollectionDetail />} />
-          {/* ── Granite ──────────────────────────────────────────────────────── */}
+          <Route path="products" element={<Products />} />
+          <Route path="products/:slug" element={<ProductDetail />} />
+          <Route path="marble" element={<Marble />} />
           <Route path="granite" element={<Granite />} />
-          <Route path="granite/:stoneId" element={<GraniteDetail />} />
-          {/* ── About ────────────────────────────────────────────────────────── */}
-          <Route path="about" element={<div className="min-h-screen p-20 text-center"><h1 className="text-4xl font-heading">About Us</h1><p className="mt-4 text-gray-600">Details coming soon.</p></div>} />
+          <Route path="kota-stone" element={<KotaStone />} />
+          <Route path="sanitary-ware" element={<SanitaryWare />} />
+          <Route path="tiles-catalog" element={<TilesCatalog />} />
+          <Route path="about" element={<About />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="granite/:stoneId" element={<Granite />} />
+          <Route path="product/:productId" element={<ProductDetail />} />
+          <Route
+            path="*"
+            element={
+              <div className="min-h-screen flex items-center justify-center text-center px-4">
+                <div>
+                  <div className="text-8xl mb-4">🪨</div>
+                  <h1 className="text-3xl font-heading font-black text-gray-900 mb-2">Page Not Found</h1>
+                  <p className="text-gray-500 mb-6">This page doesn't exist. Browse our products instead.</p>
+                  <a href="/" className="btn-primary inline-flex">← Back to Home</a>
+                </div>
+              </div>
+            }
+          />
         </Route>
       </Routes>
     </Router>

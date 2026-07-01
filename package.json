@@ -7,11 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db-seed": "tsc --ignoreConfig --target ES2022 --module ESNext src/data/products.ts src/data/catalogs.ts --outDir dist-temp && node seedSupabase.js"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "@supabase/supabase-js": "^2.108.2",
     "@tabler/icons-react": "^3.44.0",
     "framer-motion": "^12.40.0",
     "react": "^19.2.6",

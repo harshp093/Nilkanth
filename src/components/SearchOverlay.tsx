@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconSearch, IconX, IconArrowRight, IconMapPin, IconSparkles, IconArrowUp, IconArrowDown } from '@tabler/icons-react';
-import { getProducts, getMarbleTypes, getBrands, getTileCollections, getGraniteVariants } from '../data/mockDb';
+import { supabase } from '../utils/supabase';
+import { allProducts } from '../data/products';
 
 interface SearchResult {
   id: string;
@@ -19,420 +20,287 @@ interface SearchOverlayProps {
   onClose: () => void;
 }
 
+const CATEGORY_COLOR: Record<string, string> = {
+  marble:       '#1C3A6B',
+  granite:      '#374151',
+  'kota-others':'#b45309',
+  'sanitary-ware':'#0891b2',
+  'tiles-catalog':'#059669',
+};
+
+const POPULAR_SEARCHES = [
+  'Carrara Marble', 'Italian Marble', 'Black Granite',
+  'Vitrified Tiles', 'Sanitary Ware', 'Rajasthani Marble',
+];
+
 const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [liveResults, setLiveResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const resultsRef = useRef<HTMLDivElement>(null);
-  const activeItemRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const handleClose = useCallback(() => {
     setQuery('');
     setActiveIndex(-1);
+    setLiveResults([]);
     onClose();
   }, [onClose]);
 
-  const allProducts = useMemo(() => getProducts(), []);
-  const allMarbles = useMemo(() => getMarbleTypes(), []);
-  const allBrands = useMemo(() => getBrands(), []);
-  const allTileCollections = useMemo(() => getTileCollections(), []);
-  const allGranite = useMemo(() => getGraniteVariants(), []);
-
-  /**
-   * ✅ FIX: Results are derived from query — use useMemo, not useEffect + setState.
-   * This computes synchronously during render with zero extra render cycles.
-   */
-  const results = useMemo<SearchResult[]>(() => {
-    if (!query.trim()) return [];
-    const lower = query.toLowerCase();
-    const found: SearchResult[] = [];
-
-    allProducts.forEach(p => {
-      if (
-        p.name.toLowerCase().includes(lower) ||
-        p.category.toLowerCase().includes(lower) ||
-        p.finish.toLowerCase().includes(lower) ||
-        (p.origin && p.origin.toLowerCase().includes(lower)) ||
-        (p.description && p.description.toLowerCase().includes(lower))
-      ) {
-        found.push({
-          id: `product-${p.id}`,
-          title: p.name,
-          subtitle: `${p.category} · ${p.dimensions} · ${p.finish}`,
-          tag: 'Product',
-          tagColor: '#E8553A',
-          imageUrl: p.imageUrl,
-          href: `/product/${p.id}`,
-        });
-      }
-    });
-
-    allMarbles.forEach(m => {
-      if (
-        m.name.toLowerCase().includes(lower) ||
-        m.origin.toLowerCase().includes(lower) ||
-        m.description.toLowerCase().includes(lower) ||
-        m.tag.toLowerCase().includes(lower)
-      ) {
-        found.push({
-          id: `marble-${m.id}`,
-          title: m.name,
-          subtitle: `Natural Marble · Origin: ${m.origin} · ${m.finish}`,
-          tag: m.tag,
-          tagColor: '#d97706',
-          imageUrl: m.imageUrl,
-          href: '/gallery',
-        });
-      }
-    });
-
-    allBrands.forEach(b => {
-      if (
-        b.name.toLowerCase().includes(lower) ||
-        b.category.toLowerCase().includes(lower) ||
-        b.description.toLowerCase().includes(lower)
-      ) {
-        found.push({
-          id: `brand-${b.id}`,
-          title: b.name,
-          subtitle: `${b.category} · ${b.productCount} products · Origin: ${b.origin}`,
-          tag: 'Brand',
-          tagColor: b.colorAccent,
-          href: `/brands/${b.id}`,
-        });
-      }
-    });
-
-    // Search tile collections & variants
-    allTileCollections.forEach(c => {
-      if (
-        c.name.toLowerCase().includes(lower) ||
-        c.tagline.toLowerCase().includes(lower) ||
-        c.description.toLowerCase().includes(lower) ||
-        c.finish.some(f => f.toLowerCase().includes(lower))
-      ) {
-        found.push({
-          id: `collection-${c.id}`,
-          title: c.name,
-          subtitle: `Tiles · ${c.size} · ${c.finish.join(', ')}`,
-          tag: 'Tile Collection',
-          tagColor: '#2E9E8A',
-          imageUrl: c.coverImage,
-          href: `/tiles/${c.brandId}/${c.id}`,
-        });
-      }
-      c.variants.forEach(v => {
-        if (v.name.toLowerCase().includes(lower) || v.colorDescription.toLowerCase().includes(lower)) {
-          found.push({
-            id: `variant-${v.id}`,
-            title: v.name,
-            subtitle: `${c.name} · Tile · ${v.surfaces.join(', ')}`,
-            tag: 'Tile Variant',
-            tagColor: '#2E9E8A',
-            imageUrl: v.imageHighGloss,
-            href: `/tiles/${c.brandId}/${c.id}`,
-          });
-        }
-      });
-    });
-
-    // Search granite
-    allGranite.forEach(g => {
-      if (
-        g.name.toLowerCase().includes(lower) ||
-        g.origin.toLowerCase().includes(lower) ||
-        g.description.toLowerCase().includes(lower) ||
-        g.color.toLowerCase().includes(lower) ||
-        (g.tag && g.tag.toLowerCase().includes(lower)) ||
-        g.subcategory.toLowerCase().includes(lower)
-      ) {
-        found.push({
-          id: `granite-${g.id}`,
-          title: g.name,
-          subtitle: `${g.subcategory === 'natural-stone' ? 'Natural Stone' : 'Artificial Stone'} · ${g.origin} · ${g.finishes[0]}`,
-          tag: g.subcategory === 'natural-stone' ? 'Natural Stone' : 'Artificial Stone',
-          tagColor: g.subcategory === 'natural-stone' ? '#1A5C38' : '#1B4CA8',
-          imageUrl: g.imageUrl,
-          href: `/granite/${g.id}`,
-        });
-      }
-    });
-
-    return found.slice(0, 10);
-  }, [query, allProducts, allMarbles, allBrands, allTileCollections, allGranite]);
-
-  /* ── Body scroll lock: freeze page behind search ── */
+  // Focus input when overlay opens
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-      // Focus input
-      setTimeout(() => inputRef.current?.focus(), 120);
-    } else {
-      // Restore scroll position exactly
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      if (scrollY) window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
-  const goTo = useCallback((href: string) => {
-    navigate(href);
+  // ESC to close
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleClose]);
+
+  // Search — Supabase first, fallback to local mock data
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!query.trim()) {
+      const resetTimer = setTimeout(() => {
+        setLiveResults([]);
+        setSearching(false);
+      }, 0);
+      return () => clearTimeout(resetTimer);
+    }
+
+    const searchingTimer = setTimeout(() => {
+      setSearching(true);
+    }, 0);
+
+    debounceRef.current = setTimeout(async () => {
+      const lower = query.toLowerCase();
+      const found: SearchResult[] = [];
+
+      if (supabase) {
+        try {
+          const { data } = await supabase
+              .from('products')
+              .select('id,slug,name,category,subcategory,price_range,brand,images')
+              .or(`name.ilike.%${query}%,category.ilike.%${query}%,brand.ilike.%${query}%,subcategory.ilike.%${query}%,description.ilike.%${query}%`)
+              .eq('is_active', true)
+              .limit(12);
+
+          (data || []).forEach((p: any) => {
+            found.push({
+              id: `db-${p.id}`,
+              title: p.name,
+              subtitle: [
+                p.category?.replace(/-/g, ' '),
+                p.subcategory,
+                p.brand,
+                p.price_range,
+              ].filter(Boolean).join(' · '),
+              tag: p.category?.charAt(0).toUpperCase() + p.category?.slice(1).replace(/-/g, ' '),
+              tagColor: CATEGORY_COLOR[p.category] || '#1C3A6B',
+              imageUrl: p.images?.[0],
+              href: `/products/${p.slug}`,
+            });
+          });
+        } catch {
+          // fall through to local
+        }
+      }
+
+      // Search local mock data only if Supabase is not configured
+      if (!supabase) {
+        allProducts
+            .filter(p => p.isActive && (
+                p.name.toLowerCase().includes(lower) ||
+                p.category.toLowerCase().includes(lower) ||
+                (p.description || '').toLowerCase().includes(lower) ||
+                (p.brand || '').toLowerCase().includes(lower) ||
+                (p.subcategory || '').toLowerCase().includes(lower)
+            ))
+            .slice(0, 12)
+            .forEach(p => {
+              found.push({
+                id: `local-${p.id}`,
+                title: p.name,
+                subtitle: [
+                  p.category.replace(/-/g, ' '),
+                  p.subcategory,
+                  p.priceRange,
+                ].filter(Boolean).join(' · '),
+                tag: p.category.charAt(0).toUpperCase() + p.category.slice(1).replace(/-/g, ' '),
+                tagColor: CATEGORY_COLOR[p.category] || '#1C3A6B',
+                imageUrl: p.images?.[0],
+                href: `/products/${p.slug}`,
+              });
+            });
+      }
+
+      setLiveResults(found);
+      setSearching(false);
+    }, 300);
+
+    return () => {
+      clearTimeout(searchingTimer);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query]);
+
+  const handleSelect = useCallback((result: SearchResult) => {
+    navigate(result.href);
     handleClose();
   }, [navigate, handleClose]);
 
-  /* ── Scroll active result into view inside the results panel ── */
-  useEffect(() => {
-    if (activeItemRef.current && resultsRef.current) {
-      activeItemRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  }, [activeIndex]);
-
-  /* ── Keyboard navigation (scoped to search panel only) ── */
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-      if (e.key === 'Escape') { handleClose(); return; }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        e.stopPropagation();
-        setActiveIndex(i => Math.min(i + 1, results.length - 1));
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        e.stopPropagation();
-        setActiveIndex(i => Math.max(i - 1, -1));
-      }
-      if (e.key === 'Enter' && activeIndex >= 0) {
-        e.preventDefault();
-        goTo(results[activeIndex].href);
-      }
-    };
-    // useCapture=true so we intercept before any other handler
-    window.addEventListener('keydown', handleKey, true);
-    return () => window.removeEventListener('keydown', handleKey, true);
-  }, [isOpen, results, activeIndex, handleClose, goTo]);
-
-  const popular = ['Carrara White', 'Calacatta Gold', 'Nero Marquina', 'Statuario', 'Marble Tiles', 'Vitrified'];
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!liveResults.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, liveResults.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, -1)); }
+    else if (e.key === 'Enter' && activeIndex >= 0) { handleSelect(liveResults[activeIndex]); }
+  };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop — click to close, no scroll behind */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[200] flex items-start justify-center pt-16 sm:pt-24 px-4"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}
+          onClick={handleClose}
+        >
           <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22 }}
-            className="fixed inset-0 z-[200] bg-black/75 backdrop-blur-md"
-            onClick={handleClose}
-          />
-
-          {/* Search Panel — scrollable INSIDE only */}
-          <motion.div
-            key="panel"
-            initial={{ opacity: 0, y: -24, scale: 0.97 }}
+            initial={{ opacity: 0, y: -20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -24, scale: 0.97 }}
-            transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="fixed top-6 left-0 right-0 z-[201] mx-auto max-w-2xl px-4"
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl"
+            style={{ background: '#fff', maxHeight: 'calc(100vh - 120px)' }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-stone-950 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden"
-              style={{ maxHeight: 'min(85vh, 640px)' }}
-            >
-              {/* ── Input Row ── */}
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-white/8 shrink-0">
-                <IconSearch size={20} className="text-amber-400 shrink-0" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={query}
-                  onChange={e => {
-                    setQuery(e.target.value);
-                    setActiveIndex(-1);
-                  }}
-                  placeholder="Search marble type, origin, brand, finish…"
-                  className="flex-1 bg-transparent text-white text-base placeholder:text-stone-500 outline-none caret-amber-400"
-                  id="global-search-input"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                {query && (
-                  <motion.button
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    whileTap={{ scale: 0.88 }}
-                    onClick={() => {
-                      setQuery('');
-                      setActiveIndex(-1);
-                    }}
-                    className="text-stone-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/8"
-                  >
-                    <IconX size={16} />
-                  </motion.button>
-                )}
-                <button
-                  onClick={handleClose}
-                  className="text-stone-500 hover:text-white text-xs border border-white/10 hover:border-white/25 rounded-lg px-2.5 py-1.5 transition-all"
-                >
-                  Esc
-                </button>
-              </div>
+            {/* Search Input */}
+            <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" className="flex-shrink-0">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={e => { setQuery(e.target.value); setActiveIndex(-1); }}
+                onKeyDown={handleKeyDown}
+                placeholder="Search marble, granite, tiles, sanitary ware…"
+                className="flex-1 text-base text-gray-900 placeholder-gray-400 outline-none bg-transparent"
+                autoComplete="off"
+              />
+              {(query || searching) && (
+                <button onClick={() => { setQuery(''); setLiveResults([]); }}
+                  className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 transition-colors text-sm font-bold">×</button>
+              )}
+              <button onClick={handleClose}
+                className="ml-1 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-xs font-semibold hover:bg-gray-200 transition-colors">
+                ESC
+              </button>
+            </div>
 
-              {/* ── Scrollable Results Area (ONLY this scrolls) ── */}
-              <div
-                ref={resultsRef}
-                className="overflow-y-auto overscroll-contain flex-1"
-                style={{ scrollbarWidth: 'thin', scrollbarColor: '#d97706 transparent' }}
-              >
-                {query.trim() === '' ? (
-                  /* Popular Searches */
-                  <div className="px-5 py-5">
-                    <p className="text-stone-500 text-xs uppercase tracking-widest font-semibold mb-3 flex items-center gap-2">
-                      <IconSparkles size={13} className="text-amber-400" />
-                      Popular Searches
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {popular.map(term => (
-                        <motion.button
-                          key={term}
-                          whileHover={{ scale: 1.05, y: -1 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => {
-                            setQuery(term);
-                            setActiveIndex(-1);
-                          }}
-                          className="px-4 py-2 bg-white/5 hover:bg-amber-400/15 hover:text-amber-400 text-stone-300 rounded-full text-sm border border-white/8 transition-all duration-200"
-                        >
-                          {term}
-                        </motion.button>
-                      ))}
-                    </div>
+            {/* Results */}
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+              {/* Loading state */}
+              {searching && (
+                <div className="flex items-center gap-2 px-5 py-4 text-gray-400 text-sm">
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" strokeOpacity="0.75"/>
+                  </svg>
+                  Searching products…
+                </div>
+              )}
 
-                    {/* Quick marble preview thumbnails */}
-                    <p className="text-stone-500 text-xs uppercase tracking-widest font-semibold mt-6 mb-3">Quick Browse — Marble Types</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {allMarbles.slice(0, 6).map(m => (
-                        <button
-                          key={m.id}
-                          onClick={() => goTo('/gallery')}
-                          className="relative rounded-xl overflow-hidden h-20 group border border-white/5 hover:border-amber-400/40 transition-all"
-                        >
-                          <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-400" />
-                          <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors" />
-                          <span className="absolute bottom-1.5 left-0 right-0 text-center text-white text-xs font-semibold px-1 leading-tight">{m.name}</span>
-                        </button>
-                      ))}
-                    </div>
+              {/* No results */}
+              {!searching && query && liveResults.length === 0 && (
+                <div className="text-center py-12 px-4">
+                  <div className="text-4xl mb-3">🔍</div>
+                  <p className="text-gray-500 font-semibold">No results for "{query}"</p>
+                  <p className="text-gray-400 text-sm mt-1">Try searching marble, granite, tiles…</p>
+                </div>
+              )}
+
+              {/* Results list */}
+              {!searching && liveResults.length > 0 && (
+                <div>
+                  <div className="px-4 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider border-b border-gray-50">
+                    {liveResults.length} result{liveResults.length !== 1 ? 's' : ''} found
                   </div>
-                ) : results.length === 0 ? (
-                  /* No Results */
-                  <div className="px-5 py-12 text-center">
-                    <div className="text-5xl mb-4">🔍</div>
-                    <p className="text-white font-semibold text-lg mb-1">
-                      No results for "<span className="text-amber-400">{query}</span>"
-                    </p>
-                    <p className="text-stone-500 text-sm">Try: marble name, country (Italy, Spain, India), or finish type.</p>
-                  </div>
-                ) : (
-                  /* Results List */
-                  <div className="py-2">
-                    <div className="px-5 pt-2 pb-1 flex items-center justify-between">
-                      <span className="text-xs text-stone-500 uppercase tracking-widest font-semibold">
-                        {results.length} result{results.length !== 1 ? 's' : ''}
+                  {liveResults.map((r, i) => (
+                    <button
+                      key={r.id}
+                      onClick={() => handleSelect(r)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                        i === activeIndex ? 'bg-primary/5' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-100">
+                        {r.imageUrl ? (
+                          <img src={r.imageUrl} alt={r.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">💎</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{r.title}</div>
+                        <div className="text-xs text-gray-500 truncate capitalize">{r.subtitle}</div>
+                      </div>
+                      <span className="text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0 text-white" style={{ background: r.tagColor }}>
+                        {r.tag}
                       </span>
-                      <span className="text-xs text-stone-600 flex items-center gap-1.5">
-                        <IconArrowUp size={11} />
-                        <IconArrowDown size={11} />
-                        to navigate
-                      </span>
-                    </div>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-                    {results.map((result, i) => {
-                      const isActive = activeIndex === i;
-                      return (
-                        <motion.button
-                          key={result.id}
-                          ref={isActive ? activeItemRef : undefined}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.035 }}
-                          onClick={() => goTo(result.href)}
-                          className={`w-full flex items-center gap-4 px-5 py-3 text-left transition-all duration-120 group outline-none ${isActive
-                            ? 'bg-amber-400/12 border-l-2 border-amber-400'
-                            : 'hover:bg-white/5 border-l-2 border-transparent'
-                            }`}
-                        >
-                          {/* Thumbnail */}
-                          <div className={`w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-stone-800 border transition-all duration-200 ${isActive ? 'border-amber-400/50 scale-105' : 'border-white/5'}`}>
-                            {result.imageUrl ? (
-                              <img src={result.imageUrl} alt={result.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div
-                                className="w-full h-full flex items-center justify-center font-heading font-bold text-base"
-                                style={{ backgroundColor: `${result.tagColor}22`, color: result.tagColor }}
-                              >
-                                {result.title.charAt(0)}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Text */}
-                          <div className="flex-1 min-w-0">
-                            <div className={`font-semibold truncate transition-colors ${isActive ? 'text-amber-300' : 'text-white group-hover:text-amber-300'}`}>
-                              {result.title}
-                            </div>
-                            <div className="text-stone-500 text-xs truncate mt-0.5">{result.subtitle}</div>
-                          </div>
-
-                          {/* Tag + Arrow */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span
-                              className="text-xs font-bold px-2 py-0.5 rounded-full"
-                              style={{ backgroundColor: `${result.tagColor}20`, color: result.tagColor }}
-                            >
-                              {result.tag}
-                            </span>
-                            <IconArrowRight
-                              size={14}
-                              className={`transition-colors ${isActive ? 'text-amber-400' : 'text-stone-600 group-hover:text-amber-400'}`}
-                            />
-                          </div>
-                        </motion.button>
-                      );
-                    })}
+              {/* Popular Searches (empty state) */}
+              {!query && (
+                <div className="p-4">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Popular Searches</p>
+                  <div className="flex flex-wrap gap-2">
+                    {POPULAR_SEARCHES.map(s => (
+                      <button
+                        key={s}
+                        onClick={() => setQuery(s)}
+                        className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-primary hover:text-primary transition-all"
+                      >
+                        {s}
+                      </button>
+                    ))}
                   </div>
-                )}
-              </div>
-
-              {/* ── Footer ── */}
-              <div className="px-5 py-2.5 border-t border-white/5 flex items-center gap-4 text-xs text-stone-600 shrink-0 bg-stone-950">
-                <span className="flex items-center gap-1"><IconArrowUp size={10} /><IconArrowDown size={10} /> Navigate</span>
-                <span>↵ Open</span>
-                <span>Esc Close</span>
-                <span className="ml-auto flex items-center gap-1">
-                  <IconMapPin size={10} /> Nadiad, Gujarat
-                </span>
-              </div>
+                  <div className="mt-6 grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'All Products', href: '/products', emoji: '💎' },
+                      { label: 'Marble', href: '/marble', emoji: '🪨' },
+                      { label: 'Granite', href: '/granite', emoji: '⬛' },
+                      { label: 'Tile Catalogs', href: '/tiles-catalog', emoji: '🔲' },
+                    ].map(link => (
+                      <button
+                        key={link.href}
+                        onClick={() => { navigate(link.href); handleClose(); }}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-50 hover:bg-primary/5 border border-gray-100 hover:border-primary/20 text-sm font-semibold text-gray-700 hover:text-primary transition-all"
+                      >
+                        <span>{link.emoji}</span>{link.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

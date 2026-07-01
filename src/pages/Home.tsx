@@ -1,678 +1,366 @@
-import React, { Suspense, lazy, useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
-import { getBrands, getFeaturedProducts, getMarbleTypes } from '../data/mockDb';
-import type { MarbleType } from '../data/mockDb';
-import HeroLoader from '../components/HeroLoader';
-import useSEO from '../hooks/useSEO';
-import { IconCheck, IconShieldCheck, IconMessageCircle, IconArrowRight, IconArrowLeft, IconMapPin, IconSparkles, IconDiamond } from '@tabler/icons-react';
+import { motion, useInView } from 'framer-motion';
+import { categories } from '../data/categories';
+import { useSupabaseProducts } from '../hooks/useSupabaseProducts';
+import ProductCard from '../components/products/ProductCard';
+import ThreeHero from '../components/ThreeHero';
 
-// Lazy load the heavy 3D component
-const ThreeHero = lazy(() => import('../components/ThreeHero'));
-
-/* ─── Marble Carousel ─── */
-const MarbleCarousel: React.FC<{ marbles: MarbleType[]; onNavigate: () => void }> = ({ marbles, onNavigate }) => {
-  const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
-  const total = marbles.length;
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(sectionRef, { once: false, margin: '-100px' });
-
-  const go = useCallback((next: number, dir: number) => {
-    setDirection(dir);
-    setCurrent(((next % total) + total) % total);
-  }, [total]);
-
-  const prev = () => go(current - 1, -1);
-  const next = () => go(current + 1, 1);
-
-  /* ── Arrow key navigation (only when carousel is in viewport) ── */
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      // Skip if search overlay is open (body is position:fixed)
-      if (document.body.style.position === 'fixed') return;
-      // Only fire if carousel section is in viewport
-      if (!inView) return;
-      if (e.key === 'ArrowLeft')  { e.preventDefault(); go(current - 1, -1); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1, 1); }
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [current, go, inView]);
-
-  const marble = marbles[current];
-  const accentColor = marble.color === '#FFFFFF' || marble.color === '#FAFAFA' ? '#d4af37' : marble.color;
-
-  const variants = {
-    enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 80 : -80, scale: 0.96 }),
-    center: { opacity: 1, x: 0, scale: 1 },
-    exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -80 : 80, scale: 0.96 }),
-  };
-
-  return (
-    <div ref={sectionRef} className="w-full">
-      {/* Main Carousel Stage */}
-      <div className="relative rounded-3xl overflow-hidden bg-stone-900 border border-white/8 shadow-2xl" style={{ height: 'clamp(320px, 55vh, 540px)' }}>
-
-        {/* Image layer */}
-        <AnimatePresence custom={direction} mode="wait">
-          <motion.div
-            key={marble.id}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="absolute inset-0"
-          >
-            <img
-              src={marble.imageUrl}
-              alt={marble.name}
-              className="w-full h-full object-cover"
-            />
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Info Panel (left side) */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`info-${marble.id}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.38, delay: 0.1 }}
-            className="absolute bottom-0 left-0 p-6 md:p-10 max-w-md"
-          >
-            <span
-              className="inline-block text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3"
-              style={{ backgroundColor: `${accentColor}25`, color: accentColor, border: `1px solid ${accentColor}40` }}
-            >
-              {marble.tag}
-            </span>
-            <h3 className="font-heading font-black text-white text-3xl md:text-4xl mb-2 leading-tight">{marble.name}</h3>
-            <div className="flex items-center gap-2 text-white/60 text-sm mb-3">
-              <IconMapPin size={13} style={{ color: accentColor }} />
-              <span>Origin: <strong className="text-white/80">{marble.origin}</strong></span>
-              <span className="text-white/30 mx-1">·</span>
-              <span className="text-white/50">{marble.finish}</span>
-            </div>
-            <p className="text-white/55 text-sm leading-relaxed hidden md:block">{marble.description}</p>
-            <motion.button
-              whileHover={{ scale: 1.04, x: 4 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={onNavigate}
-              className="mt-4 flex items-center gap-2 text-sm font-bold"
-              style={{ color: accentColor }}
-            >
-              View in Gallery <IconArrowRight size={14} />
-            </motion.button>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Counter badge */}
-        <div className="absolute top-5 right-5 bg-black/50 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 text-white text-xs font-mono">
-          {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-        </div>
-
-        {/* ── Arrow Buttons ── */}
-        <motion.button
-          whileHover={{ scale: 1.1, x: -2 }}
-          whileTap={{ scale: 0.93 }}
-          onClick={prev}
-          aria-label="Previous marble"
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 backdrop-blur-sm border border-white/15 hover:border-white/35 rounded-full p-3 text-white transition-all duration-200 shadow-xl"
-        >
-          <IconArrowLeft size={22} />
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.1, x: 2 }}
-          whileTap={{ scale: 0.93 }}
-          onClick={next}
-          aria-label="Next marble"
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 backdrop-blur-sm border border-white/15 hover:border-white/35 rounded-full p-3 text-white transition-all duration-200 shadow-xl"
-        >
-          <IconArrowRight size={22} />
-        </motion.button>
-
-        {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
-          <motion.div
-            className="h-full"
-            style={{ backgroundColor: accentColor }}
-            animate={{ width: `${((current + 1) / total) * 100}%` }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          />
-        </div>
-      </div>
-
-      {/* Thumbnail Strip */}
-      <div className="flex gap-2.5 mt-4 overflow-x-auto pb-1 scrollbar-none">
-        {marbles.map((m, i) => {
-          const isActive = i === current;
-          const tc = m.color === '#FFFFFF' || m.color === '#FAFAFA' ? '#d4af37' : m.color;
-          return (
-            <motion.button
-              key={m.id}
-              onClick={() => go(i, i > current ? 1 : -1)}
-              whileHover={{ y: -3 }}
-              whileTap={{ scale: 0.95 }}
-              className="relative shrink-0 rounded-xl overflow-hidden transition-all duration-300"
-              style={{
-                width: isActive ? '90px' : '64px',
-                height: '56px',
-                border: isActive ? `2px solid ${tc}` : '2px solid transparent',
-                boxShadow: isActive ? `0 0 14px ${tc}55` : 'none',
-              }}
-              aria-label={m.name}
-            >
-              <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover" />
-              <div className={`absolute inset-0 transition-opacity ${isActive ? 'bg-black/20' : 'bg-black/50 hover:bg-black/30'}`} />
-              {isActive && (
-                <motion.div
-                  layoutId="thumb-active"
-                  className="absolute bottom-0 left-0 right-0 h-0.5"
-                  style={{ backgroundColor: tc }}
-                />
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Keyboard hint */}
-      <p className="text-center text-stone-600 text-xs mt-3 flex items-center justify-center gap-2">
-        <kbd className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-stone-500">←</kbd>
-        <kbd className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-stone-500">→</kbd>
-        Navigate with arrow keys when viewing this section
-      </p>
-    </div>
-  );
-};
-
-
-
-/* ─── Animated Counter ─── */
-const Counter: React.FC<{ end: number; suffix?: string; label: string }> = ({ end, suffix = '', label }) => {
+// ─── Counter Component ───
+const Counter: React.FC<{ end: number; suffix?: string; label: string; prefix?: string }> = ({
+  end, suffix = '', prefix = '', label,
+}) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
   return (
     <div ref={ref} className="text-center">
-      <div className="text-5xl font-heading font-black text-amber-400 mb-1">
+      <div className="text-4xl md:text-5xl font-heading font-black mb-1 text-black">
         <motion.span
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          {end}{suffix}
+          {prefix}{end}{suffix}
         </motion.span>
       </div>
-      <div className="text-stone-400 text-sm uppercase tracking-widest font-medium">{label}</div>
+      <div className="text-black/85 text-xs uppercase tracking-widest font-black">{label}</div>
     </div>
   );
 };
 
 const Home: React.FC = () => {
-  useSEO({
-    title: 'Premium Marble & Tiles Showroom Nadiad, Gujarat — The Quality Forever',
-    description: 'Nilkanth Marble & Tiles — Authorized dealer of premium Italian marble, vitrified tiles & ceramics in Nadiad, Gujarat. KalingaStone, Donato, Colortile & more. Call +91 94084 61000.',
-    keywords: 'marble showroom Nadiad, Italian marble Gujarat, premium tiles India, Calacatta marble, Carrara marble, vitrified tiles dealer',
-    image: '/marble-calacatta.png',
-    url: '/',
-  });
-
-  const brands = getBrands();
-  const featuredProducts = getFeaturedProducts();
-  const marbleTypes = getMarbleTypes();
   const navigate = useNavigate();
+  const { products, loading: productsLoading } = useSupabaseProducts();
+  const featuredProducts = (products || []).filter(p => p.isFeatured).slice(0, 8);
 
-  const marbleSectionRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: marbleSectionRef, offset: ['start end', 'end start'] });
-  const parallaxY = useTransform(scrollYProgress, [0, 1], ['0%', '-10%']);
-
-  const containerVariants = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.08 } },
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] as const } },
-  };
+  const waGeneralUrl = `https://wa.me/919974142777?text=${encodeURIComponent('Hi Nilkanth Marble! 👋\n\nI am interested in your products. Please share details.')}`;
 
   return (
     <div className="w-full overflow-x-hidden">
-      {/* 3D Hero */}
-      <Suspense fallback={<HeroLoader />}>
-        <ThreeHero />
-      </Suspense>
 
-      {/* ── Stats Strip ── */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
-        className="bg-stone-950 py-12 border-y border-white/5"
-      >
+      {/* ── HERO ── */}
+      <ThreeHero />
+
+      {/* ── STATS STRIP ── */}
+      <section className="bg-[#C8962E] py-10 border-y border-[#C8962E]">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { end: 500, suffix: '+', label: 'Products' },
-            { end: 6, suffix: '', label: 'Premium Brands' },
-            { end: 15, suffix: '+', label: 'Years Experience' },
-            { end: 12, suffix: '', label: 'Marble Varieties' },
-          ].map((stat) => (
-            <Counter key={stat.label} {...stat} />
-          ))}
+          <Counter end={20} suffix="+" label="Years Experience" />
+          <Counter end={500} suffix="+" label="Products" />
+          <Counter end={5} label="Categories" />
+          <Counter end={0} suffix="" label="Online Payments" prefix="₹" />
         </div>
-      </motion.section>
+        <p className="text-center text-black/70 text-xs mt-4 tracking-widest uppercase font-bold">
+          N.H. No.8, Piplag Chokdi, Nadiad, Gujarat · +91 94084 61000
+        </p>
+      </section>
 
-
-      {/* ── Product Categories ── */}
-      <section className="py-24 bg-light">
+      {/* ── CATEGORIES SHOWCASE ── */}
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 28 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.7 }}
-            className="text-center mb-14"
+            className="text-center mb-12"
           >
-            <span className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 mb-4">
-              <IconSparkles size={14} className="text-primary" />
-              <span className="text-primary text-xs font-bold tracking-widest uppercase">Product Range</span>
+            <span className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-1.5 mb-4">
+              <span className="text-primary text-xs font-bold tracking-widest uppercase">Product Categories</span>
             </span>
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-stone-900 mb-4">
-              Tiles & Granite
+            <h2 className="text-4xl md:text-5xl font-heading font-black text-gray-900 mb-4">
+              What We Offer
             </h2>
-            <p className="text-stone-500 max-w-xl mx-auto">
-              From premium high-gloss tiles to natural granite slabs — everything for your dream space under one roof.
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Everything for your dream space — under one roof in Nadiad, Gujarat.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Tiles Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0 }}
-              whileHover={{ y: -6, transition: { duration: 0.25 } }}
-              className="group relative rounded-3xl overflow-hidden shadow-lg cursor-pointer col-span-1"
-              onClick={() => navigate('/tiles')}
-              style={{ minHeight: '320px' }}
-            >
-              <img src="/tile-hero.png" alt="Premium Tiles" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
-              <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                <span className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">4 Brands · 20+ Collections</span>
-                <h3 className="text-3xl font-heading font-bold text-white mb-2">Premium Tiles</h3>
-                <p className="text-white/70 text-sm mb-5">Colortile Genesis, Donato Aurora, Latigres Woodland & Marfil Royal Essence. High Gloss, Matt, Satin finishes.</p>
-                <div className="flex items-center gap-2 text-white font-semibold text-sm group-hover:gap-4 transition-all">
-                  <span>Explore Tiles</span>
-                  <IconArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </motion.div>
+          {/* Category Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {categories.map((cat, i) => (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.6, delay: i * 0.08 }}
+                whileHover={{ y: -6 }}
+                onClick={() => navigate(cat.route)}
+                className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
+                style={{ minHeight: '220px' }}
+              >
+                {/* Background Image */}
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
 
-            {/* Natural Stone Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              whileHover={{ y: -6, transition: { duration: 0.25 } }}
-              className="group relative rounded-3xl overflow-hidden shadow-lg cursor-pointer"
-              onClick={() => navigate('/granite?type=natural-stone')}
-              style={{ minHeight: '320px' }}
-            >
-              <img src="/natural-stone-hero.png" alt="Natural Granite" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Natural · Unique Slabs</span>
-                <h3 className="text-3xl font-heading font-bold text-white mb-2">Natural Granite</h3>
-                <p className="text-white/70 text-sm mb-5">Black Galaxy, Kashmir White, Tan Brown, Absolute Black & more premium Indian granites.</p>
-                <div className="flex items-center gap-2 text-white font-semibold text-sm group-hover:gap-4 transition-all">
-                  <span>Explore Natural Stone</span>
-                  <IconArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </motion.div>
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/25" />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'linear-gradient(135deg, rgba(200,150,46,0.3) 0%, transparent 100%)' }} />
 
-            {/* Artificial Stone Card */}
+                {/* Content */}
+                <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                  <span className="text-2xl mb-2">{cat.emoji}</span>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-xl font-heading font-bold text-white">{cat.name}</h3>
+                    <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">
+                      {products.filter(p => p.category === cat.id).length} items
+                    </span>
+                  </div>
+                  <p className="text-white/70 text-sm">{cat.description}</p>
+                  <div className="flex items-center gap-1.5 text-white/90 text-sm font-semibold mt-3 group-hover:gap-3 transition-all duration-200">
+                    <span>Explore</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="transition-transform group-hover:translate-x-1">
+                      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+
+            {/* View All card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              whileHover={{ y: -6, transition: { duration: 0.25 } }}
-              className="group relative rounded-3xl overflow-hidden shadow-lg cursor-pointer"
-              onClick={() => navigate('/granite?type=artificial-stone')}
-              style={{ minHeight: '320px' }}
+              transition={{ duration: 0.6, delay: categories.length * 0.08 }}
+              whileHover={{ y: -6 }}
+              onClick={() => navigate('/products')}
+              className="group relative rounded-2xl overflow-hidden cursor-pointer border-2 border-dashed border-primary/30 hover:border-primary/60 transition-all duration-300 flex items-center justify-center"
+              style={{ minHeight: '220px' }}
             >
-              <img src="/artificial-stone-hero.png" alt="Artificial Stone" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 to-transparent" />
-              <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                <span className="text-xs font-bold uppercase tracking-widest text-blue-300 mb-2">Engineered · Zero Maintenance</span>
-                <h3 className="text-3xl font-heading font-bold text-white mb-2">Artificial Stone</h3>
-                <p className="text-white/70 text-sm mb-5">Calacatta, Statuario & Nero engineered quartz. Non-porous, stain-proof, consistent colour.</p>
-                <div className="flex items-center gap-2 text-white font-semibold text-sm group-hover:gap-4 transition-all">
-                  <span>Explore Artificial Stone</span>
-                  <IconArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              <div className="text-center p-8">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1C3A6B" strokeWidth="2.5" strokeLinecap="round">
+                    <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                  </svg>
                 </div>
+                <h3 className="font-heading font-bold text-primary text-lg mb-2">View All Products</h3>
+                <p className="text-gray-500 text-sm">Browse our complete collection</p>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ── Marble Types Carousel with Arrow Navigation ── */}
-      <section ref={marbleSectionRef} className="relative py-20 bg-stone-950 overflow-hidden">
-        {/* Parallax background orbs */}
-        <motion.div style={{ y: parallaxY }} className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-amber-400/5 blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
-        </motion.div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.7 }}
-            className="text-center mb-12"
-          >
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 bg-amber-400/10 border border-amber-400/20 rounded-full px-5 py-2 mb-5"
+      {/* ── FEATURED PRODUCTS — FLIPKART STYLE ── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h2 className="text-3xl md:text-4xl font-heading font-black text-gray-900">
+                  Featured Products
+                </h2>
+                <div className="section-divider mt-2" />
+              </motion.div>
+            </div>
+            <Link
+              to="/products"
+              className="hidden md:flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all group"
             >
-              <IconDiamond size={14} className="text-amber-400" />
-              <span className="text-amber-400 text-xs font-bold tracking-widest uppercase">Natural Stone Collection</span>
-            </motion.span>
-            <h2 className="text-5xl md:text-6xl font-heading font-black text-white mb-4 leading-tight">
-              World-Class{' '}
-              <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 bg-clip-text text-transparent">
-                Marble Types
-              </span>
-            </h2>
-            <p className="text-stone-400 text-base max-w-2xl mx-auto">
-              Use <kbd className="bg-white/10 border border-white/20 rounded px-2 py-0.5 text-xs text-stone-300 font-mono mx-1">←</kbd>
-              <kbd className="bg-white/10 border border-white/20 rounded px-2 py-0.5 text-xs text-stone-300 font-mono mx-1">→</kbd>
-              arrow keys or buttons to browse all {marbleTypes.length} premium marbles.
-            </p>
-          </motion.div>
+              View All
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="transition-transform group-hover:translate-x-1">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
+          </div>
 
-          {/* ── Main Carousel ── */}
-          <MarbleCarousel marbles={marbleTypes} onNavigate={() => navigate('/gallery')} />
+          {productsLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200 w-full">
+              <div className="animate-spin h-10 w-10 border-4 border-[#C8962E] border-t-transparent rounded-full mb-4"></div>
+              <p className="text-gray-500 text-sm">Loading featured products...</p>
+            </div>
+          ) : featuredProducts.length === 0 ? (
+            <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200 px-6 w-full">
+              <span className="text-4xl mb-4 block">🏛️</span>
+              <h3 className="text-xl font-heading font-bold text-gray-800 mb-2">Catalog Under Construction</h3>
+              <p className="text-gray-500 text-sm max-w-md mx-auto mb-4">
+                We are currently uploading our premium new products and collections. Contact us on WhatsApp or call today for live inventory, photos, and prices!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full">
+              {featuredProducts.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-30px' }}
+                  transition={{ duration: 0.5, delay: Math.min(i * 0.06, 0.4) }}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </div>
+          )}
 
-          {/* CTA */}
+          <div className="text-center mt-10">
+            <Link to="/products" className="btn-primary inline-flex px-8 py-3.5 text-base">
+              View All Products
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY CHOOSE US ── */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mt-10"
-          >
-            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-              <Link
-                to="/gallery"
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-stone-900 px-8 py-4 rounded-full font-bold text-base shadow-2xl shadow-amber-500/30 transition-all duration-300"
-              >
-                <IconSparkles size={20} />
-                Explore Full Marble Gallery
-                <IconArrowRight size={20} />
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-
-      {/* ── Brands Section ── */}
-      <section className="py-24 bg-stone-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.7 }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-stone-900 mb-4">Brands We Carry</h2>
-            <div className="w-24 h-1 bg-primary mx-auto mb-4" />
-            <p className="text-stone-500 max-w-xl mx-auto">Authorized dealer of the finest brands in marble, tiles, and stone</p>
+            <h2 className="text-3xl md:text-4xl font-heading font-black text-gray-900 mb-4">
+              Why Choose Nilkanth?
+            </h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Decades of expertise delivering quality stone and tiles across Gujarat.
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {brands.map((brand, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                icon: '🏆',
+                title: '20+ Years Experience',
+                desc: 'Established dealership with deep expertise in marble and stone selection.',
+              },
+              {
+                icon: '🛡️',
+                title: 'Quality Guaranteed',
+                desc: 'Every stone inspected for quality. Only the finest marble and granite.',
+              },
+              {
+                icon: '💬',
+                title: 'Expert Consultation',
+                desc: 'Free guidance from our experts to find the right stone for your space.',
+              },
+              {
+                icon: '🚚',
+                title: 'Pan-India Delivery',
+                desc: 'Safe delivery with proper packaging across India. Showroom in Nadiad.',
+              },
+            ].map((item, i) => (
               <motion.div
-                key={brand.id}
-                initial={{ opacity: 0, y: 24 }}
+                key={item.title}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.55, delay: index * 0.07 }}
-                whileHover={{ y: -6, scale: 1.03, transition: { duration: 0.25 } }}
-                onClick={() => navigate(`/brands/${brand.id}`)}
-                className="cursor-pointer bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center group border-t-4 border-transparent hover:border-current"
-                style={{ borderTopColor: brand.colorAccent }}
+                viewport={{ once: true, margin: '-30px' }}
+                transition={{ duration: 0.6, delay: i * 0.12 }}
+                whileHover={{ y: -4 }}
+                className="bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-lg border border-gray-100 transition-all duration-300"
               >
-                <motion.div
-                  className="h-16 w-16 mb-4 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-                  style={{ backgroundColor: `${brand.colorAccent}15` }}
-                  whileHover={{ rotate: [0, -5, 5, 0] }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <span className="font-heading font-bold text-2xl" style={{ color: brand.colorAccent }}>
-                    {brand.name.charAt(0)}
-                  </span>
-                </motion.div>
-                <h3 className="font-semibold text-stone-900 text-base mb-1">{brand.name}</h3>
-                <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">{brand.category}</p>
-                <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full">{brand.productCount} Products</span>
+                <div className="text-4xl mb-4">{item.icon}</div>
+                <h3 className="font-heading font-bold text-gray-900 text-lg mb-2">{item.title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Featured Products ── */}
-      <section className="py-24 bg-white">
+      {/* ── HOW IT WORKS (IndiaMart style) ── */}
+      <section className="py-16 bg-primary">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-white mb-3">
+              How to Order — It's Simple
+            </h2>
+            <p className="text-white/70 mb-10">No online payments. We work like IndiaMart — browse and contact us.</p>
+          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {[
+              { step: '1', icon: '👁️', title: 'Browse Products', desc: 'Explore our catalog of 500+ marble, granite & tile products' },
+              { step: '2', icon: '💬', title: 'Contact Us', desc: 'Call or WhatsApp to get pricing, availability and samples' },
+              { step: '3', icon: '✅', title: 'Get Your Stone', desc: 'Visit our showroom or we deliver to your location' },
+            ].map((step, i) => (
+              <motion.div
+                key={step.step}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
+                className="text-center"
+              >
+                <div className="w-16 h-16 rounded-full bg-white/10 border-2 border-accent flex items-center justify-center mx-auto mb-4 text-2xl">
+                  {step.icon}
+                </div>
+                <div className="font-heading font-black text-accent text-sm mb-1">STEP {step.step}</div>
+                <h3 className="font-heading font-bold text-white text-lg mb-2">{step.title}</h3>
+                <p className="text-white/60 text-sm">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CONTACT CTA ── */}
+      <section className="py-16 bg-bg border-t border-border/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-12">
+          <div className="bg-gradient-to-r from-[#111118] to-[#1a1a26] border border-border/20 rounded-3xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full border border-white/5 -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-20 w-48 h-48 rounded-full border border-accent/10 translate-y-1/2" />
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
+              className="text-center md:text-left relative z-10"
             >
-              <h2 className="text-4xl font-heading font-bold text-stone-900 mb-3">Featured Collection</h2>
-              <div className="w-24 h-1 bg-primary" />
+              <h2 className="text-2xl md:text-3xl font-heading font-bold mb-2" style={{ color: '#ffffff' }}>
+                Ready to transform your space?
+              </h2>
+              <p className="text-sm font-sans" style={{ color: '#d1d5db' }}>
+                Visit our showroom at Piplag Chokdi, Nadiad or contact us today.
+              </p>
+              <p className="font-semibold mt-2 text-sm font-outfit" style={{ color: '#C8962E' }}>
+                📍 N.H. No.8, Piplag Chokdi, Nadiad - 387 355 · Mon–Sat 9AM–7PM
+              </p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
+              className="flex flex-col sm:flex-row gap-3 relative z-10 shrink-0"
             >
-              <Link to="/catalog" className="hidden md:flex items-center gap-2 text-primary font-semibold hover:text-red-700 transition-colors group">
-                View Full Catalog
-                <motion.span whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
-                  <IconArrowRight size={20} />
-                </motion.span>
+              <a
+                href={waGeneralUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-wa px-7 py-3.5"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                WhatsApp Us
+              </a>
+              <Link to="/contact" className="btn-outline border-white/30 text-white hover:bg-white hover:text-primary px-7 py-3.5">
+                Contact Us
               </Link>
             </motion.div>
           </div>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-60px' }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-          >
-            {featuredProducts.slice(0, 8).map((product) => (
-              <motion.div
-                key={product.id}
-                variants={cardVariants}
-                whileHover={{ y: -6, transition: { duration: 0.25 } }}
-                className="group cursor-pointer rounded-2xl overflow-hidden bg-stone-50 shadow-sm hover:shadow-xl transition-all duration-300 border border-stone-100"
-                onClick={() => navigate(`/product/${product.id}`)}
-              >
-                <div className="relative h-64 overflow-hidden">
-                  <motion.img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.6 }}
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-white/90 backdrop-blur-sm text-xs font-bold px-3 py-1 rounded-full text-stone-900 shadow-sm uppercase tracking-wide">
-                      {brands.find(b => b.id === product.brandId)?.name || 'Brand'}
-                    </span>
-                  </div>
-                  {product.origin && (
-                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="bg-amber-400/90 text-stone-900 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                        <IconMapPin size={10} /> {product.origin}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-5">
-                  <h3 className="font-heading font-bold text-lg text-stone-900 mb-2 group-hover:text-primary transition-colors">
-                    {product.name}
-                  </h3>
-                  <div className="flex justify-between items-center text-sm text-stone-500">
-                    <span>{product.dimensions}</span>
-                    <span className="capitalize bg-stone-200 px-2 py-0.5 rounded-full text-xs">{product.finish}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <div className="mt-10 text-center md:hidden">
-            <Link to="/catalog" className="btn-secondary inline-flex items-center gap-2">
-              View Full Catalog <IconArrowRight size={20} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Why Nilkanth ── */}
-      <section className="py-28 bg-stone-950 text-white relative overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-amber-400/10"
-          />
-          <motion.div
-            animate={{ rotate: -360 }}
-            transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full border border-primary/10"
-          />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-950 via-stone-900/50 to-stone-950" />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-4">Why Choose Nilkanth?</h2>
-            <p className="text-stone-400 text-lg max-w-2xl mx-auto">Decades of expertise and a commitment to quality ensures your spaces look magnificent forever.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: IconShieldCheck, title: 'Authorized Dealer', desc: 'Directly sourcing from top-tier brands ensures 100% genuine products with manufacturer warranties.', color: 'text-primary' },
-              { icon: IconCheck, title: 'Premium Selection', desc: 'Curated collections of the finest Italian design stones, vitrified tiles, and premium marble varieties.', color: 'text-amber-400' },
-              { icon: IconMessageCircle, title: 'Expert Guidance', desc: 'Our experienced team helps you select the perfect materials for your specific architectural needs.', color: 'text-emerald-400' },
-            ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.6, delay: i * 0.15 }}
-                whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="flex flex-col items-center text-center p-8 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
-              >
-                <motion.div
-                  className="p-5 rounded-2xl mb-6"
-                  style={{ background: 'rgba(255,255,255,0.05)' }}
-                  whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <item.icon size={44} className={item.color} />
-                </motion.div>
-                <h3 className="text-2xl font-heading font-bold mb-4">{item.title}</h3>
-                <p className="text-stone-400 leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Contact CTA Strip ── */}
-      <section className="relative py-16 overflow-hidden">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-red-500 to-primary" />
-        <motion.div
-          animate={{ x: ['-100%', '100%'] }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 opacity-10 bg-gradient-to-r from-transparent via-white to-transparent"
-        />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center justify-between text-white gap-8">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center md:text-left"
-          >
-            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-2">Ready to transform your space?</h2>
-            <p className="text-white/80 text-lg">Visit our showroom in Nadiad or contact us today.</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 items-center"
-          >
-            <div className="flex flex-col text-right hidden sm:flex mr-4">
-              <span className="font-bold text-lg">+91 94084 61000</span>
-              <span className="text-sm text-white/80">nilkanth1marble@gmail.com</span>
-            </div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
-              <Link
-                to="/contact"
-                className="bg-white text-primary hover:bg-stone-950 hover:text-white px-8 py-4 rounded-full font-bold text-base transition-all shadow-xl"
-              >
-                Get in Touch
-              </Link>
-            </motion.div>
-          </motion.div>
         </div>
       </section>
     </div>
