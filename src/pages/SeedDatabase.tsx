@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { supabase } from '../utils/supabase';
 import { allProducts } from '../data/products';
 import { tilesCatalogs } from '../data/catalogs';
+import { categories } from '../data/categories';
 
 const SeedDatabase: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -92,6 +93,36 @@ const SeedDatabase: React.FC = () => {
           console.error(error);
         } else {
           addLog(`✅ Catalog synced: ${cat.title}`);
+        }
+      }
+
+      // 3. Upload Categories
+      addLog(`Syncing ${categories.length} categories...`);
+      for (const cat of categories) {
+        const dbCategory = {
+          id: cat.id,
+          slug: cat.slug,
+          name: cat.name,
+          description: cat.description,
+          long_description: cat.longDescription || '',
+          emoji: cat.emoji || '',
+          color: cat.color || 'amber',
+          accent_color: cat.accentColor || '#C8962E',
+          image: cat.image,
+          product_count: cat.productCount || 0,
+          route: cat.route,
+          is_active: true,
+        };
+
+        const { error } = await supabase
+          .from('categories')
+          .upsert(dbCategory, { onConflict: 'id' });
+
+        if (error) {
+          addLog(`⚠️ Category "${cat.name}" sync skipped or error: ${error.message} (Note: Run categories_setup.sql if relation does not exist)`);
+          console.warn(error);
+        } else {
+          addLog(`✅ Category synced: ${cat.name}`);
         }
       }
 

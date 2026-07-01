@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
-import { categories } from '../data/categories';
-import { useSupabaseProducts } from '../hooks/useSupabaseProducts';
+import { useSupabaseProducts, useSupabaseCategories, useSupabaseCatalogs } from '../hooks/useSupabaseProducts';
 import ProductCard from '../components/products/ProductCard';
 import ThreeHero from '../components/ThreeHero';
 
@@ -31,6 +30,16 @@ const Counter: React.FC<{ end: number; suffix?: string; label: string; prefix?: 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { products, loading: productsLoading } = useSupabaseProducts();
+  const { categories } = useSupabaseCategories();
+  const { catalogs } = useSupabaseCatalogs();
+
+  const getCount = (catId: string) => {
+    if (catId === 'tiles-catalog') {
+      return (catalogs || []).length;
+    }
+    return (products || []).filter((p) => p.category === catId).length;
+  };
+
   const featuredProducts = (products || []).filter(p => p.isFeatured).slice(0, 8);
 
   const waGeneralUrl = `https://wa.me/919974142777?text=${encodeURIComponent('Hi Nilkanth Marble! 👋\n\nI am interested in your products. Please share details.')}`;
@@ -89,16 +98,21 @@ const Home: React.FC = () => {
                 className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
                 style={{ minHeight: '220px' }}
               >
-                {/* Background Image */}
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
+                {/* Background Image - Only show if items exist in category */}
+                {getCount(cat.id) > 0 && (
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                )}
 
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/25" />
+                {getCount(cat.id) === 0 && (
+                  <div className="absolute inset-0 border-2 border-dashed border-[#C8962E]/25 rounded-2xl m-2" />
+                )}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   style={{ background: 'linear-gradient(135deg, rgba(200,150,46,0.3) 0%, transparent 100%)' }} />
 
@@ -108,7 +122,7 @@ const Home: React.FC = () => {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-xl font-heading font-bold text-white">{cat.name}</h3>
                     <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">
-                      {products.filter(p => p.category === cat.id).length} items
+                      {getCount(cat.id)} items
                     </span>
                   </div>
                   <p className="text-white/70 text-sm">{cat.description}</p>

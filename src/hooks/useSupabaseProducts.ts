@@ -5,6 +5,8 @@ import { allProducts } from '../data/products';
 import type { NProduct, ProductCategory } from '../data/products';
 import { tilesCatalogs } from '../data/catalogs';
 import type { TilesCatalog } from '../data/catalogs';
+import { categories as staticCategories } from '../data/categories';
+import type { Category } from '../data/categories';
 
 /**
  * Hook to load products dynamically from Supabase (or fallback to mock data)
@@ -197,4 +199,72 @@ export function useSupabaseCatalogs() {
   }, []);
 
   return { catalogs, loading };
+}
+
+/**
+ * Hook to load categories dynamically from Supabase (or fallback to static data)
+ */
+export function useSupabaseCategories() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function getCategories() {
+      if (!supabase) {
+        setCategories(staticCategories);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          // If categories table doesn't exist, fall back to static list gracefully
+          if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+            console.warn('Categories table does not exist in Supabase, using static fallback.');
+            setCategories(staticCategories);
+          } else {
+            throw error;
+          }
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          setCategories([]);
+          return;
+        }
+
+        const mapped: Category[] = data.map((c: any) => ({
+          id: c.id,
+          slug: c.slug,
+          name: c.name,
+          description: c.description,
+          longDescription: c.long_description || '',
+          emoji: c.emoji || '',
+          color: c.color || 'amber',
+          accentColor: c.accent_color || '#C8962E',
+          image: c.image,
+          productCount: c.product_count || 0,
+          route: c.route,
+        }));
+
+        setCategories(mapped);
+      } catch (err) {
+        console.error('Error fetching categories from Supabase, using static fallback:', err);
+        setCategories(staticCategories);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getCategories();
+  }, []);
+
+  return { categories, loading };
 }

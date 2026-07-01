@@ -61,7 +61,22 @@ interface CatalogRecord {
   created_at: string;
 }
 
-type ActiveTab = 'dashboard' | 'inquiries' | 'products' | 'catalogs';
+interface CategoryRecord {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  long_description: string | null;
+  emoji: string | null;
+  color: string | null;
+  accent_color: string | null;
+  image: string;
+  product_count: number;
+  route: string;
+  is_active: boolean;
+}
+
+type ActiveTab = 'dashboard' | 'inquiries' | 'products' | 'catalogs' | 'categories';
 
 /* ═══════════════════════════════════════════════════════════════
    CONSTANTS & HELPERS
@@ -704,6 +719,195 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
 };
 
 /* ═══════════════════════════════════════════════════════════════
+   CATEGORY COVER UPLOADER
+────────────────────────────────────────────────────────────────── */
+const CategoryCoverUploader: React.FC<{ onUploaded: (url: string) => void }> = ({ onUploaded }) => {
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+    
+    setUploading(true);
+    setProgress(10);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const name = `cat_${Date.now()}.${ext}`;
+      const { data, error } = await supabase.storage.from('product-images').upload(name, file, {
+        cacheControl: '3600',
+        upsert: false,
+        onUploadProgress: (progressEvent: any) => {
+          const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+          setProgress(Math.min(95, percent));
+        }
+      } as any);
+
+      if (error) throw error;
+      setProgress(98);
+      const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(data.path);
+      onUploaded(publicUrl);
+      setProgress(100);
+      showToast('Cover photo uploaded successfully!');
+      setTimeout(() => { setUploading(false); setProgress(0); }, 500);
+    } catch (err: any) {
+      showToast('Cover upload failed: ' + err.message, 'error');
+      setUploading(false);
+      setProgress(0);
+    }
+  };
+
+  return (
+    <div>
+      <button type="button" onClick={() => fileRef.current?.click()} className="btn-outline px-4 py-2 text-xs flex items-center gap-2 cursor-pointer mt-1">
+        {uploading ? `Uploading (${progress}%)` : '📤 Upload Cover Photo File'}
+      </button>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   CATEGORY MODAL
+────────────────────────────────────────────────────────────────── */
+interface CategoryModalProps {
+  category: CategoryRecord | null;
+  onClose: () => void;
+  onSaved: () => void;
+}
+
+const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSaved }) => {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    id: category?.id || '',
+    slug: category?.slug || '',
+    name: category?.name || '',
+    description: category?.description || '',
+    long_description: category?.long_description || '',
+    emoji: category?.emoji || '',
+    accent_color: category?.accent_color || '#C8962E',
+    image: category?.image || '',
+    is_active: category?.is_active !== false,
+  });
+
+  const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    setSaving(true);
+    try {
+      const payload = {
+        id: form.id,
+        slug: form.slug.trim() || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+        name: form.name.trim(),
+        description: form.description.trim(),
+        long_description: form.long_description.trim() || null,
+        emoji: form.emoji.trim() || null,
+        accent_color: form.accent_color.trim() || null,
+        image: form.image.trim(),
+        is_active: form.is_active,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('categories')
+        .update(payload)
+        .eq('id', form.id);
+
+      if (error) throw error;
+
+      showToast('Category updated successfully!');
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      showToast('Error saving category: ' + err.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
+      <motion.div initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
+        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e1e2e]" style={{ background: 'linear-gradient(135deg,#1C3A6B22,#C8962E11)' }}>
+          <div>
+            <h3 className="text-white font-heading font-bold text-lg">✏️ Edit Category: {category?.name}</h3>
+            <p className="text-[#8888aa] text-xs mt-0.5">Customize cover photo, description, and details for this offer</p>
+          </div>
+          <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="admin-label">Category Name *</label>
+              <input type="text" required value={form.name} onChange={e => set('name', e.target.value)} className="admin-input" />
+            </div>
+            <div>
+              <label className="admin-label">Emoji *</label>
+              <input type="text" required value={form.emoji} onChange={e => set('emoji', e.target.value)} className="admin-input" placeholder="e.g. 🪨" />
+            </div>
+          </div>
+
+          <div>
+            <label className="admin-label">Short Description *</label>
+            <input type="text" required value={form.description} onChange={e => set('description', e.target.value)} className="admin-input" placeholder="Premium Italian & Indian marble" />
+          </div>
+
+          <div>
+            <label className="admin-label">Long Description</label>
+            <textarea value={form.long_description} onChange={e => set('long_description', e.target.value)} rows={3} className="admin-input resize-none" placeholder="Detailed details shown on category collections page..." />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="admin-label">Accent Color (Hex)</label>
+              <input type="text" value={form.accent_color} onChange={e => set('accent_color', e.target.value)} className="admin-input" placeholder="e.g. #C8962E" />
+            </div>
+            <div>
+              <label className="admin-label">Slug (URL segment)</label>
+              <input type="text" required disabled value={form.slug} className="admin-input opacity-60" />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-[#C8962E] text-xs font-bold uppercase tracking-wider mb-2">📸 Cover Photo Background</h4>
+            
+            <div className="flex gap-4 items-center mb-2">
+              {form.image && (
+                <div className="w-16 h-16 rounded-xl overflow-hidden border border-[#1e1e2e] flex-shrink-0 bg-black">
+                  <img src={form.image} alt="" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <input type="url" value={form.image} onChange={e => set('image', e.target.value)} placeholder="Paste image cover URL here..." className="admin-input flex-1" />
+            </div>
+            
+            <CategoryCoverUploader onUploaded={url => set('image', url)} />
+          </div>
+
+          <div className="flex items-center gap-3 py-2">
+            <div onClick={() => set('is_active', !form.is_active)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_active ? 'bg-emerald-500' : 'bg-[#2a2a3a]'}`}>
+              <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_active ? 'left-5' : 'left-0.5'}`} />
+            </div>
+            <span className="text-[#e4e4ef] text-sm font-semibold">Category is active and visible on Homepage</span>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e2e]">
+            <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-[#444] hover:text-white transition-all cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving} className="btn-accent px-7 py-2.5 text-sm disabled:opacity-60">
+              {saving ? 'Saving...' : 'Update Category'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════
    MAIN ADMIN COMPONENT
 ────────────────────────────────────────────────────────────────── */
 
@@ -821,6 +1025,9 @@ const Admin: React.FC = () => {
   const [inquiries, setInquiries] = useState<InquiryRecord[]>([]);
   const [products, setProducts] = useState<ProductRecord[]>([]);
   const [catalogs, setCatalogs] = useState<CatalogRecord[]>([]);
+  const [categories, setCategories] = useState<CategoryRecord[]>([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryRecord | null>(null);
   const [fetchLoading, setFetchLoading] = useState(false);
 
   const [productSearch, setProductSearch] = useState('');
@@ -858,6 +1065,21 @@ const Admin: React.FC = () => {
       setInquiries(inqRes.data || []);
       setProducts(prodRes.data || []);
       setCatalogs(catRes.data || []);
+
+      // Fetch categories separately to be resilient if categories table is not created yet
+      try {
+        const { data: catgData, error: catgError } = await supabase
+          .from('categories')
+          .select('*')
+          .order('created_at', { ascending: true });
+        
+        if (!catgError && catgData) {
+          setCategories(catgData);
+        }
+      } catch (catgErr) {
+        console.warn('Categories table not initialized:', catgErr);
+      }
+
       setDbStatus('connected');
     } catch (err: any) {
       console.error(err.message);
@@ -1128,6 +1350,7 @@ const Admin: React.FC = () => {
           <NavItem id="inquiries" label="Inquiries" icon="📥" count={inquiries.filter(i => i.status === 'unread' || !i.status).length} active={activeTab === 'inquiries'} onClick={() => setActiveTab('inquiries')} />
           <NavItem id="products" label="Products" icon="💎" count={products.length} active={activeTab === 'products'} onClick={() => setActiveTab('products')} />
           <NavItem id="catalogs" label="Tile Catalogs" icon="📚" count={catalogs.length} active={activeTab === 'catalogs'} onClick={() => setActiveTab('catalogs')} />
+          <NavItem id="categories" label="Categories Manager" icon="🏷️" count={categories.length} active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
         </nav>
         
         <div className="p-4 border-t border-[#1e1e2e] space-y-3">
@@ -1142,10 +1365,10 @@ const Admin: React.FC = () => {
           style={{ background: 'rgba(10,10,15,0.96)', backdropFilter: 'blur(12px)' }}>
           <div>
             <h2 className="text-white font-heading font-black text-lg">
-              {activeTab === 'dashboard' ? '📊 Dashboard Overview' : activeTab === 'inquiries' ? '📥 Customer Inquiries' : activeTab === 'products' ? '💎 Product Catalogue' : '📚 Tile Catalogs'}
+              {activeTab === 'dashboard' ? '📊 Dashboard Overview' : activeTab === 'inquiries' ? '📥 Customer Inquiries' : activeTab === 'products' ? '💎 Product Catalogue' : activeTab === 'catalogs' ? '📚 Tile Catalogs' : '🏷️ Homepage Categories'}
             </h2>
             <p className="text-[#8888aa] text-xs font-medium mt-0.5">
-              {activeTab === 'dashboard' ? 'Real-time overview of database records' : activeTab === 'inquiries' ? `${inquiries.length} queries received` : activeTab === 'products' ? `${products.length} items listed` : `${catalogs.length} catalogs uploaded`}
+              {activeTab === 'dashboard' ? 'Real-time overview of database records' : activeTab === 'inquiries' ? `${inquiries.length} queries received` : activeTab === 'products' ? `${products.length} items listed` : activeTab === 'catalogs' ? `${catalogs.length} catalogs uploaded` : `${categories.length} categories on homepage`}
             </p>
           </div>
           <div className="text-[#4a4a6a] text-xs text-right font-medium">
@@ -1516,6 +1739,71 @@ const Admin: React.FC = () => {
                 </div>
               </motion.div>
             )}
+
+            {activeTab === 'categories' && (
+              <motion.div key="categories" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="space-y-6">
+                
+                {/* Information Callout */}
+                <div className="bg-[#C8962E]/5 border border-[#C8962E]/25 rounded-2xl p-5 flex gap-4 cursor-default">
+                  <span className="text-2xl mt-0.5 flex-shrink-0">🏷️</span>
+                  <div>
+                    <h3 className="text-white font-bold text-sm">Dynamic Categories & "What We Offer" Manager</h3>
+                    <p className="text-[#8888aa] text-xs mt-1 leading-relaxed">
+                      Customize the five category cards displayed on your homepage. You can edit names, emojis, cover photos, and toggle their visibility.
+                      Uploading a background image here will dynamically update the homepage category background.
+                    </p>
+                  </div>
+                </div>
+
+                {categories.length === 0 && (
+                  <div className="text-center py-20 bg-white/[0.01] rounded-2xl border border-dashed border-[#1e1e2e]">
+                    <div className="text-5xl mb-3">⚠️</div>
+                    <p className="text-[#8888aa] text-sm font-semibold">No categories found in Supabase.</p>
+                    <p className="text-[#4a4a6a] text-xs mt-2 max-w-sm mx-auto">
+                      Please copy the SQL query from <code>categories_setup.sql</code> and execute it in your Supabase SQL editor, then run the database seeder to populate them.
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {categories.map((cat) => {
+                    const count = cat.id === 'tiles-catalog' 
+                      ? catalogs.length 
+                      : products.filter(p => p.category === cat.id).length;
+
+                    return (
+                      <div key={cat.id} className="admin-card overflow-hidden group border border-[#1e1e2e]/85">
+                        <div className="aspect-[16/9] relative overflow-hidden bg-[#0d0d16]">
+                          {cat.image && (
+                            <img src={cat.image} alt={cat.name} className="w-full h-full object-cover opacity-60 group-hover:scale-102 transition-all duration-300" />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                          <div className="absolute top-3 right-3">
+                            {cat.is_active ? <span className="status-active">● Visible</span> : <span className="status-draft">● Hidden</span>}
+                          </div>
+                          <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                            <span className="text-xl bg-white/10 p-1.5 rounded-lg backdrop-blur-sm">{cat.emoji}</span>
+                            <div>
+                              <h4 className="text-white font-bold text-sm leading-none">{cat.name}</h4>
+                              <span className="text-[10px] text-[#C8962E] font-bold mt-1.5 block">{count} Active Items</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <p className="text-[#8888aa] text-xs line-clamp-2 min-h-[2rem]">{cat.description}</p>
+                          <div className="flex gap-2 mt-4 pt-3 border-t border-[#1e1e2e]/50">
+                            <button onClick={() => { setEditingCategory(cat); setShowCategoryModal(true); }}
+                              className="w-full py-2 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-xs font-semibold hover:border-[#C8962E] hover:text-[#C8962E] hover:bg-[#C8962E]/5 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                              ✏️ Edit Category Design
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </main>
@@ -1524,6 +1812,7 @@ const Admin: React.FC = () => {
       <AnimatePresence>
         {showProductModal && <ProductModal product={editingProduct} onClose={() => { setShowProductModal(false); setEditingProduct(null); }} onSaved={fetchData} />}
         {showCatalogModal && <CatalogModal catalog={editingCatalog} onClose={() => { setShowCatalogModal(false); setEditingCatalog(null); }} onSaved={fetchData} />}
+        {showCategoryModal && <CategoryModal category={editingCategory} onClose={() => { setShowCategoryModal(false); setEditingCategory(null); }} onSaved={fetchData} />}
         {selectedInquiry && (
           <InquiryModal
             inquiry={selectedInquiry}
