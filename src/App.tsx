@@ -11,6 +11,7 @@ import TilesCatalog from './pages/TilesCatalog';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
+import SeedDatabase from './pages/SeedDatabase';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <Routes>
         {/* Admin — full-screen, no layout navbar/footer */}
         <Route path="/admin" element={<Admin />} />
+        <Route path="/seed" element={<SeedDatabase />} />
 
         {/* Main website with Layout (navbar + footer) */}
         <Route path="/" element={<Layout />}>
