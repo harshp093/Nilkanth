@@ -370,7 +370,8 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
     setUploading(true);
     setProgress(5);
     try {
-      const name = `catalog_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      const cleanName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._()-]/g, '');
+      const name = `catalog_${Date.now()}_${cleanName}`;
       
       const { data, error } = await supabase.storage.from(bucket).upload(name, file, { 
         contentType: 'application/pdf', 
