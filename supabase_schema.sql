@@ -253,3 +253,18 @@ CREATE TRIGGER set_catalogs_updated_at
 -- ══════════════════════════════════════════════════════════════
 -- DONE! All tables, RLS policies, storage buckets & triggers set up.
 -- ══════════════════════════════════════════════════════════════
+
+-- Ensure product_category enum is altered if it exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_category') THEN
+    ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'stone';
+    ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'adhesives-chemicals';
+  END IF;
+END $$;
+
+-- Migrate existing products to new 'stone' category if categorized as granite with natural/artificial subcategory
+UPDATE products
+SET category = 'stone'
+WHERE category = 'granite' 
+  AND (subcategory = 'natural-stone' OR subcategory = 'artificial-stone');

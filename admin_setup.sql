@@ -169,3 +169,21 @@ CREATE POLICY "Authenticated delete tile catalogs" ON "storage"."objects"
 CREATE POLICY "Public read catalogs b" ON "storage"."objects" FOR SELECT USING (bucket_id = 'tile-catalogs-b');
 CREATE POLICY "Authenticated upload catalogs b" ON "storage"."objects" FOR INSERT TO authenticated WITH CHECK (bucket_id = 'tile-catalogs-b');
 CREATE POLICY "Authenticated delete catalogs b" ON "storage"."objects" FOR DELETE TO authenticated USING (bucket_id = 'tile-catalogs-b');
+
+-- ─────────────────────────────────────────
+-- 6. DYNAMIC CATEGORY MIGRATION & ENUMS
+-- ─────────────────────────────────────────
+-- Ensure enum type is altered if it exists in Supabase
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_category') THEN
+    ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'stone';
+    ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'adhesives-chemicals';
+  END IF;
+END $$;
+
+-- Migrate existing products to new 'stone' category if categorized as granite with natural/artificial subcategory
+UPDATE products
+SET category = 'stone'
+WHERE category = 'granite' 
+  AND (subcategory = 'natural-stone' OR subcategory = 'artificial-stone');
