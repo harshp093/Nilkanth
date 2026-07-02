@@ -11,8 +11,10 @@ interface ProductFiltersProps {
 const CATEGORY_OPTIONS = [
   { value: 'marble', label: '🪨 Marble' },
   { value: 'granite', label: '⬛ Granite' },
-  { value: 'kota-others', label: '🟫 Kota & Others' },
+  { value: 'stone', label: '🪨 Stone' },
+  { value: 'kota-others', label: '🟫 Kota Stone' },
   { value: 'sanitary-ware', label: '🚿 Sanitary Ware' },
+  { value: 'adhesives-chemicals', label: '🧪 Chemicals' },
 ];
 
 const FINISH_OPTIONS = ['Polished', 'Matte', 'Honed', 'Brushed', 'Flamed', 'Natural'];

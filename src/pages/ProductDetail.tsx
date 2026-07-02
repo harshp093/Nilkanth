@@ -9,8 +9,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   marble: 'Marble',
   granite: 'Granite',
   stone: 'Stone',
-  'adhesives-chemicals': 'Adhesives & Chemicals',
-  'kota-others': 'Kota & Others',
+  'adhesives-chemicals': 'Chemicals',
+  'kota-others': 'Kota Stone',
   'sanitary-ware': 'Sanitary Ware',
   'tiles-catalog': 'Tiles',
 };

@@ -27,9 +27,9 @@ const KotaStone: React.FC = () => {
             <span>›</span>
             <Link to="/products" className="hover:text-primary transition-colors">Products</Link>
             <span>›</span>
-            <span className="text-gray-900 font-medium">Kota & Others</span>
+            <span className="text-gray-900 font-medium">Kota Stone</span>
           </nav>
-          <h1 className="text-3xl font-heading font-black text-gray-900">🟫 Kota & Others</h1>
+          <h1 className="text-3xl font-heading font-black text-gray-900">🟫 Kota Stone</h1>
           <p className="text-gray-500 mt-1">
             Kota stone, slate & natural stones — ideal for outdoor, pool side, steps and flooring
           </p>

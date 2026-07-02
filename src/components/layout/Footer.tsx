@@ -78,8 +78,8 @@ const Footer: React.FC = () => {
                 { to: '/marble', label: '🪨 Marble' },
                 { to: '/granite', label: '⬛ Granite' },
                 { to: '/stone', label: '🪨 Stone' },
-                { to: '/adhesives-chemicals', label: '🧪 Adhesives & Chemicals' },
-                { to: '/kota-stone', label: '🟫 Kota & Others' },
+                { to: '/adhesives-chemicals', label: '🧪 Chemicals' },
+                { to: '/kota-stone', label: '🟫 Kota Stone' },
                 { to: '/sanitary-ware', label: '🚿 Sanitary Ware' },
                 { to: '/tiles-catalog', label: '🔲 Tiles Catalog' },
               ].map(item => (

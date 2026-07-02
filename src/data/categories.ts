@@ -59,7 +59,7 @@ export const categories: Category[] = [
   {
     id: 'kota-others',
     slug: 'kota-others',
-    name: 'Kota & Others',
+    name: 'Kota Stone',
     description: 'Kota stone, slate & natural stone',
     longDescription: 'Kota blue and green limestone for outdoor use — pathways, pool sides, steps. Also natural roofing slate and other specialty stones.',
     emoji: '🟫',
@@ -98,8 +98,8 @@ export const categories: Category[] = [
   {
     id: 'adhesives-chemicals',
     slug: 'adhesives-chemicals',
-    name: 'Adhesives & Chemicals',
-    description: 'Tile adhesives, stone fixing & construction chemicals',
+    name: 'Chemicals',
+    description: 'Tile adhesives & construction chemicals',
     longDescription: 'High-performance polymer modified cement adhesives, white adhesives, epoxy grouts, and waterproofing chemicals by Roff (Pidilite), Laticrete, and Weber.',
     emoji: '🧪',
     color: 'emerald',

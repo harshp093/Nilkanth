@@ -9,9 +9,11 @@ const EMAIL = 'nilkanth1marble@gmail.com';
 
 const productsDropdown = [
   { to: '/marble', label: 'Marble', desc: 'Premium Italian & Indian marble', icon: '🪨' },
-  { to: '/granite', label: 'Granite', desc: 'Natural & artificial stone', icon: '⬛' },
-  { to: '/kota-stone', label: 'Kota & Others', desc: 'Kota stone, slate & more', icon: '🟫' },
+  { to: '/granite', label: 'Granite', desc: 'Natural granite slabs', icon: '⬛' },
+  { to: '/stone', label: 'Stone', desc: 'Natural & engineered stones', icon: '🪨' },
+  { to: '/kota-stone', label: 'Kota Stone', desc: 'Kota stone, slate & more', icon: '🟫' },
   { to: '/sanitary-ware', label: 'Sanitary Ware', desc: 'Closets, basins, faucets', icon: '🚿' },
+  { to: '/adhesives-chemicals', label: 'Chemicals', desc: 'Tile adhesives & construction chemicals', icon: '🧪' },
 ];
 
 const Navbar: React.FC = () => {

@@ -128,6 +128,11 @@ INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('tile-catalogs', 'tile-catalogs', true)
   ON CONFLICT (id) DO NOTHING;
 
+-- Expand maximum file upload limit to 150MB for tile-catalogs bucket
+UPDATE "storage"."buckets"
+SET file_size_limit = 157286400
+WHERE id = 'tile-catalogs';
+
 -- Clean up storage policies to avoid conflicts
 DROP POLICY IF EXISTS "Public read product images" ON "storage"."objects";
 DROP POLICY IF EXISTS "Authenticated upload product images" ON "storage"."objects";

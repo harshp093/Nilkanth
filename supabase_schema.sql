@@ -176,6 +176,11 @@ INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('tile-catalogs-johnson', 'tile-catalogs-johnson', true)
   ON CONFLICT (id) DO NOTHING;
 
+-- Ensure all catalog buckets allow up to 150MB file uploads
+UPDATE "storage"."buckets"
+SET file_size_limit = 157286400
+WHERE id LIKE 'tile-catalogs%';
+
 -- ─────────────────────────────────────────
 -- STORAGE ACCESS POLICIES
 -- ─────────────────────────────────────────
