@@ -152,27 +152,27 @@ CREATE POLICY "Admin update inquiries" ON inquiries
 --
 -- OR insert them via SQL (requires storage schema access):
 -- ══════════════════════════════════════════════════════════════
-INSERT INTO storage.buckets (id, name, public)
+INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('product-images', 'product-images', true)
   ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO storage.buckets (id, name, public)
+INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('tile-catalogs', 'tile-catalogs', true)
   ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO storage.buckets (id, name, public)
+INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('tile-catalogs-b', 'tile-catalogs-b', true)
   ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO storage.buckets (id, name, public)
+INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('tile-catalogs-kajaria', 'tile-catalogs-kajaria', true)
   ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO storage.buckets (id, name, public)
+INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('tile-catalogs-somany', 'tile-catalogs-somany', true)
   ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO storage.buckets (id, name, public)
+INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('tile-catalogs-johnson', 'tile-catalogs-johnson', true)
   ON CONFLICT (id) DO NOTHING;
 
@@ -181,38 +181,38 @@ INSERT INTO storage.buckets (id, name, public)
 -- ─────────────────────────────────────────
 
 -- Product images: public read
-DROP POLICY IF EXISTS "Public read product images" ON storage.objects;
+DROP POLICY IF EXISTS "Public read product images" ON "storage"."objects";
 CREATE POLICY "Public read product images"
-  ON storage.objects FOR SELECT
+  ON "storage"."objects" FOR SELECT
   USING (bucket_id = 'product-images');
 
 -- Product images: authenticated upload
-DROP POLICY IF EXISTS "Authenticated upload product images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated upload product images" ON "storage"."objects";
 CREATE POLICY "Authenticated upload product images"
-  ON storage.objects FOR INSERT
+  ON "storage"."objects" FOR INSERT
   TO authenticated
   WITH CHECK (bucket_id = 'product-images');
 
 -- Product images: authenticated delete
-DROP POLICY IF EXISTS "Authenticated delete product images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated delete product images" ON "storage"."objects";
 CREATE POLICY "Authenticated delete product images"
-  ON storage.objects FOR DELETE
+  ON "storage"."objects" FOR DELETE
   TO authenticated
   USING (bucket_id = 'product-images');
 
 -- Tile catalog PDFs: public read (all catalog buckets)
-DROP POLICY IF EXISTS "Public read tile catalogs" ON storage.objects;
+DROP POLICY IF EXISTS "Public read tile catalogs" ON "storage"."objects";
 CREATE POLICY "Public read tile catalogs"
-  ON storage.objects FOR SELECT
+  ON "storage"."objects" FOR SELECT
   USING (bucket_id IN (
     'tile-catalogs','tile-catalogs-b',
     'tile-catalogs-kajaria','tile-catalogs-somany','tile-catalogs-johnson'
   ));
 
 -- Tile catalog PDFs: authenticated upload
-DROP POLICY IF EXISTS "Authenticated upload tile catalogs" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated upload tile catalogs" ON "storage"."objects";
 CREATE POLICY "Authenticated upload tile catalogs"
-  ON storage.objects FOR INSERT
+  ON "storage"."objects" FOR INSERT
   TO authenticated
   WITH CHECK (bucket_id IN (
     'tile-catalogs','tile-catalogs-b',
@@ -220,9 +220,9 @@ CREATE POLICY "Authenticated upload tile catalogs"
   ));
 
 -- Tile catalog PDFs: authenticated delete
-DROP POLICY IF EXISTS "Authenticated delete tile catalogs" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated delete tile catalogs" ON "storage"."objects";
 CREATE POLICY "Authenticated delete tile catalogs"
-  ON storage.objects FOR DELETE
+  ON "storage"."objects" FOR DELETE
   TO authenticated
   USING (bucket_id IN (
     'tile-catalogs','tile-catalogs-b',

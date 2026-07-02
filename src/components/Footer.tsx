@@ -40,8 +40,9 @@ const Footer: React.FC = () => {
               <li><Link to="/tiles" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Premium Tiles</Link></li>
               <li><Link to="/tiles/colortile/genesis" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Colortile Genesis</Link></li>
               <li><Link to="/tiles/donato/aurora" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Donato Aurora</Link></li>
-              <li><Link to="/granite?type=natural-stone" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Natural Granite</Link></li>
-              <li><Link to="/granite?type=artificial-stone" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Artificial Stone</Link></li>
+              <li><Link to="/stone?type=natural-stone" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Natural Stone</Link></li>
+              <li><Link to="/stone?type=artificial-stone" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Artificial Stone</Link></li>
+              <li><Link to="/adhesives-chemicals" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Adhesives & Chemicals</Link></li>
               <li><Link to="/granite/black-galaxy" className="text-gray-400 hover:text-amber-400 transition-colors text-sm">Black Galaxy Granite</Link></li>
             </ul>
           </div>

@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { NProduct, ProductCategory } from '../../data/products';
 import ProductCard from './ProductCard';
+import { useSupabaseCategories } from '../../hooks/useSupabaseProducts';
 
 interface ProductGridProps {
   products: NProduct[];
@@ -28,10 +29,11 @@ const ITEMS_PER_PAGE = 24;
 const FINISH_OPTIONS = ['Polished', 'Matte', 'Honed', 'Brushed', 'Flamed', 'Natural'];
 const APPLICATION_OPTIONS = ['Flooring', 'Wall Cladding', 'Counter Top', 'Bathroom', 'Outdoor', 'Staircase', 'Pool Side'];
 
-const CATEGORY_TABS = [
+const staticCategoryTabs = [
   { value: 'all', label: '🛍️ All Products', route: '/products' },
   { value: 'marble', label: '🪨 Marble', route: '/marble' },
   { value: 'granite', label: '⬛ Granite', route: '/granite' },
+  { value: 'stone', label: '🪨 Stone', route: '/stone' },
   { value: 'kota-others', label: '🟫 Kota & Slate', route: '/kota-stone' },
   { value: 'sanitary-ware', label: '🚿 Sanitary Ware', route: '/sanitary-ware' },
   { value: 'tiles-catalog', label: '🔲 Tiles Catalog', route: '/tiles-catalog' },
@@ -47,14 +49,41 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   const location = useLocation();
 
   // Initialize filters based on current URL path
+  const { categories } = useSupabaseCategories();
+
+  // Initialize filters based on current URL path
   const currentTab = useMemo(() => {
+    // Try to match path with categories from database
+    const matchingCat = categories.find(cat => 
+      location.pathname.startsWith(cat.route) || 
+      (cat.slug && location.pathname.includes(`/category/${cat.slug}`)) ||
+      (cat.id && location.pathname.includes(`/category/${cat.id}`))
+    );
+    if (matchingCat) return matchingCat.id;
+
     if (location.pathname.startsWith('/marble')) return 'marble';
     if (location.pathname.startsWith('/granite')) return 'granite';
+    if (location.pathname.startsWith('/stone')) return 'stone';
     if (location.pathname.startsWith('/kota-stone')) return 'kota-others';
     if (location.pathname.startsWith('/sanitary-ware')) return 'sanitary-ware';
     if (location.pathname.startsWith('/tiles-catalog')) return 'tiles-catalog';
     return 'all';
-  }, [location.pathname]);
+  }, [location.pathname, categories]);
+
+  const categoryTabs = useMemo(() => {
+    if (!categories || categories.length === 0) {
+      return staticCategoryTabs;
+    }
+    const list = [{ value: 'all', label: '🛍️ All Products', route: '/products' }];
+    categories.forEach(cat => {
+      list.push({
+        value: cat.id,
+        label: `${cat.emoji || '🪨'} ${cat.name}`,
+        route: cat.route || `/category/${cat.slug}`,
+      });
+    });
+    return list;
+  }, [categories]);
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const initialBrand = searchParams.get('brand') || '';
@@ -158,7 +187,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 
     // Subcategory filter
     if (filters.subcategory) {
-      result = result.filter(p => p.subcategory === filters.subcategory);
+      const targetSub = filters.subcategory.trim().toLowerCase().replace(/\s+/g, '-');
+      result = result.filter(p => p.subcategory && p.subcategory.trim().toLowerCase().replace(/\s+/g, '-') === targetSub);
     }
 
     // Brand filter
@@ -331,7 +361,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
         {/* Category Tabs list */}
         {showFilters && (
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none border-t border-border/30 pt-3">
-            {CATEGORY_TABS.map(tab => (
+            {categoryTabs.map(tab => (
               <button
                 key={tab.value}
                 onClick={() => handleTabClick(tab.value, tab.route)}
@@ -458,14 +488,14 @@ const ProductGrid: React.FC<ProductGridProps> = ({
           )}
         </AnimatePresence>
 
-        {/* ─── GRANITE SUB-CATEGORY FILTERS ─── */}
-        {currentTab === 'granite' && (
+        {/* ─── STONE SUB-CATEGORY FILTERS ─── */}
+        {currentTab === 'stone' && (
           <div className="flex items-center gap-2 border-t border-border/30 pt-3">
-            <span className="text-[10px] font-bold text-dark/40 uppercase tracking-widest mr-2">Stone Origin:</span>
+            <span className="text-[10px] font-bold text-dark/40 uppercase tracking-widest mr-2">Stone Type:</span>
             {[
               { id: '', label: 'All Slabs' },
-              { id: 'natural-stone', label: '🪨 Natural Granite' },
-              { id: 'artificial-stone', label: '🧪 Artificial / Quartz' },
+              { id: 'natural-stone', label: '🌿 Natural Stone' },
+              { id: 'artificial-stone', label: '🧪 Artificial Stone' },
             ].map(sub => (
               <button
                 key={sub.id}

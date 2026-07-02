@@ -23,7 +23,10 @@ const BRAND_DETAILS: Record<string, { desc: string; color: string; origin: strin
   'donato': { desc: 'Imported luxury tiles and sanitary fixtures that focus on minimalist Italian-inspired modern concepts.', color: '#dc2626', origin: 'Italy' },
   'latigres': { desc: 'Vibrant outdoor floor pavers and specialized vitrified tiles with exceptional strength and grip.', color: '#0891b2', origin: 'India' },
   'marfil': { desc: 'Luxury marble-finished tiles and premium bathroom fittings offering timeless design concepts.', color: '#db2777', origin: 'Spain' },
-  'kalingastone': { desc: 'Premium engineered marble and quartz slabs for high-traffic and luxury kitchen spaces.', color: '#4f46e5', origin: 'India' }
+  'kalingastone': { desc: 'Premium engineered marble and quartz slabs for high-traffic and luxury kitchen spaces.', color: '#4f46e5', origin: 'India' },
+  'pidilite roff': { desc: 'A leading brand by Pidilite, offering advanced tile adhesives, grouts, and stone fixing chemicals.', color: '#16a34a', origin: 'India' },
+  'myk laticrete': { desc: 'A pioneer in the tile and stone installation industry, providing globally recognized adhesives and waterproofing systems.', color: '#0284c7', origin: 'USA / India' },
+  'saint-gobain weber': { desc: 'Global leader in construction chemicals and tile installation materials with high-performance formulas.', color: '#059669', origin: 'France / India' }
 };
 
 const Brands: React.FC = () => {

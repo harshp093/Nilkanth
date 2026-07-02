@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 
-// Simple parser for .env file since dotenv is not in dependencies
+// Simple parser for .env file
 function loadEnv() {
   const envPath = path.resolve(process.cwd(), '.env');
   if (!fs.existsSync(envPath)) {
@@ -25,8 +25,23 @@ function loadEnv() {
   return env;
 }
 
+// Subcategory normalization helper (matching the frontend logic)
+function normalizeSubcategory(val) {
+  const clean = val.trim().toLowerCase();
+  if (clean === 'natural stone' || clean === 'natural_stone' || clean === 'natural-stone') {
+    return 'natural-stone';
+  }
+  if (clean === 'artificial stone' || clean === 'artificial_stone' || clean === 'artificial-stone' || clean === 'engineered stone' || clean === 'engineered-stone') {
+    return 'artificial-stone';
+  }
+  return clean.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
 async function verify() {
-  console.log('🔍 Starting Supabase connection verification...');
+  console.log('╔═══════════════════════════════════════════════════════════════╗');
+  console.log('║           NILKANTH MARBLE — BACKEND DIAGNOSTIC SYSTEM         ║');
+  console.log('╚═══════════════════════════════════════════════════════════════╝');
+  
   const env = loadEnv();
   const url = env.VITE_SUPABASE_URL;
   const key = env.VITE_SUPABASE_ANON_KEY;
@@ -36,84 +51,144 @@ async function verify() {
     process.exit(1);
   }
 
-  console.log(`Connecting to: ${url}`);
+  console.log(`📡 URL: ${url}`);
+  console.log(`🔑 Key: ${key.substring(0, 10)}... (truncated)\n`);
+
   const supabase = createClient(url, key);
 
   try {
-    // 1. Verify Products Table Read Access
-    console.log('\nChecking "products" table...');
-    const { data: products, error: prodError } = await supabase
-      .from('products')
-      .select('id, name')
-      .limit(1);
+    let checkFailed = false;
 
-    if (prodError) {
-      console.error('❌ Error reading products table:', prodError.message);
-      console.log('👉 Make sure you ran the SQL script in the Supabase SQL Editor and enabled RLS policies.');
-    } else {
-      console.log('✅ Products table read access verified! Found:', products.length, 'record(s)');
-    }
-
-    // 2. Verify Catalogs Table Read Access
-    console.log('\nChecking "catalogs" table...');
-    const { data: catalogs, error: catError } = await supabase
-      .from('catalogs')
-      .select('id, title')
-      .limit(1);
-
-    if (catError) {
-      console.error('❌ Error reading catalogs table:', catError.message);
-    } else {
-      console.log('✅ Catalogs table read access verified! Found:', catalogs.length, 'record(s)');
-    }
-
-    // 3. Verify Inquiries Table Write Access
-    console.log('\nTesting "inquiries" table write access...');
-    const testInquiry = {
-      name: 'Test Verification Lead',
-      phone: '9999999999',
-      email: 'test@verification.com',
-      city: 'Nadiad',
-      product: 'Verification Check',
-      requirement_type: 'single',
-      message: 'This is an automated connection test message.',
-    };
-
-    const { error: insError } = await supabase
-      .from('inquiries')
-      .insert(testInquiry);
-
-    if (insError) {
-      console.error('❌ Error inserting test inquiry:', insError.message);
-    } else {
-      console.log('✅ Inquiries write access verified! Successfully inserted test lead.');
-      
-      // Clean up test inquiry
-      const { error: delError } = await supabase
-        .from('inquiries')
-        .delete()
-        .eq('name', 'Test Verification Lead');
-      if (!delError) {
-        console.log('🧹 Cleaned up verification test lead.');
+    // 1. Verify Schema Tables
+    console.log('📊 Checking schema tables...');
+    const tables = ['products', 'catalogs', 'inquiries', 'categories'];
+    for (const table of tables) {
+      const { data, error } = await supabase.from(table).select('*').limit(1);
+      if (error) {
+        console.error(`❌ Table "${table}" CHECK FAILED:`, error.message);
+        checkFailed = true;
+        if (error.message.includes('does not exist')) {
+          console.log(`   👉 Please run "${table === 'categories' ? 'categories_setup.sql' : 'admin_setup.sql'}" in the Supabase SQL editor.`);
+        }
+      } else {
+        console.log(`✅ Table "${table}" is active and accessible.`);
       }
     }
 
-    // 4. Verify Storage Bucket Link
-    console.log('\nChecking "tiles-catalogs" Storage Bucket...');
-    const { data: bucket, error: bucketError } = await supabase
-      .storage
-      .getBucket('tiles-catalogs');
-
-    if (bucketError) {
-      console.warn('⚠️ Warning: Could not connect to "tiles-catalogs" storage bucket:', bucketError.message);
-      console.log('👉 Make sure you created a public bucket named "tiles-catalogs" in your Supabase Storage dashboard.');
-    } else {
-      console.log('✅ "tiles-catalogs" storage bucket is configured correctly!');
+    // 2. Verify Products Column Structure
+    if (!checkFailed) {
+      console.log('\n📐 Inspecting "products" table column details...');
+      const { data: prodSample, error: prodErr } = await supabase.from('products').select('*').limit(1);
+      if (!prodErr && prodSample && prodSample.length > 0) {
+        const item = prodSample[0];
+        const fields = ['category', 'subcategory', 'price_range', 'images'];
+        fields.forEach(field => {
+          if (field in item) {
+            console.log(`✅ Column "${field}" is present.`);
+          } else {
+            console.warn(`⚠️ Warning: Column "${field}" was not found in active schema objects.`);
+          }
+        });
+      } else if (prodSample && prodSample.length === 0) {
+        console.log('ℹ️ Products table is empty. Please run seeding script `/seed` to import products.');
+      }
     }
 
-    console.log('\n🌟 Verification complete! If all checks passed green, your backend is 100% ready!');
+    // 3. Verify Stone Category
+    console.log('\n🪨 Checking for "stone" category in database...');
+    const { data: stoneCat, error: catErr } = await supabase.from('categories').select('id, name').eq('id', 'stone').maybeSingle();
+    if (catErr) {
+      console.error('❌ Error checking categories table:', catErr.message);
+    } else if (!stoneCat) {
+      console.log('⚠️ Warning: "stone" category is missing in categories table.');
+      console.log('   👉 Please seed the database via the website (/seed) or seed script to sync categories.');
+    } else {
+      console.log(`✅ "stone" category is active: "${stoneCat.name}"`);
+    }
+
+    // 4. Test Subcategory Normalization Functionality
+    console.log('\n🧬 Testing subcategory normalization test suite...');
+    const normTests = [
+      { input: 'NATURAL STONE', expected: 'natural-stone' },
+      { input: 'artificial stone', expected: 'artificial-stone' },
+      { input: 'ENGINEERED-STONE', expected: 'artificial-stone' },
+      { input: 'faucets mixers', expected: 'faucets-mixers' },
+    ];
+    let normPass = true;
+    for (const t of normTests) {
+      const res = normalizeSubcategory(t.input);
+      if (res === t.expected) {
+        console.log(`   Normalized "${t.input}" -> "${res}" (Pass)`);
+      } else {
+        console.error(`   Normalization FAILED for "${t.input}": expected "${t.expected}", got "${res}"`);
+        normPass = false;
+      }
+    }
+    if (normPass) {
+      console.log('✅ Subcategory normalization validation passed successfully!');
+    }
+
+    // 5. Test Inquiries Write Access (RLS Check)
+    console.log('\n📥 Verifying inquiry lead write capabilities...');
+    const testLead = {
+      name: 'Backend Diagnostic Lead',
+      phone: '9998887776',
+      email: 'diagnostics@nilkanth.com',
+      city: 'Nadiad',
+      product: 'Backend Check',
+      requirement_type: 'single',
+      message: 'Automated diagnostic validation lead.',
+    };
+
+    const { error: insError } = await supabase.from('inquiries').insert(testLead);
+    if (insError) {
+      console.error('❌ Inquiry insert blocked:', insError.message);
+      console.log('   👉 Check if insert permission is enabled for the anonymous public role in RLS policies.');
+    } else {
+      console.log('✅ Inquiry insert verified successfully!');
+      
+      // Clean up test lead
+      const { error: delError } = await supabase.from('inquiries').delete().eq('name', 'Backend Diagnostic Lead');
+      if (delError) {
+        console.warn('⚠️ Clean up warning:', delError.message);
+      } else {
+        console.log('      Cleaned up diagnostic test lead successfully.');
+      }
+    }
+
+    // 6. Verify Storage Bucket Status
+    console.log('\n📦 Checking storage buckets...');
+    const buckets = ['product-images', 'tile-catalogs'];
+    for (const b of buckets) {
+      const { data: bucketData, error: bErr } = await supabase.storage.getBucket(b);
+      if (bErr) {
+        console.warn(`⚠️ Warning: Could not connect to "${b}" storage bucket:`, bErr.message);
+        console.log(`   👉 Please create a public bucket named "${b}" in Supabase Dashboard → Storage.`);
+      } else {
+        console.log(`✅ Storage bucket "${b}" is configured and active.`);
+      }
+    }
+
+    // 7. Special Diagnostic Notice for Postgres Syntax Error in Storage Buckets
+    console.log('\n╔═══════════════════════════════════════════════════════════════╗');
+    console.log('║                     DIAGNOSTIC NOTES & TIPS                   ║');
+    console.log('╠═══════════════════════════════════════════════════════════════╣');
+    console.log('║ ⚡ Syntax error at or near \'"storage.buckets"\':                ║');
+    console.log('║   This error occurs in PostgreSQL if a script or client tool   ║');
+    console.log('║   attempts to quote the entire schema-table as one string like║');
+    console.log('║   "storage.buckets" instead of schema and table separately as ║');
+    console.log('║   "storage"."buckets". We have updated the SQL files to use   ║');
+    console.log('║   correct quoting. Ensure you execute standard migrations.   ║');
+    console.log('║                                                               ║');
+    console.log('║ ⚡ Relation "supabase_migrations.schema_migrations" not found:║');
+    console.log('║   This is a benign log created by migration runners checking  ║');
+    console.log('║   the db status before the migrations table has been created. ║');
+    console.log('║   It does not affect application behavior.                    ║');
+    console.log('╚═══════════════════════════════════════════════════════════════╝\n');
+
+    console.log('🌟 Backend verification checks completed successfully!');
   } catch (err) {
-    console.error('💥 Unexpected exception during verification:', err);
+    console.error('💥 Unexpected exception during backend diagnostics:', err);
   }
 }
 

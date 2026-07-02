@@ -30,6 +30,8 @@ function App() {
           <Route path="products/:slug" element={<ProductDetail />} />
           <Route path="marble" element={<DynamicCategoryPage categoryId="marble" />} />
           <Route path="granite" element={<DynamicCategoryPage categoryId="granite" />} />
+          <Route path="stone" element={<DynamicCategoryPage categoryId="stone" />} />
+          <Route path="adhesives-chemicals" element={<DynamicCategoryPage categoryId="adhesives-chemicals" />} />
           <Route path="kota-stone" element={<DynamicCategoryPage categoryId="kota-others" />} />
           <Route path="sanitary-ware" element={<DynamicCategoryPage categoryId="sanitary-ware" />} />
           <Route path="tiles-catalog" element={<TilesCatalog />} />

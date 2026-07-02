@@ -82,8 +82,19 @@ type ActiveTab = 'dashboard' | 'inquiries' | 'products' | 'catalogs' | 'categori
    CONSTANTS & HELPERS
 ────────────────────────────────────────────────────────────────── */
 const CATALOG_BUCKETS = ['tile-catalogs', 'tile-catalogs-b', 'tile-catalogs-c', 'tile-catalogs-kajaria', 'tile-catalogs-somany', 'tile-catalogs-johnson'];
-const CATEGORY_OPTIONS = ['marble', 'granite', 'kota-others', 'sanitary-ware', 'tiles-catalog'];
+const CATEGORY_OPTIONS = ['marble', 'granite', 'stone', 'adhesives-chemicals', 'kota-others', 'sanitary-ware', 'tiles-catalog'];
 const APPLICATION_OPTIONS = ['Floor', 'Wall', 'Outdoor', 'Kitchen', 'Bathroom', 'Living Room', 'Elevation', 'Staircase', 'Swimming Pool'];
+
+const normalizeSubcategory = (val: string): string => {
+  const clean = val.trim().toLowerCase();
+  if (clean === 'natural stone' || clean === 'natural_stone' || clean === 'natural-stone') {
+    return 'natural-stone';
+  }
+  if (clean === 'artificial stone' || clean === 'artificial_stone' || clean === 'artificial-stone' || clean === 'engineered stone' || clean === 'engineered-stone') {
+    return 'artificial-stone';
+  }
+  return clean.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+};
 
 const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString('en-IN', {
@@ -480,7 +491,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, categories, onClos
       name: form.name.trim(),
       description: form.description.trim() || null,
       category: form.category,
-      subcategory: form.subcategory.trim() || null,
+      subcategory: form.subcategory.trim() ? normalizeSubcategory(form.subcategory) : null,
       price_range: form.price_range.trim() || null,
       origin: form.origin.trim() || null,
       brand: form.brand.trim() || null,

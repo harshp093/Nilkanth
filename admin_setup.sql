@@ -120,52 +120,52 @@ CREATE POLICY "Allow admin full access to inquiries" ON inquiries
 -- ─────────────────────────────────────────
 
 -- Ensure storage schema is active (standard Supabase bucket structure)
-INSERT INTO storage.buckets (id, name, public)
+INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('product-images', 'product-images', true)
   ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO storage.buckets (id, name, public)
+INSERT INTO "storage"."buckets" (id, name, public)
   VALUES ('tile-catalogs', 'tile-catalogs', true)
   ON CONFLICT (id) DO NOTHING;
 
 -- Clean up storage policies to avoid conflicts
-DROP POLICY IF EXISTS "Public read product images" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated upload product images" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated delete product images" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated update product images" ON storage.objects;
+DROP POLICY IF EXISTS "Public read product images" ON "storage"."objects";
+DROP POLICY IF EXISTS "Authenticated upload product images" ON "storage"."objects";
+DROP POLICY IF EXISTS "Authenticated delete product images" ON "storage"."objects";
+DROP POLICY IF EXISTS "Authenticated update product images" ON "storage"."objects";
 
-DROP POLICY IF EXISTS "Public read tile catalogs" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated upload tile catalogs" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated delete tile catalogs" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated update tile catalogs" ON storage.objects;
+DROP POLICY IF EXISTS "Public read tile catalogs" ON "storage"."objects";
+DROP POLICY IF EXISTS "Authenticated upload tile catalogs" ON "storage"."objects";
+DROP POLICY IF EXISTS "Authenticated delete tile catalogs" ON "storage"."objects";
+DROP POLICY IF EXISTS "Authenticated update tile catalogs" ON "storage"."objects";
 
 -- Product Images bucket policies
-CREATE POLICY "Public read product images" ON storage.objects
+CREATE POLICY "Public read product images" ON "storage"."objects"
   FOR SELECT USING (bucket_id = 'product-images');
 
-CREATE POLICY "Authenticated upload product images" ON storage.objects
+CREATE POLICY "Authenticated upload product images" ON "storage"."objects"
   FOR INSERT TO authenticated WITH CHECK (bucket_id = 'product-images');
 
-CREATE POLICY "Authenticated update product images" ON storage.objects
+CREATE POLICY "Authenticated update product images" ON "storage"."objects"
   FOR UPDATE TO authenticated USING (bucket_id = 'product-images') WITH CHECK (bucket_id = 'product-images');
 
-CREATE POLICY "Authenticated delete product images" ON storage.objects
+CREATE POLICY "Authenticated delete product images" ON "storage"."objects"
   FOR DELETE TO authenticated USING (bucket_id = 'product-images');
 
 -- Tile Catalogs bucket policies
-CREATE POLICY "Public read tile catalogs" ON storage.objects
+CREATE POLICY "Public read tile catalogs" ON "storage"."objects"
   FOR SELECT USING (bucket_id = 'tile-catalogs');
 
-CREATE POLICY "Authenticated upload tile catalogs" ON storage.objects
+CREATE POLICY "Authenticated upload tile catalogs" ON "storage"."objects"
   FOR INSERT TO authenticated WITH CHECK (bucket_id = 'tile-catalogs');
 
-CREATE POLICY "Authenticated update tile catalogs" ON storage.objects
+CREATE POLICY "Authenticated update tile catalogs" ON "storage"."objects"
   FOR UPDATE TO authenticated USING (bucket_id = 'tile-catalogs') WITH CHECK (bucket_id = 'tile-catalogs');
 
-CREATE POLICY "Authenticated delete tile catalogs" ON storage.objects
+CREATE POLICY "Authenticated delete tile catalogs" ON "storage"."objects"
   FOR DELETE TO authenticated USING (bucket_id = 'tile-catalogs');
 
 -- Additional overflow buckets policies (if they exist)
-CREATE POLICY "Public read catalogs b" ON storage.objects FOR SELECT USING (bucket_id = 'tile-catalogs-b');
-CREATE POLICY "Authenticated upload catalogs b" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'tile-catalogs-b');
-CREATE POLICY "Authenticated delete catalogs b" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'tile-catalogs-b');
+CREATE POLICY "Public read catalogs b" ON "storage"."objects" FOR SELECT USING (bucket_id = 'tile-catalogs-b');
+CREATE POLICY "Authenticated upload catalogs b" ON "storage"."objects" FOR INSERT TO authenticated WITH CHECK (bucket_id = 'tile-catalogs-b');
+CREATE POLICY "Authenticated delete catalogs b" ON "storage"."objects" FOR DELETE TO authenticated USING (bucket_id = 'tile-catalogs-b');

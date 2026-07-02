@@ -8,6 +8,8 @@ import { productEnquiryWhatsApp, shareProductWhatsApp, CALL_LINK } from '../util
 const CATEGORY_LABELS: Record<string, string> = {
   marble: 'Marble',
   granite: 'Granite',
+  stone: 'Stone',
+  'adhesives-chemicals': 'Adhesives & Chemicals',
   'kota-others': 'Kota & Others',
   'sanitary-ware': 'Sanitary Ware',
   'tiles-catalog': 'Tiles',

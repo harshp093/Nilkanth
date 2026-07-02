@@ -106,7 +106,7 @@ const Navbar: React.FC = () => {
                 <button
                   onClick={() => setCategoriesOpen(!categoriesOpen)}
                   className={`relative flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition-colors group ${
-                    location.pathname.startsWith('/category/') || location.pathname.startsWith('/marble') || location.pathname.startsWith('/granite') || location.pathname.startsWith('/kota-stone') || location.pathname.startsWith('/sanitary-ware') ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-white'
+                    location.pathname.startsWith('/category/') || location.pathname.startsWith('/marble') || location.pathname.startsWith('/granite') || location.pathname.startsWith('/stone') || location.pathname.startsWith('/adhesives-chemicals') || location.pathname.startsWith('/kota-stone') || location.pathname.startsWith('/sanitary-ware') ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-white'
                   }`}
                 >
                   Products
@@ -131,7 +131,7 @@ const Navbar: React.FC = () => {
                         {categories.map((cat) => (
                           <Link
                             key={cat.id}
-                            to={cat.id === 'tiles-catalog' ? '/tiles-catalog' : (['marble', 'granite', 'kota-others', 'sanitary-ware'].includes(cat.id) ? `/${cat.id === 'kota-others' ? 'kota-stone' : cat.id}` : `/category/${cat.slug}`)}
+                            to={cat.id === 'tiles-catalog' ? '/tiles-catalog' : (['marble', 'granite', 'stone', 'adhesives-chemicals', 'kota-others', 'sanitary-ware'].includes(cat.id) ? `/${cat.id === 'kota-others' ? 'kota-stone' : cat.id}` : `/category/${cat.slug}`)}
                             onClick={() => setCategoriesOpen(false)}
                             className="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-white/8 transition-colors group"
                           >
@@ -256,7 +256,7 @@ const Navbar: React.FC = () => {
                   <button
                     onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${
-                      location.pathname.startsWith('/category/') || location.pathname.startsWith('/marble') || location.pathname.startsWith('/granite') || location.pathname.startsWith('/kota-stone') || location.pathname.startsWith('/sanitary-ware') ? 'text-amber-400 bg-amber-400/10' : 'text-stone-300 hover:text-white hover:bg-white/5'
+                      location.pathname.startsWith('/category/') || location.pathname.startsWith('/marble') || location.pathname.startsWith('/granite') || location.pathname.startsWith('/stone') || location.pathname.startsWith('/adhesives-chemicals') || location.pathname.startsWith('/kota-stone') || location.pathname.startsWith('/sanitary-ware') ? 'text-amber-400 bg-amber-400/10' : 'text-stone-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
                     Products
@@ -275,7 +275,7 @@ const Navbar: React.FC = () => {
                         {categories.map((cat) => (
                           <Link
                             key={cat.id}
-                            to={cat.id === 'tiles-catalog' ? '/tiles-catalog' : (['marble', 'granite', 'kota-others', 'sanitary-ware'].includes(cat.id) ? `/${cat.id === 'kota-others' ? 'kota-stone' : cat.id}` : `/category/${cat.slug}`)}
+                            to={cat.id === 'tiles-catalog' ? '/tiles-catalog' : (['marble', 'granite', 'stone', 'adhesives-chemicals', 'kota-others', 'sanitary-ware'].includes(cat.id) ? `/${cat.id === 'kota-others' ? 'kota-stone' : cat.id}` : `/category/${cat.slug}`)}
                             onClick={() => { setIsOpen(false); setMobileCategoriesOpen(false); }}
                             className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-colors text-sm"
                           >

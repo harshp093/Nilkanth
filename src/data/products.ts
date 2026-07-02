@@ -6,11 +6,13 @@
 export type ProductCategory =
   | 'marble'
   | 'granite'
+  | 'stone'
   | 'kota-others'
   | 'sanitary-ware'
-  | 'tiles-catalog';
+  | 'tiles-catalog'
+  | 'adhesives-chemicals';
 
-export type GraniteSubcategory = 'natural-stone' | 'artificial-stone';
+export type StoneSubcategory = 'natural-stone' | 'artificial-stone';
 export type SanitarySubcategory =
   | 'water-closets'
   | 'wash-basins'
@@ -200,7 +202,6 @@ const graniteProducts: NProduct[] = [
     name: 'Black Galaxy Granite',
     description: 'Deep black base with shimmering golden specks — one of the most popular granites globally. Quarried exclusively in Andhra Pradesh, India.',
     category: 'granite',
-    subcategory: 'natural-stone',
     priceRange: '₹55 – ₹130 per sq.ft',
     origin: 'Andhra Pradesh, India',
     thicknessOptions: ['16mm', '18mm', '20mm'],
@@ -219,7 +220,6 @@ const graniteProducts: NProduct[] = [
     name: 'Kashmir White Granite',
     description: 'Light grey/white base with black spots and burgundy garnets. A versatile and elegant granite for both residential and commercial use.',
     category: 'granite',
-    subcategory: 'natural-stone',
     priceRange: '₹60 – ₹140 per sq.ft',
     origin: 'Tamil Nadu, India',
     thicknessOptions: ['16mm', '18mm', '20mm'],
@@ -238,7 +238,6 @@ const graniteProducts: NProduct[] = [
     name: 'Tan Brown Granite',
     description: 'Warm brown base with dark brown and black crystals and burgundy clusters. A classic choice for kitchen countertops and bathroom vanities.',
     category: 'granite',
-    subcategory: 'natural-stone',
     priceRange: '₹50 – ₹120 per sq.ft',
     origin: 'Andhra Pradesh, India',
     thicknessOptions: ['16mm', '18mm', '20mm'],
@@ -257,7 +256,6 @@ const graniteProducts: NProduct[] = [
     name: 'Absolute Black Granite',
     description: 'Uniform jet-black granite with no visible veining. Perfect for contemporary minimalist designs and sleek kitchen countertops.',
     category: 'granite',
-    subcategory: 'natural-stone',
     priceRange: '₹65 – ₹150 per sq.ft',
     origin: 'Karnataka, India',
     thicknessOptions: ['16mm', '18mm', '20mm'],
@@ -270,12 +268,16 @@ const graniteProducts: NProduct[] = [
     isActive: true,
     images: ['/natural-stone-hero.png'],
   },
+];
+
+// ─── STONE PRODUCTS ──────────────────────────────────────────
+const stoneProducts: NProduct[] = [
   {
     id: 'g-5',
     slug: 'calacatta-artificial-stone',
     name: 'Calacatta Engineered Quartz',
     description: 'Engineered quartz with Calacatta marble appearance — non-porous, stain-proof, and consistent colour. Zero maintenance. Perfect for busy kitchens.',
-    category: 'granite',
+    category: 'stone',
     subcategory: 'artificial-stone',
     priceRange: '₹80 – ₹200 per sq.ft',
     origin: 'Engineered',
@@ -294,7 +296,7 @@ const graniteProducts: NProduct[] = [
     slug: 'statuario-artificial-stone',
     name: 'Statuario Engineered Quartz',
     description: 'Statuario look engineered quartz with ultra-consistent white base and fine grey veining. Scratch-resistant, heat-resistant and completely non-porous.',
-    category: 'granite',
+    category: 'stone',
     subcategory: 'artificial-stone',
     priceRange: '₹90 – ₹220 per sq.ft',
     origin: 'Engineered',
@@ -511,12 +513,144 @@ const sanitaryProducts: NProduct[] = [
   },
 ];
 
+// ─── ADHESIVES & CHEMICALS PRODUCTS ───────────────────────────
+const chemicalProducts: NProduct[] = [
+  {
+    id: 'chem-1',
+    slug: 'roff-vitrofix-t03',
+    name: 'Roff Vitrofix T03 Tile Adhesive',
+    description: 'Pidilite Roff Vitrofix T03 is a high-performance polymer-modified cement-based tile adhesive. Suitable for fixing vitrified tiles, marble, granite, and stones of any size on internal/external floor and wall. Provides superior bond strength, high open time, and high initial grab. Conforms to IS 15477:2019 Type II T & EN 12004 C2TE.',
+    category: 'adhesives-chemicals',
+    subcategory: 'tile-adhesives',
+    priceRange: '₹350 – ₹950 per 20kg bag',
+    brand: 'Pidilite Roff',
+    material: 'Cementitious polymer modified',
+    finishOptions: ['Grey', 'White'],
+    colors: ['#888888', '#FAFAFA'],
+    colorNames: ['Grey', 'White'],
+    application: ['Floor', 'Wall', 'Bathroom', 'Kitchen', 'Elevation'],
+    isFeatured: true,
+    isActive: true,
+    images: ['/adhesives-hero.png'],
+  },
+  {
+    id: 'chem-2',
+    slug: 'roff-nsa-t02',
+    name: 'Roff NSA T02 Non-Skid Adhesive',
+    description: 'Pidilite Roff NSA Grey T02 is a premium non-skid, polymer-modified tile adhesive designed for fixing medium-sized ceramic, vitrified tiles, and natural stones on walls and floors. Features high bond strength and tile-on-tile application properties with zero slip.',
+    category: 'adhesives-chemicals',
+    subcategory: 'tile-adhesives',
+    priceRange: '₹280 – ₹720 per 20kg bag',
+    brand: 'Pidilite Roff',
+    material: 'Cementitious modified adhesive',
+    finishOptions: ['Grey'],
+    colors: ['#888888'],
+    colorNames: ['Grey'],
+    application: ['Floor', 'Wall', 'Bathroom', 'Kitchen'],
+    isFeatured: true,
+    isActive: true,
+    images: ['/adhesives-hero.png'],
+  },
+  {
+    id: 'chem-3',
+    slug: 'roff-nca-t01',
+    name: 'Roff NCA T01 New Construction Adhesive',
+    description: 'Pidilite Roff NCA Grey T01 is a cement-based tile adhesive formulated for general flooring work in new construction projects. Saves time and labor compared to traditional sand-cement mortars. Prevents hollow sounds and cracking under tiles.',
+    category: 'adhesives-chemicals',
+    subcategory: 'tile-adhesives',
+    priceRange: '₹180 – ₹450 per 20kg bag',
+    brand: 'Pidilite Roff',
+    material: 'Cement based adhesive',
+    finishOptions: ['Grey'],
+    colors: ['#888888'],
+    colorNames: ['Grey'],
+    application: ['Floor', 'Indoor Pavers'],
+    isFeatured: false,
+    isActive: true,
+    images: ['/adhesives-hero.png'],
+  },
+  {
+    id: 'chem-4',
+    slug: 'roff-nsa-t09',
+    name: 'Roff NSA White T09 Adhesive',
+    description: 'Pidilite Roff NSA White T09 is a white cement-based, high-bond non-skid adhesive. Specially formulated for fixing translucent marble slabs, glass mosaic tiles, and light-colored natural stones on walls or swimming pools without causing discoloration.',
+    category: 'adhesives-chemicals',
+    subcategory: 'stone-adhesives',
+    priceRange: '₹600 – ₹1,400 per 20kg bag',
+    brand: 'Pidilite Roff',
+    material: 'White cement based modified',
+    finishOptions: ['White'],
+    colors: ['#FAFAFA'],
+    colorNames: ['White'],
+    application: ['Floor', 'Wall', 'Bathroom', 'Swimming Pool', 'Glass Cladding'],
+    isFeatured: true,
+    isActive: true,
+    images: ['/adhesives-hero.png'],
+  },
+  {
+    id: 'chem-5',
+    slug: 'roff-vitrofix-t04',
+    name: 'Roff Vitrofix T04 White Adhesive',
+    description: 'Pidilite Roff Vitrofix T04 White is a high-performance white cementitious adhesive with exceptional elasticity. Ideal for heavy-duty claddings, large format stones, granite slabs, and glass mosaics on high deflection surfaces like drywall or high-rise elevations.',
+    category: 'adhesives-chemicals',
+    subcategory: 'stone-adhesives',
+    priceRange: '₹750 – ₹1,850 per 20kg bag',
+    brand: 'Pidilite Roff',
+    material: 'High-deformation white adhesive',
+    finishOptions: ['White'],
+    colors: ['#FAFAFA'],
+    colorNames: ['White'],
+    application: ['Floor', 'Wall', 'Elevation', 'Swimming Pool', 'Heavy Cladding'],
+    isFeatured: false,
+    isActive: true,
+    images: ['/adhesives-hero.png'],
+  },
+  {
+    id: 'chem-6',
+    slug: 'myk-laticrete-307',
+    name: 'MYK Laticrete 307 Floor & Wall Adhesive',
+    description: 'MYK Laticrete 307 is a smooth, creamy polymer-fortified thin-set adhesive for installing ceramic tiles, vitrified tiles, and natural stones on concrete surfaces. Offers high strength and superior workability.',
+    category: 'adhesives-chemicals',
+    subcategory: 'tile-adhesives',
+    priceRange: '₹320 – ₹850 per 20kg bag',
+    brand: 'MYK Laticrete',
+    material: 'Cementitious polymer fortified',
+    finishOptions: ['Grey'],
+    colors: ['#888888'],
+    colorNames: ['Grey'],
+    application: ['Floor', 'Wall', 'Bathroom', 'Kitchen'],
+    isFeatured: false,
+    isActive: true,
+    images: ['/adhesives-hero.png'],
+  },
+  {
+    id: 'chem-7',
+    slug: 'webercol-fix-tile-adhesive',
+    name: 'Saint-Gobain Weber Webercol Fix',
+    description: 'Saint-Gobain Weber Webercol Fix is a ready-mix cementitious mortar containing special polymers for thin-bed tile installation. Ideal for vitrified, ceramic tiles on floors in high-load areas.',
+    category: 'adhesives-chemicals',
+    subcategory: 'tile-adhesives',
+    priceRange: '₹290 – ₹780 per 20kg bag',
+    brand: 'Saint-Gobain Weber',
+    material: 'Polymer modified cement base',
+    finishOptions: ['Grey'],
+    colors: ['#888888'],
+    colorNames: ['Grey'],
+    application: ['Floor', 'Kitchen', 'Hallways'],
+    isFeatured: false,
+    isActive: true,
+    images: ['/adhesives-hero.png'],
+  },
+];
+
 // ─── ALL PRODUCTS ─────────────────────────────────────────────
 export const allProducts: NProduct[] = [
   ...marbleProducts,
   ...graniteProducts,
+  ...stoneProducts,
   ...kotaProducts,
   ...sanitaryProducts,
+  ...chemicalProducts,
 ];
 
 // ─── HELPER FUNCTIONS ─────────────────────────────────────────
