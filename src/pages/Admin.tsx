@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../utils/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as tus from 'tus-js-client';
 
 /* ═══════════════════════════════════════════════════════════════
    TYPES
@@ -366,31 +367,58 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !supabase) return;
+    const client = supabase;
+    if (!file || !client) return;
     setUploading(true);
     setProgress(5);
     try {
       const cleanName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._()-]/g, '');
       const name = `catalog_${Date.now()}_${cleanName}`;
       
-      const { data, error } = await supabase.storage.from(bucket).upload(name, file, { 
-        contentType: 'application/pdf', 
-        cacheControl: '3600', 
-        upsert: false,
-        onUploadProgress: (progressEvent: any) => {
-          const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-          setProgress(Math.min(95, percent));
-        }
-      } as any);
-      
-      if (error) throw error;
+      const { data: { session } } = await client.auth.getSession();
+      const token = session?.access_token || '';
 
-      setProgress(98);
-      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
-      setProgress(100);
-      onUploaded(publicUrl);
-      showToast(`PDF catalog uploaded to "${bucket}"!`);
-      setTimeout(() => { setUploading(false); setProgress(0); }, 800);
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+      const projectIdMatch = supabaseUrl.match(/https:\/\/([^.]+)\.supabase/);
+      const projectId = projectIdMatch ? projectIdMatch[1] : '';
+      const endpoint = projectId
+        ? `https://${projectId}.storage.supabase.co/storage/v1/upload/resumable`
+        : `${supabaseUrl}/storage/v1/upload/resumable`;
+
+      const upload = new tus.Upload(file, {
+        endpoint,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        headers: {
+          authorization: `Bearer ${token}`,
+          'x-upsert': 'true',
+        },
+        metadata: {
+          bucketName: bucket,
+          objectName: name,
+          contentType: 'application/pdf',
+          cacheControl: '3600',
+        },
+        chunkSize: 6 * 1024 * 1024, // 6MB chunks
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const percent = Math.round((bytesUploaded / bytesTotal) * 100);
+          setProgress(Math.min(99, percent));
+        },
+        onSuccess: () => {
+          const { data: { publicUrl } } = client.storage.from(bucket).getPublicUrl(name);
+          setProgress(100);
+          onUploaded(publicUrl);
+          showToast(`PDF catalog uploaded to "${bucket}"!`);
+          setTimeout(() => { setUploading(false); setProgress(0); }, 800);
+        },
+        onError: (err) => {
+          showToast('PDF upload failed: ' + err.message, 'error');
+          setUploading(false); setProgress(0);
+        }
+      });
+
+      upload.start();
     } catch (err: any) {
       showToast('PDF upload failed: ' + err.message, 'error');
       setUploading(false); setProgress(0);

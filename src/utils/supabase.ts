@@ -8,6 +8,14 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
+if (supabase && supabaseUrl) {
+  // Route all storage traffic directly to storage hostname, bypassing Gateway
+  if (supabaseUrl.includes('.supabase.co')) {
+    const directStorageUrl = supabaseUrl.replace('.supabase.co', '.storage.supabase.co') + '/storage/v1';
+    (supabase.storage as any).url = directStorageUrl;
+  }
+}
+
 if (!supabase) {
   console.warn(
     '⚠️ Supabase VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables are missing. ' +
