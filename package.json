@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "db-seed": "tsc --ignoreConfig --target ES2022 --module ESNext src/data/products.ts src/data/catalogs.ts --outDir dist-temp && node seedSupabase.js"
+    "db-seed": "tsc --ignoreConfig --target ES2022 --module ESNext src/data/products.ts src/data/catalogs.ts src/data/categories.ts --outDir dist-temp && node seedSupabase.js"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

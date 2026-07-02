@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { NProduct, ProductCategory } from '../../data/products';
@@ -56,6 +56,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     return 'all';
   }, [location.pathname]);
 
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const initialBrand = searchParams.get('brand') || '';
+
   const [filters, setFilters] = useState<FilterState>({
     categories: defaultCategory ? [defaultCategory] : (currentTab !== 'all' ? [currentTab] : []),
     colors: [],
@@ -63,8 +66,16 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     applications: [],
     search: '',
     subcategory: '',
-    brand: '',
+    brand: initialBrand,
   });
+
+  // Sync filters if URL search params change
+  useEffect(() => {
+    const brandParam = new URLSearchParams(location.search).get('brand') || '';
+    if (brandParam !== filters.brand) {
+      setFilters(prev => ({ ...prev, brand: brandParam }));
+    }
+  }, [location.search]);
 
   const [sortBy, setSortBy] = useState<'featured' | 'name-asc' | 'name-desc'>('featured');
   const [page, setPage] = useState(1);

@@ -425,13 +425,17 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
 /* ═══════════════════════════════════════════════════════════════
    PRODUCT MODAL
 ────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   PRODUCT MODAL (LUXURY SHOWROOM THEME)
+────────────────────────────────────────────────────────────────── */
 interface ProductModalProps {
   product: Partial<ProductRecord> | null;
+  categories: CategoryRecord[];
   onClose: () => void;
   onSaved: () => void;
 }
 
-const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSaved }) => {
+const ProductModal: React.FC<ProductModalProps> = ({ product, categories, onClose, onSaved }) => {
   const isEdit = !!product?.id;
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -509,11 +513,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSaved }
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)' }}>
       <motion.div initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
-        className="w-full max-w-3xl my-8 rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e1e2e]" style={{ background: 'linear-gradient(135deg,#1C3A6B22,#C8962E11)' }}>
+        className="w-full max-w-3xl my-8 rounded-2xl overflow-hidden shadow-2xl" 
+        style={{ background: 'linear-gradient(135deg, #181512 0%, #100e0d 100%)', border: '1px solid rgba(200, 150, 46, 0.3)' }}>
+        <div className="flex items-center justify-between px-6 py-4" 
+          style={{ background: 'linear-gradient(135deg, rgba(200, 150, 46, 0.15) 0%, rgba(28, 58, 107, 0.08) 100%)', borderBottom: '1px solid rgba(200, 150, 46, 0.2)' }}>
           <div>
-            <h3 className="text-white font-heading font-bold text-lg">{isEdit ? '✏️ Edit Product' : '➕ Add New Product'}</h3>
-            <p className="text-[#8888aa] text-xs mt-0.5">All details synced directly to the cloud database</p>
+            <span className="text-[#C8962E] text-[10px] font-black tracking-widest uppercase block mb-1">🏺 PREMIUM SHOWROOM PRODUCT</span>
+            <h3 className="text-white font-heading font-bold text-lg">{isEdit ? '✏️ Edit Showroom Product' : '🏺 Add Premium Product'}</h3>
           </div>
           <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
         </div>
@@ -528,7 +534,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSaved }
               <div>
                 <label className="admin-label">Category *</label>
                 <select value={form.category} onChange={e => set('category', e.target.value)} className="admin-select cursor-pointer">
-                  {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1).replace(/-/g, ' ')}</option>)}
+                  {categories.length > 0
+                    ? categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+                    : CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1).replace(/-/g, ' ')}</option>)
+                  }
                 </select>
               </div>
               <div><label className="admin-label">Subcategory</label><input type="text" value={form.subcategory} onChange={e => set('subcategory', e.target.value)} placeholder="e.g. natural-stone, faucets-mixers" className="admin-input" /></div>
@@ -604,9 +613,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSaved }
 
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e2e]">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-[#444] hover:text-white transition-all cursor-pointer">Cancel</button>
+            <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-stone-500 hover:text-white transition-all cursor-pointer bg-transparent">Cancel</button>
             <button type="submit" disabled={saving} className="btn-accent px-7 py-2.5 text-sm disabled:opacity-60">
-              {saving ? 'Saving...' : isEdit ? '💾 Update Product' : '✅ Add Product'}
+              {saving ? 'Saving...' : isEdit ? '💾 Update Showroom Product' : '🏺 Add Product to Showroom'}
             </button>
           </div>
         </form>
@@ -617,6 +626,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSaved }
 
 /* ═══════════════════════════════════════════════════════════════
    CATALOG MODAL
+────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   CATALOG MODAL (DOCUMENT LIBRARY THEME)
 ────────────────────────────────────────────────────────────────── */
 interface CatalogModalProps {
   catalog: Partial<CatalogRecord> | null;
@@ -672,11 +684,13 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
       <motion.div initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
-        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e1e2e]" style={{ background: 'linear-gradient(135deg,#1C3A6B22,#C8962E11)' }}>
+        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl" 
+        style={{ background: 'linear-gradient(135deg, #0d131f 0%, #080c14 100%)', border: '1px solid rgba(20, 184, 166, 0.25)' }}>
+        <div className="flex items-center justify-between px-6 py-4" 
+          style={{ background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, rgba(15, 23, 42, 0.15) 100%)', borderBottom: '1px solid rgba(20, 184, 166, 0.15)' }}>
           <div>
-            <h3 className="text-white font-heading font-bold text-lg">{isEdit ? '✏️ Edit Tile Catalog' : '➕ Add Catalog'}</h3>
-            <p className="text-[#8888aa] text-xs mt-0.5">Upload PDF catalogs for customer download</p>
+            <span className="text-[#14b8a6] text-[10px] font-black tracking-widest uppercase block mb-1">📖 DOCUMENT ARCHIVE PUBLISHER</span>
+            <h3 className="text-white font-heading font-bold text-lg">{isEdit ? '✏️ Edit Catalog Document' : '📖 Publish New Catalog'}</h3>
           </div>
           <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
         </div>
@@ -688,11 +702,11 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
           <div><label className="admin-label">Tags / Keywords (comma-sep)</label><input type="text" value={form.tags} onChange={e => set('tags', e.target.value)} placeholder="Glossy, Ceramic, Bathroom" className="admin-input" /></div>
 
           <div>
-            <h4 className="text-[#C8962E] text-xs font-bold uppercase tracking-wider mb-2">📄 PDF Catalog File</h4>
+            <h4 className="text-[#14b8a6] text-xs font-bold uppercase tracking-wider mb-2">📄 PDF Catalog File</h4>
             {form.pdf_url && (
               <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                 <span className="text-emerald-400 text-xs font-semibold">✅ Linked:</span>
-                <a href={form.pdf_url} target="_blank" rel="noopener noreferrer" className="text-[#C8962E] text-xs underline truncate flex-1">{form.pdf_url}</a>
+                <a href={form.pdf_url} target="_blank" rel="noopener noreferrer" className="text-[#14b8a6] text-xs underline truncate flex-1">{form.pdf_url}</a>
                 <button type="button" onClick={() => set('pdf_url', '')} className="text-red-400 text-xs hover:text-red-300">✕</button>
               </div>
             )}
@@ -707,9 +721,9 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e2e]">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-[#444] hover:text-white transition-all cursor-pointer">Cancel</button>
+            <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-stone-500 hover:text-white transition-all cursor-pointer bg-transparent">Cancel</button>
             <button type="submit" disabled={saving} className="btn-accent px-7 py-2.5 text-sm disabled:opacity-60">
-              {saving ? 'Saving...' : isEdit ? 'Update' : 'Create Catalog'}
+              {saving ? 'Saving...' : isEdit ? 'Update Document' : 'Create & Publish Catalog'}
             </button>
           </div>
         </form>
@@ -767,9 +781,8 @@ const CategoryCoverUploader: React.FC<{ onUploaded: (url: string) => void }> = (
     </div>
   );
 };
-
 /* ═══════════════════════════════════════════════════════════════
-   CATEGORY MODAL
+   CATEGORY MODAL (LAYOUT CANVAS THEME)
 ────────────────────────────────────────────────────────────────── */
 interface CategoryModalProps {
   category: CategoryRecord | null;
@@ -778,6 +791,7 @@ interface CategoryModalProps {
 }
 
 const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSaved }) => {
+  const isEdit = !!category?.id;
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     id: category?.id || '',
@@ -793,9 +807,25 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
+  const handleNameChange = (val: string) => {
+    setForm(f => {
+      const generated = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      return {
+        ...f,
+        name: val,
+        id: isEdit ? f.id : generated,
+        slug: isEdit ? f.slug : generated,
+      };
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
+    if (!form.id) {
+      showToast('Category ID is required.', 'error');
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -805,20 +835,21 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
         description: form.description.trim(),
         long_description: form.long_description.trim() || null,
         emoji: form.emoji.trim() || null,
+        color: 'amber', // Default style prefix
         accent_color: form.accent_color.trim() || null,
         image: form.image.trim(),
+        route: `/category/${form.slug.trim() || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`,
         is_active: form.is_active,
         updated_at: new Date().toISOString(),
       };
 
       const { error } = await supabase
         .from('categories')
-        .update(payload)
-        .eq('id', form.id);
+        .upsert(payload, { onConflict: 'id' });
 
       if (error) throw error;
 
-      showToast('Category updated successfully!');
+      showToast(isEdit ? 'Category updated successfully!' : 'Category created successfully!');
       onSaved();
       onClose();
     } catch (err: any) {
@@ -831,11 +862,13 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
       <motion.div initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
-        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e1e2e]" style={{ background: 'linear-gradient(135deg,#1C3A6B22,#C8962E11)' }}>
+        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl" 
+        style={{ background: 'linear-gradient(135deg, #140d24 0%, #0d0818 100%)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+        <div className="flex items-center justify-between px-6 py-4" 
+          style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(244, 63, 94, 0.06) 100%)', borderBottom: '1px solid rgba(99, 102, 241, 0.2)' }}>
           <div>
-            <h3 className="text-white font-heading font-bold text-lg">✏️ Edit Category: {category?.name}</h3>
-            <p className="text-[#8888aa] text-xs mt-0.5">Customize cover photo, description, and details for this offer</p>
+            <span className="text-[#a5b4fc] text-[10px] font-black tracking-widest uppercase block mb-1">🎨 HOMEPAGE CANVAS LAYOUT MANAGER</span>
+            <h3 className="text-white font-heading font-bold text-lg">{isEdit ? `✏️ Edit Category Design: ${category?.name}` : '➕ Add Custom Category Page'}</h3>
           </div>
           <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
         </div>
@@ -844,11 +877,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="admin-label">Category Name *</label>
-              <input type="text" required value={form.name} onChange={e => set('name', e.target.value)} className="admin-input" />
+              <input type="text" required value={form.name} onChange={e => isEdit ? set('name', e.target.value) : handleNameChange(e.target.value)} className="admin-input" placeholder="e.g. Wooden Planks" />
             </div>
             <div>
               <label className="admin-label">Emoji *</label>
-              <input type="text" required value={form.emoji} onChange={e => set('emoji', e.target.value)} className="admin-input" placeholder="e.g. 🪨" />
+              <input type="text" required value={form.emoji} onChange={e => set('emoji', e.target.value)} className="admin-input" placeholder="e.g. 🪵" />
             </div>
           </div>
 
@@ -1152,6 +1185,14 @@ const Admin: React.FC = () => {
     const { error } = await supabase.from('catalogs').delete().eq('id', id);
     if (error) { showToast('Error: ' + error.message, 'error'); return; }
     showToast('Catalog deleted successfully.');
+    fetchData();
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!supabase || !confirm('Permanently delete this category? All products under this category will lose their category grouping.')) return;
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast('Category deleted successfully.');
     fetchData();
   };
 
@@ -1755,6 +1796,10 @@ const Admin: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="flex justify-end mb-4">
+                  <button onClick={() => { setEditingCategory(null); setShowCategoryModal(true); }} className="btn-accent text-xs font-bold px-5 py-3 shadow-md shadow-[#C8962E]/10 cursor-pointer">➕ Add New Category</button>
+                </div>
+
                 {categories.length === 0 && (
                   <div className="text-center py-20 bg-white/[0.01] rounded-2xl border border-dashed border-[#1e1e2e]">
                     <div className="text-5xl mb-3">⚠️</div>
@@ -1793,9 +1838,10 @@ const Admin: React.FC = () => {
                           <p className="text-[#8888aa] text-xs line-clamp-2 min-h-[2rem]">{cat.description}</p>
                           <div className="flex gap-2 mt-4 pt-3 border-t border-[#1e1e2e]/50">
                             <button onClick={() => { setEditingCategory(cat); setShowCategoryModal(true); }}
-                              className="w-full py-2 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-xs font-semibold hover:border-[#C8962E] hover:text-[#C8962E] hover:bg-[#C8962E]/5 transition-all cursor-pointer flex items-center justify-center gap-1.5">
-                              ✏️ Edit Category Design
+                              className="flex-1 py-2 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-xs font-semibold hover:border-[#C8962E] hover:text-[#C8962E] hover:bg-[#C8962E]/5 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                              ✏️ Edit Design
                             </button>
+                            <button onClick={() => handleDeleteCategory(cat.id)} className="btn-icon bg-red-500/10 text-red-400 hover:bg-red-500/20 p-2 rounded-xl cursor-pointer">🗑️</button>
                           </div>
                         </div>
                       </div>
@@ -1810,7 +1856,7 @@ const Admin: React.FC = () => {
 
       {/* ── Modals ── */}
       <AnimatePresence>
-        {showProductModal && <ProductModal product={editingProduct} onClose={() => { setShowProductModal(false); setEditingProduct(null); }} onSaved={fetchData} />}
+        {showProductModal && <ProductModal product={editingProduct} categories={categories} onClose={() => { setShowProductModal(false); setEditingProduct(null); }} onSaved={fetchData} />}
         {showCatalogModal && <CatalogModal catalog={editingCatalog} onClose={() => { setShowCatalogModal(false); setEditingCatalog(null); }} onSaved={fetchData} />}
         {showCategoryModal && <CategoryModal category={editingCategory} onClose={() => { setShowCategoryModal(false); setEditingCategory(null); }} onSaved={fetchData} />}
         {selectedInquiry && (

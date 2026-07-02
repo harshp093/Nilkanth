@@ -38,8 +38,9 @@ async function seed() {
   // Load compiled data dynamically using ES imports
   const productsPath = path.resolve(process.cwd(), 'dist-temp/products.js');
   const catalogsPath = path.resolve(process.cwd(), 'dist-temp/catalogs.js');
+  const categoriesPath = path.resolve(process.cwd(), 'dist-temp/categories.js');
 
-  if (!fs.existsSync(productsPath) || !fs.existsSync(catalogsPath)) {
+  if (!fs.existsSync(productsPath) || !fs.existsSync(catalogsPath) || !fs.existsSync(categoriesPath)) {
     console.error('❌ Error: Compiled JS files not found. Please compile TS files first.');
     process.exit(1);
   }
@@ -47,6 +48,7 @@ async function seed() {
   // Use dynamic imports for ESNext modules
   const { allProducts } = await import('./dist-temp/products.js');
   const { tilesCatalogs } = await import('./dist-temp/catalogs.js');
+  const { categories } = await import('./dist-temp/categories.js');
 
   console.log(`Connecting securely to: ${url}`);
   const supabase = createClient(url, serviceKey, {
@@ -118,6 +120,35 @@ async function seed() {
         console.error(`❌ Error upserting catalog "${cat.title}":`, error.message);
       } else {
         console.log(`✅ Catalog synced: ${cat.title}`);
+      }
+    }
+
+    // 3. Sync Categories
+    console.log(`\nSyncing ${categories.length} categories with admin bypass...`);
+    for (const cat of categories) {
+      const dbCategory = {
+        id: cat.id,
+        slug: cat.slug,
+        name: cat.name,
+        description: cat.description,
+        long_description: cat.longDescription || '',
+        emoji: cat.emoji || '',
+        color: cat.color || 'amber',
+        accent_color: cat.accentColor || '#C8962E',
+        image: cat.image,
+        product_count: cat.productCount || 0,
+        route: cat.route,
+        is_active: true,
+      };
+
+      const { error } = await supabase
+        .from('categories')
+        .upsert(dbCategory, { onConflict: 'id' });
+
+      if (error) {
+        console.error(`❌ Error upserting category "${cat.name}":`, error.message);
+      } else {
+        console.log(`✅ Category synced: ${cat.name}`);
       }
     }
 

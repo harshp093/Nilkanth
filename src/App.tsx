@@ -3,15 +3,17 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
-import Marble from './pages/Marble';
 import Granite from './pages/Granite';
-import KotaStone from './pages/KotaStone';
-import SanitaryWare from './pages/SanitaryWare';
 import TilesCatalog from './pages/TilesCatalog';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import SeedDatabase from './pages/SeedDatabase';
+import Brands from './pages/Brands';
+import Catalog from './pages/Catalog';
+import Tiles from './pages/Tiles';
+import Gallery from './pages/Gallery';
+import DynamicCategoryPage from './pages/DynamicCategoryPage';
 
 function App() {
   return (
@@ -26,11 +28,17 @@ function App() {
           <Route index element={<Home />} />
           <Route path="products" element={<Products />} />
           <Route path="products/:slug" element={<ProductDetail />} />
-          <Route path="marble" element={<Marble />} />
-          <Route path="granite" element={<Granite />} />
-          <Route path="kota-stone" element={<KotaStone />} />
-          <Route path="sanitary-ware" element={<SanitaryWare />} />
+          <Route path="marble" element={<DynamicCategoryPage categoryId="marble" />} />
+          <Route path="granite" element={<DynamicCategoryPage categoryId="granite" />} />
+          <Route path="kota-stone" element={<DynamicCategoryPage categoryId="kota-others" />} />
+          <Route path="sanitary-ware" element={<DynamicCategoryPage categoryId="sanitary-ware" />} />
           <Route path="tiles-catalog" element={<TilesCatalog />} />
+          <Route path="brands" element={<Brands />} />
+          <Route path="brands/:brandId" element={<Catalog />} />
+          <Route path="catalog" element={<Catalog />} />
+          <Route path="tiles" element={<Tiles />} />
+          <Route path="gallery" element={<Gallery />} />
+          <Route path="category/:categorySlug" element={<DynamicCategoryPage />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
           <Route path="granite/:stoneId" element={<Granite />} />

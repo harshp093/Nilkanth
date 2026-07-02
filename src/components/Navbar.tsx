@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconMenu2, IconX, IconSearch, IconChevronDown, IconLeaf, IconAtom } from '@tabler/icons-react';
+import { IconMenu2, IconX, IconSearch, IconChevronDown } from '@tabler/icons-react';
 import Logo from './Logo';
 import SearchOverlay from './SearchOverlay';
+import { useSupabaseCategories } from '../hooks/useSupabaseProducts';
 
 const navLinks = [
   { to: '/brands', label: 'Brands' },
@@ -13,20 +14,15 @@ const navLinks = [
   { to: '/about', label: 'About' },
 ];
 
-// Granite has a dropdown
-const graniteDropdown = [
-  { to: '/granite?type=natural-stone', label: 'Natural Stone', icon: IconLeaf, desc: 'Black Galaxy, Kashmir White & more' },
-  { to: '/granite?type=artificial-stone', label: 'Artificial Stone', icon: IconAtom, desc: 'Engineered quartz, zero-maintenance' },
-];
-
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [graniteOpen, setGraniteOpen] = useState(false);
-  const [mobileGraniteOpen, setMobileGraniteOpen] = useState(false);
-  const graniteRef = useRef<HTMLDivElement>(null);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
+  const categoriesRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const { categories } = useSupabaseCategories();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -34,11 +30,11 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close granite dropdown on outside click
+  // Close categories dropdown on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (graniteRef.current && !graniteRef.current.contains(e.target as Node)) {
-        setGraniteOpen(false);
+      if (categoriesRef.current && !categoriesRef.current.contains(e.target as Node)) {
+        setCategoriesOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
@@ -56,9 +52,6 @@ const Navbar: React.FC = () => {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
-
-  const isGraniteActive =
-    location.pathname === '/granite' || location.pathname.startsWith('/granite/');
 
   return (
     <>
@@ -108,68 +101,58 @@ const Navbar: React.FC = () => {
                 );
               })}
 
-              {/* ── Granite Dropdown ── */}
-              <div ref={graniteRef} className="relative">
+              {/* ── Categories Dropdown ── */}
+              <div ref={categoriesRef} className="relative">
                 <button
-                  onClick={() => setGraniteOpen(!graniteOpen)}
+                  onClick={() => setCategoriesOpen(!categoriesOpen)}
                   className={`relative flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition-colors group ${
-                    isGraniteActive ? 'text-amber-400' : 'text-stone-300 hover:text-white'
+                    location.pathname.startsWith('/category/') || location.pathname.startsWith('/marble') || location.pathname.startsWith('/granite') || location.pathname.startsWith('/kota-stone') || location.pathname.startsWith('/sanitary-ware') ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-white'
                   }`}
                 >
-                  Granite
+                  Products
                   <motion.div
-                    animate={{ rotate: graniteOpen ? 180 : 0 }}
+                    animate={{ rotate: categoriesOpen ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
                   >
                     <IconChevronDown size={14} />
                   </motion.div>
-                  {isGraniteActive && (
-                    <motion.div
-                      layoutId="navbar-indicator"
-                      className="absolute inset-0 bg-white/5 rounded-lg border border-amber-400/20"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
                 </button>
 
                 <AnimatePresence>
-                  {graniteOpen && (
+                  {categoriesOpen && (
                     <motion.div
                       initial={{ opacity: 0, y: -8, scale: 0.97 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.97 }}
                       transition={{ duration: 0.18 }}
-                      className="absolute top-full left-0 mt-2 w-72 bg-stone-900/98 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                      className="absolute top-full left-0 mt-2 w-72 bg-stone-900/98 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in"
                     >
                       <div className="p-2">
-                        {graniteDropdown.map((item) => {
-                          const Icon = item.icon;
-                          return (
-                            <Link
-                              key={item.to}
-                              to={item.to}
-                              onClick={() => setGraniteOpen(false)}
-                              className="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-white/8 transition-colors group"
-                            >
-                              <div className="bg-white/10 rounded-lg p-1.5 mt-0.5 flex-shrink-0">
-                                <Icon size={15} className="text-amber-400" />
-                              </div>
-                              <div>
-                                <p className="text-white font-semibold text-sm group-hover:text-amber-400 transition-colors">
-                                  {item.label}
-                                </p>
-                                <p className="text-stone-400 text-xs mt-0.5">{item.desc}</p>
-                              </div>
-                            </Link>
-                          );
-                        })}
+                        {categories.map((cat) => (
+                          <Link
+                            key={cat.id}
+                            to={cat.id === 'tiles-catalog' ? '/tiles-catalog' : (['marble', 'granite', 'kota-others', 'sanitary-ware'].includes(cat.id) ? `/${cat.id === 'kota-others' ? 'kota-stone' : cat.id}` : `/category/${cat.slug}`)}
+                            onClick={() => setCategoriesOpen(false)}
+                            className="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-white/8 transition-colors group"
+                          >
+                            <div className="bg-white/10 rounded-lg p-1.5 mt-0.5 flex-shrink-0 text-sm">
+                              {cat.emoji || '🪨'}
+                            </div>
+                            <div>
+                              <p className="text-white font-semibold text-sm group-hover:text-amber-400 transition-colors">
+                                {cat.name}
+                              </p>
+                              <p className="text-stone-400 text-[10px] mt-0.5 line-clamp-1">{cat.description}</p>
+                            </div>
+                          </Link>
+                        ))}
                         <div className="border-t border-white/8 mt-1 pt-1">
                           <Link
-                            to="/granite"
-                            onClick={() => setGraniteOpen(false)}
-                            className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-stone-400 hover:text-amber-400 transition-colors"
+                            to="/products"
+                            onClick={() => setCategoriesOpen(false)}
+                            className="flex items-center justify-center gap-1.5 px-4 py-2 text-xs text-stone-400 hover:text-amber-400 transition-colors"
                           >
-                            View all granite →
+                            View all products →
                           </Link>
                         </div>
                       </div>
@@ -268,41 +251,46 @@ const Navbar: React.FC = () => {
                   </motion.div>
                 ))}
 
-                {/* Mobile Granite sub-section */}
+                {/* Mobile Products sub-section */}
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
                   <button
-                    onClick={() => setMobileGraniteOpen(!mobileGraniteOpen)}
+                    onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${
-                      isGraniteActive ? 'text-amber-400 bg-amber-400/10' : 'text-stone-300 hover:text-white hover:bg-white/5'
+                      location.pathname.startsWith('/category/') || location.pathname.startsWith('/marble') || location.pathname.startsWith('/granite') || location.pathname.startsWith('/kota-stone') || location.pathname.startsWith('/sanitary-ware') ? 'text-amber-400 bg-amber-400/10' : 'text-stone-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    Granite
-                    <motion.div animate={{ rotate: mobileGraniteOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    Products
+                    <motion.div animate={{ rotate: mobileCategoriesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <IconChevronDown size={16} />
                     </motion.div>
                   </button>
                   <AnimatePresence>
-                    {mobileGraniteOpen && (
+                    {mobileCategoriesOpen && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden ml-4 mt-1 space-y-1"
                       >
-                        {graniteDropdown.map((item) => {
-                          const Icon = item.icon;
-                          return (
-                            <Link
-                              key={item.to}
-                              to={item.to}
-                              onClick={() => { setIsOpen(false); setMobileGraniteOpen(false); }}
-                              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-colors text-sm"
-                            >
-                              <Icon size={15} className="text-amber-400" />
-                              {item.label}
-                            </Link>
-                          );
-                        })}
+                        {categories.map((cat) => (
+                          <Link
+                            key={cat.id}
+                            to={cat.id === 'tiles-catalog' ? '/tiles-catalog' : (['marble', 'granite', 'kota-others', 'sanitary-ware'].includes(cat.id) ? `/${cat.id === 'kota-others' ? 'kota-stone' : cat.id}` : `/category/${cat.slug}`)}
+                            onClick={() => { setIsOpen(false); setMobileCategoriesOpen(false); }}
+                            className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-colors text-sm"
+                          >
+                            <span className="text-base">{cat.emoji || '🪨'}</span>
+                            {cat.name}
+                          </Link>
+                        ))}
+                        <Link
+                          to="/products"
+                          onClick={() => { setIsOpen(false); setMobileCategoriesOpen(false); }}
+                          className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-amber-400 hover:bg-white/5 transition-colors text-sm font-semibold"
+                        >
+                          <span>🛍️</span>
+                          View all products →
+                        </Link>
                       </motion.div>
                     )}
                   </AnimatePresence>
