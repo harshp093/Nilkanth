@@ -84,7 +84,6 @@ type ActiveTab = 'dashboard' | 'inquiries' | 'products' | 'catalogs' | 'categori
 ────────────────────────────────────────────────────────────────── */
 const CATALOG_BUCKETS = ['tile-catalogs', 'tile-catalogs-b', 'tile-catalogs-c', 'tile-catalogs-kajaria', 'tile-catalogs-somany', 'tile-catalogs-johnson'];
 const CATEGORY_OPTIONS = ['marble', 'granite', 'kota-stone', 'cladding-stone', 'adhesives-chemicals'];
-const APPLICATION_OPTIONS = ['Floor', 'Wall', 'Outdoor', 'Kitchen', 'Bathroom', 'Living Room', 'Elevation', 'Staircase', 'Swimming Pool'];
 
 const normalizeSubcategory = (val: string): string => {
   const clean = val.trim().toLowerCase();
@@ -129,10 +128,9 @@ interface NavItemProps {
 
 const NavItem: React.FC<NavItemProps> = ({ id, label, icon, count, active, onClick }) => (
   <button key={id} onClick={onClick}
-    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group cursor-pointer ${
-      active ? 'bg-gradient-to-r from-[#C8962E]/20 to-transparent text-[#C8962E] border border-[#C8962E]/30 shadow-md shadow-[#C8962E]/5'
-             : 'text-[#8888aa] hover:text-white hover:bg-white/5'
-    }`}>
+    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group cursor-pointer ${active ? 'bg-gradient-to-r from-[#C8962E]/20 to-transparent text-[#C8962E] border border-[#C8962E]/30 shadow-md shadow-[#C8962E]/5'
+        : 'text-[#8888aa] hover:text-white hover:bg-white/5'
+      }`}>
     <span className={`text-lg transition-transform duration-200 group-hover:scale-110 ${active ? 'scale-110' : ''}`}>{icon}</span>
     <span className="flex-1 text-left">{label}</span>
     {count !== undefined && (
@@ -235,16 +233,16 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
       setConversionState('Uploading to Supabase...');
       const ext = fileToUpload.name.split('.').pop() || 'jpg';
       const name = `prod_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      
-      const { data, error } = await supabase.storage.from('product-images').upload(name, fileToUpload, { 
-        cacheControl: '3600', 
+
+      const { data, error } = await supabase.storage.from('product-images').upload(name, fileToUpload, {
+        cacheControl: '3600',
         upsert: false,
         onUploadProgress: (progressEvent: any) => {
           const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
           setProgress(Math.min(95, percent));
         }
       } as any);
-      
+
       if (error) throw error;
 
       setProgress(98);
@@ -270,7 +268,7 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
           placeholder="Or paste image URL and click Add" className="admin-input flex-1 placeholder-white/20" />
         <button type="button" onClick={addUrl} className="btn-accent px-4 py-2 text-xs whitespace-nowrap">Add URL</button>
       </div>
-      
+
       {/* File Browser / Upload Zone */}
       <label className="upload-zone flex items-center justify-center gap-3 cursor-pointer p-6 border-2 border-dashed border-[#2a2a3a] hover:border-[#C8962E]/50 rounded-2xl bg-white/[0.02] transition-all" onClick={() => fileRef.current?.click()}>
         {uploading ? (
@@ -290,7 +288,7 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
         )}
       </label>
       <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.webp,.avif,.svg" className="hidden" onChange={handleUpload} />
-      
+
       {/* Images List Grid */}
       {images.length > 0 ? (
         <div className="grid grid-cols-5 gap-2 pt-2">
@@ -299,7 +297,7 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
               <img src={img} alt="" className="w-full h-full object-cover"
                 onError={e => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23111" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" fill="%23555" font-size="10">Error</text></svg>'; }} />
               {idx === 0 && <div className="absolute top-1.5 left-1.5 bg-[#C8962E] text-white text-[8px] font-black px-1.5 py-0.5 rounded">MAIN</div>}
-              
+
               {/* Image Ordering and Delete Controls */}
               <div className="absolute bottom-1.5 left-1.5 right-1.5 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 p-1 rounded-md backdrop-blur-sm">
                 <button
@@ -351,11 +349,57 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
   );
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   PDF UPLOADER
-────────────────────────────────────────────────────────────────── */
+
+
+const extractPdfCover = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const runExtraction = async () => {
+      try {
+        const pdfjsLib = (window as any)['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+
+        // Render at 1.5x scale for high resolution thumbnail
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Could not get canvas context');
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({ canvasContext: context, viewport }).promise;
+
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas export to blob failed'));
+        }, 'image/jpeg', 0.85);
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    if ((window as any)['pdfjs-dist/build/pdf']) {
+      runExtraction();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.onload = () => {
+        runExtraction();
+      };
+      script.onerror = () => {
+        reject(new Error('Failed to load PDF.js from CDN'));
+      };
+      document.head.appendChild(script);
+    }
+  });
+};
+
 interface PdfUploaderProps {
-  onUploaded: (url: string) => void;
+  onUploaded: (pdfUrl: string, thumbnailUrl?: string) => void;
 }
 
 const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
@@ -403,12 +447,31 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
         removeFingerprintOnSuccess: true,
         onProgress: (bytesUploaded, bytesTotal) => {
           const percent = Math.round((bytesUploaded / bytesTotal) * 100);
-          setProgress(Math.min(99, percent));
+          setProgress(Math.min(95, percent));
         },
-        onSuccess: () => {
+        onSuccess: async () => {
           const { data: { publicUrl } } = client.storage.from(bucket).getPublicUrl(name);
+          setProgress(97);
+          
+          let extractedThumbnail = '';
+          try {
+            const coverBlob = await extractPdfCover(file);
+            const coverFile = new File([coverBlob], `cover_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            const thumbName = `catalog_cover_${Date.now()}.jpg`;
+            const { data: thumbData, error: thumbErr } = await client.storage.from('product-images').upload(thumbName, coverFile, {
+              cacheControl: '3600',
+              upsert: false
+            } as any);
+            if (!thumbErr && thumbData) {
+              const { data: { publicUrl: thumbUrl } } = client.storage.from('product-images').getPublicUrl(thumbData.path);
+              extractedThumbnail = thumbUrl;
+            }
+          } catch (coverErr) {
+            console.error('Failed to generate cover page thumbnail:', coverErr);
+          }
+
           setProgress(100);
-          onUploaded(publicUrl);
+          onUploaded(publicUrl, extractedThumbnail);
           showToast(`PDF catalog uploaded to "${bucket}"!`);
           setTimeout(() => { setUploading(false); setProgress(0); }, 800);
         },
@@ -443,7 +506,7 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
       <label className="upload-zone flex items-center justify-center gap-3 cursor-pointer p-5 border border-dashed border-[#2a2a3a] hover:border-[#C8962E]/50 rounded-2xl bg-white/[0.02]" onClick={() => fileRef.current?.click()}>
         {uploading ? (
           <div className="w-full space-y-2">
-            <div className="text-[#C8962E] text-xs font-semibold text-center">Uploading PDF...</div>
+            <div className="text-[#C8962E] text-xs font-semibold text-center">Uploading PDF & Rendering Cover...</div>
             <div className="progress-bar-track"><div className="progress-bar-fill" style={{ width: `${progress}%` }} /></div>
             <div className="text-[#8888aa] text-[10px] text-center">{progress}% completed</div>
           </div>
@@ -452,7 +515,7 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
             <span className="text-3xl">📄</span>
             <div>
               <div className="text-[#e4e4ef] text-sm font-semibold">Upload PDF Document</div>
-              <div className="text-[#8888aa] text-xs mt-0.5">Click to browse .pdf files locally</div>
+              <div className="text-[#8888aa] text-xs mt-0.5">Auto-generates cover page thumbnail. Click to browse.</div>
             </div>
           </>
         )}
@@ -462,12 +525,6 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
   );
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   PRODUCT MODAL
-────────────────────────────────────────────────────────────────── */
-/* ═══════════════════════════════════════════════════════════════
-   PRODUCT MODAL (LUXURY SHOWROOM THEME)
-────────────────────────────────────────────────────────────────── */
 interface ProductModalProps {
   product: Partial<ProductRecord> | null;
   categories: CategoryRecord[];
@@ -493,22 +550,26 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, categories, onClos
     thickness_options: (product?.thickness_options || []).join(', '),
     size_options: (product?.size_options || []).join(', '),
     finish_options: (product?.finish_options || []).join(', '),
-    colors: (product?.colors || []).join(', '),
-    color_names: (product?.color_names || []).join(', '),
-    application: product?.application || [] as string[],
+    application: (product?.application || []).join(', '),
     is_featured: product?.is_featured || false,
     is_active: product?.is_active !== false,
     images: product?.images || [] as string[],
   });
 
+  const [colorVariations, setColorVariations] = useState<{ hex: string; name: string }[]>(() => {
+    const colList = product?.colors || [];
+    const nameList = product?.color_names || [];
+    const combined = [];
+    for (let i = 0; i < Math.max(colList.length, nameList.length); i++) {
+      combined.push({
+        hex: colList[i] || '#C8962E',
+        name: nameList[i] || 'Gold Accent',
+      });
+    }
+    return combined.length > 0 ? combined : [{ hex: '#FFFFFF', name: 'White' }];
+  });
+
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
-  const toggleApp = (app: string) =>
-    setForm(f => ({
-      ...f,
-      application: f.application.includes(app)
-        ? f.application.filter(a => a !== app)
-        : [...f.application, app]
-    }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -529,9 +590,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, categories, onClos
       thickness_options: form.thickness_options.split(',').map(s => s.trim()).filter(Boolean),
       size_options: form.size_options.split(',').map(s => s.trim()).filter(Boolean),
       finish_options: form.finish_options.split(',').map(s => s.trim()).filter(Boolean),
-      colors: form.colors.split(',').map(s => s.trim()).filter(Boolean),
-      color_names: form.color_names.split(',').map(s => s.trim()).filter(Boolean),
-      application: form.application,
+      colors: colorVariations.map(c => c.hex.trim()).filter(Boolean),
+      color_names: colorVariations.map(c => c.name.trim()).filter(Boolean),
+      application: form.application.split(',').map(s => s.trim()).filter(Boolean),
       is_featured: form.is_featured,
       is_active: form.is_active,
       images: form.images,
@@ -614,33 +675,78 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, categories, onClos
             </div>
           </div>
 
-          {/* Colors Sync Synced Swatch options */}
+          {/* Dynamic Color Palette Builder */}
           <div className="space-y-3">
-            <h4 className="text-[#C8962E] text-xs font-bold uppercase tracking-wider">🎨 Color variations (Slide synched)</h4>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="admin-label">Hex Colors (comma-sep)</label>
-                <input type="text" value={form.colors} onChange={e => set('colors', e.target.value)} placeholder="e.g. #FFFFFF, #C8962E, #333333" className="admin-input" />
-              </div>
-              <div>
-                <label className="admin-label">Color Names (comma-sep)</label>
-                <input type="text" value={form.color_names} onChange={e => set('color_names', e.target.value)} placeholder="e.g. White, Gold, Black" className="admin-input" />
-              </div>
+            <div className="flex items-center justify-between">
+              <h4 className="text-[#C8962E] text-xs font-bold uppercase tracking-wider">🎨 Color Variations & Swatches</h4>
+              <button
+                type="button"
+                onClick={() => setColorVariations(prev => [...prev, { hex: '#C8962E', name: 'New Color' }])}
+                className="text-[#C8962E] text-[11px] font-bold border border-[#C8962E]/30 px-2.5 py-1 rounded-lg hover:bg-[#C8962E]/10 transition-all cursor-pointer"
+              >
+                ＋ Add Color Variation
+              </button>
             </div>
-            <p className="text-[#4a4a6a] text-[10px]">*Provide hex colors and names in corresponding order to link them with the uploaded slide images.</p>
+            
+            {colorVariations.length > 0 ? (
+              <div className="space-y-2.5 bg-white/[0.02] p-4 rounded-xl border border-[#2a2a3a]">
+                {colorVariations.map((v, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={v.hex}
+                      onChange={e => {
+                        const copy = [...colorVariations];
+                        copy[idx].hex = e.target.value;
+                        setColorVariations(copy);
+                      }}
+                      className="w-10 h-8 rounded border border-[#2a2a3a] cursor-pointer bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      disabled
+                      value={v.hex.toUpperCase()}
+                      className="w-20 admin-input text-center text-[10px] font-mono opacity-70"
+                    />
+                    <input
+                      type="text"
+                      value={v.name}
+                      onChange={e => {
+                        const copy = [...colorVariations];
+                        copy[idx].name = e.target.value;
+                        setColorVariations(copy);
+                      }}
+                      placeholder="e.g. Imperial White"
+                      className="admin-input flex-1"
+                    />
+                    <button
+                      type="button"
+                      disabled={colorVariations.length === 1}
+                      onClick={() => setColorVariations(prev => prev.filter((_, i) => i !== idx))}
+                      className="text-red-400 text-xs w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 disabled:opacity-30 disabled:hover:bg-transparent"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[#4a4a6a] text-xs">No color swatches configured.</p>
+            )}
+            <p className="text-[#4a4a6a] text-[10px]">* Select visual colors manually; display names will map corresponding swatches.</p>
           </div>
 
           {/* Applications */}
           <div className="space-y-3">
-            <h4 className="text-[#C8962E] text-xs font-bold uppercase tracking-wider">🏠 Application Zones</h4>
-            <div className="flex flex-wrap gap-2">
-              {APPLICATION_OPTIONS.map(app => (
-                <button type="button" key={app} onClick={() => toggleApp(app)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                    form.application.includes(app) ? 'bg-[#C8962E] text-white border-[#C8962E]' : 'bg-transparent text-[#8888aa] border-[#2a2a3a] hover:border-[#C8962E]/50'
-                  }`}>{app}</button>
-              ))}
-            </div>
+            <h4 className="text-[#C8962E] text-xs font-bold uppercase tracking-wider">🏠 Application Zones (comma-sep)</h4>
+            <input
+              type="text"
+              value={form.application}
+              onChange={e => set('application', e.target.value)}
+              placeholder="e.g. Floor, Wall, Bathroom, Swimming Pool, Bar & Restaurants"
+              className="admin-input"
+            />
+            <p className="text-[#4a4a6a] text-[10px]">* Enter any application environments manually, separated by commas.</p>
           </div>
 
           {/* Image Manager */}
@@ -713,17 +819,32 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
     pdf_url: catalog?.pdf_url || '',
     thumbnail_url: catalog?.thumbnail_url || '',
     catalog_type: catalog?.catalog_type || 'tiles',
+    custom_catalog_type: '',
     tags: (catalog?.tags || []).join(', '),
+    application: ((catalog as any)?.application || []).join(', '),
     is_active: catalog?.is_active !== false,
     is_featured: (catalog as any)?.is_featured || false,
   });
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
+  const handleTypeCheckboxToggle = (type: string) => {
+    const currentList = form.catalog_type.split(',').map((s: string) => s.trim()).filter(Boolean);
+    const newList = currentList.includes(type)
+      ? currentList.filter((t: string) => t !== type)
+      : [...currentList, type];
+    set('catalog_type', newList.join(', '));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
     setSaving(true);
+
+    const typesList = form.catalog_type.split(',').map((s: string) => s.trim()).filter(Boolean);
+    const customTypes = form.custom_catalog_type.split(',').map((s: string) => s.trim()).filter(Boolean);
+    const mergedTypes = Array.from(new Set([...typesList, ...customTypes])).join(', ') || 'tiles';
+
     const payload: any = {
       id: form.id || `cat-${Date.now()}`,
       title: form.title.trim(),
@@ -731,15 +852,16 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
       description: form.description.trim() || null,
       pdf_url: form.pdf_url.trim() || null,
       thumbnail_url: form.thumbnail_url.trim() || 'https://placehold.co/400x300/111/C8962E?text=Catalog',
-      catalog_type: form.catalog_type,
-      tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+      catalog_type: mergedTypes,
+      tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
+      application: form.application.split(',').map((s: string) => s.trim()).filter(Boolean),
       is_active: form.is_active,
       is_featured: form.is_featured,
     };
     try {
       let { error } = await supabase.from('catalogs').upsert(payload, { onConflict: 'id' });
-      
-      // Graceful fallback if is_featured column doesn't exist in Supabase catalogs table yet
+
+      // Graceful fallback if columns don't exist in Supabase yet
       if (error && (error.message.includes('is_featured') || error.code === 'PGRST116')) {
         console.warn('Fallback: saving catalog without is_featured column');
         const { is_featured, ...payloadWithoutFeatured } = payload;
@@ -761,9 +883,9 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
       <motion.div initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
-        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl" 
+        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: 'linear-gradient(135deg, #0d131f 0%, #080c14 100%)', border: '1px solid rgba(20, 184, 166, 0.25)' }}>
-        <div className="flex items-center justify-between px-6 py-4" 
+        <div className="flex items-center justify-between px-6 py-4"
           style={{ background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, rgba(15, 23, 42, 0.15) 100%)', borderBottom: '1px solid rgba(20, 184, 166, 0.15)' }}>
           <div>
             <span className="text-[#14b8a6] text-[10px] font-black tracking-widest uppercase block mb-1">📖 DOCUMENT ARCHIVE PUBLISHER</span>
@@ -772,32 +894,72 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
           <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div><label className="admin-label">Catalog Title *</label><input type="text" required value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Kajaria Glossy floor catalog" className="admin-input" /></div>
+          <div><label className="admin-label">Catalog Title *</label><input type="text" required value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Kajaria Floor tiles collection" className="admin-input" /></div>
           <div><label className="admin-label">Company / Brand *</label><input type="text" required value={form.company} onChange={e => set('company', e.target.value)} placeholder="e.g. Kajaria, ColorTiles" className="admin-input" /></div>
           <div><label className="admin-label">Description</label><textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} placeholder="Brief catalog description..." className="admin-input resize-none" /></div>
+          
           <div>
-            <label className="admin-label">Catalog Type *</label>
-            <select
-              value={form.catalog_type}
-              onChange={e => set('catalog_type', e.target.value)}
-              className="admin-input"
-            >
-              <optgroup label="Tiles">
-                <option value="floor-tiles">🔲 Floor Tiles</option>
-                <option value="wall-tiles">🔳 Wall Tiles</option>
-                <option value="bathroom-tiles">🛁 Bathroom Tiles</option>
-                <option value="designer-tiles">🎨 Designer Tiles</option>
-                <option value="vitrified">✨ Vitrified Tiles</option>
-              </optgroup>
-              <optgroup label="Other Catalogs">
-                <option value="sanitary">🚿 Sanitary Ware</option>
-                <option value="artificial-stone">⚗️ Artificial Stone</option>
-              </optgroup>
-            </select>
+            <label className="admin-label">Catalog Types * (Select one or more)</label>
+            <div className="grid grid-cols-2 gap-2 bg-white/[0.02] p-3 rounded-xl border border-[#2a2a3a]">
+              {[
+                { id: 'floor-tiles', label: '🔲 Floor Tiles' },
+                { id: 'wall-tiles', label: '🔳 Wall Tiles' },
+                { id: 'bathroom-tiles', label: '🛁 Bathroom Tiles' },
+                { id: 'designer-tiles', label: '🎨 Designer Tiles' },
+                { id: 'vitrified', label: '✨ Vitrified Tiles' },
+                { id: 'sanitary', label: '🚿 Sanitary Ware' },
+                { id: 'artificial-stone', label: '⚗️ Artificial Stone' },
+              ].map((opt) => {
+                const currentList = form.catalog_type.split(',').map(s => s.trim()).filter(Boolean);
+                const isChecked = currentList.includes(opt.id);
+                return (
+                  <label key={opt.id} className="flex items-center gap-2 text-xs font-semibold text-admin-text cursor-pointer select-none">
+                     <input
+                       type="checkbox"
+                       checked={isChecked}
+                       onChange={() => handleTypeCheckboxToggle(opt.id)}
+                       className="rounded border-[#2a2a3a] text-[#14b8a6] focus:ring-0 focus:ring-offset-0 bg-[#0d0d16]"
+                     />
+                     {opt.label}
+                  </label>
+                );
+              })}
+            </div>
+            <div className="mt-2.5">
+              <label className="admin-label">Additional Custom Sub-types (comma-sep)</label>
+              <input
+                type="text"
+                value={form.custom_catalog_type}
+                onChange={e => set('custom_catalog_type', e.target.value)}
+                placeholder="e.g. wall-panels, terrace-tiles"
+                className="admin-input"
+              />
+              <p className="text-[#4a4a6a] text-[9px] mt-1">* Optional custom categories. These will be merged with the selected checkboxes.</p>
+            </div>
           </div>
-          <div><label className="admin-label">Cover Image Thumbnail URL</label><input type="text" value={form.thumbnail_url} onChange={e => set('thumbnail_url', e.target.value)} placeholder="Paste photo link..." className="admin-input" /></div>
-          <div><label className="admin-label">Tags / Keywords (comma-sep)</label><input type="text" value={form.tags} onChange={e => set('tags', e.target.value)} placeholder="Glossy, Ceramic, Bathroom" className="admin-input" /></div>
- 
+
+          <div>
+            <label className="admin-label">Cover Image Thumbnail URL (Auto-fills on upload)</label>
+            <input type="text" value={form.thumbnail_url} onChange={e => set('thumbnail_url', e.target.value)} placeholder="Auto-generated on file upload..." className="admin-input" />
+          </div>
+          
+          <div>
+            <label className="admin-label">Tags / Keywords (comma-sep)</label>
+            <input type="text" value={form.tags} onChange={e => set('tags', e.target.value)} placeholder="Glossy, Ceramic, Bathroom" className="admin-input" />
+          </div>
+
+          <div>
+            <label className="admin-label">Application Zones (comma-sep)</label>
+            <input
+              type="text"
+              value={form.application}
+              onChange={e => set('application', e.target.value)}
+              placeholder="e.g. Floor, Wall, Bathroom, Swimming Pool, Bar & Restaurants"
+              className="admin-input"
+            />
+            <p className="text-[#4a4a6a] text-[10px]">* Enter application tags (e.g. Swimming Pool, Bathroom) separated by commas.</p>
+          </div>
+
           <div>
             <h4 className="text-[#14b8a6] text-xs font-bold uppercase tracking-wider mb-2">📄 PDF Catalog File</h4>
             {form.pdf_url && (
@@ -807,9 +969,12 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
                 <button type="button" onClick={() => set('pdf_url', '')} className="text-red-400 text-xs hover:text-red-300">✕</button>
               </div>
             )}
-            <PdfUploader onUploaded={url => set('pdf_url', url)} />
+            <PdfUploader onUploaded={(url, thumb) => {
+              set('pdf_url', url);
+              if (thumb) set('thumbnail_url', thumb);
+            }} />
           </div>
- 
+
           <div className="grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-xl border border-[#2a2a3a]">
             <div className="flex items-center gap-3">
               <div onClick={() => set('is_active', !form.is_active)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_active ? 'bg-emerald-500' : 'bg-[#2a2a3a]'}`}>
@@ -831,7 +996,7 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
               </div>
             </div>
           </div>
- 
+
           <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e2e]">
             <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-stone-500 hover:text-white transition-all cursor-pointer bg-transparent">Cancel</button>
             <button type="submit" disabled={saving} className="btn-accent px-7 py-2.5 text-sm disabled:opacity-60">
@@ -855,7 +1020,7 @@ const CategoryCoverUploader: React.FC<{ onUploaded: (url: string) => void }> = (
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !supabase) return;
-    
+
     setUploading(true);
     setProgress(10);
     try {
@@ -986,9 +1151,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
       <motion.div initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
-        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl" 
+        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: 'linear-gradient(135deg, #140d24 0%, #0d0818 100%)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
-        <div className="flex items-center justify-between px-6 py-4" 
+        <div className="flex items-center justify-between px-6 py-4"
           style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(244, 63, 94, 0.06) 100%)', borderBottom: '1px solid rgba(99, 102, 241, 0.2)' }}>
           <div>
             <span className="text-[#a5b4fc] text-[10px] font-black tracking-widest uppercase block mb-1">🎨 HOMEPAGE CANVAS LAYOUT MANAGER</span>
@@ -996,7 +1161,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
           </div>
           <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -1045,7 +1210,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
 
           <div>
             <h4 className="text-[#C8962E] text-xs font-bold uppercase tracking-wider mb-2">📸 Cover Photo Background</h4>
-            
+
             <div className="flex gap-4 items-center mb-2">
               {form.image && (
                 <div className="w-16 h-16 rounded-xl overflow-hidden border border-[#1e1e2e] flex-shrink-0 bg-black">
@@ -1054,7 +1219,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
               )}
               <input type="url" value={form.image} onChange={e => set('image', e.target.value)} placeholder="Paste image cover URL here..." className="admin-input flex-1" />
             </div>
-            
+
             <CategoryCoverUploader onUploaded={url => set('image', url)} />
           </div>
 
@@ -1105,7 +1270,7 @@ const InquiryModal: React.FC<InquiryModalProps> = ({ inquiry, onClose, onStatusC
           </div>
           <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
         </div>
-        
+
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -1147,14 +1312,13 @@ const InquiryModal: React.FC<InquiryModalProps> = ({ inquiry, onClose, onStatusC
                   key={st}
                   type="button"
                   onClick={() => onStatusChanged(st)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-black border transition-all cursor-pointer capitalize flex-1 text-center ${
-                    inquiry.status === st
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-black border transition-all cursor-pointer capitalize flex-1 text-center ${inquiry.status === st
                       ? st === 'unread' ? 'bg-rose-500/20 text-rose-400 border-rose-500' :
                         st === 'read' ? 'bg-amber-500/20 text-amber-400 border-amber-500' :
-                        st === 'in_progress' ? 'bg-sky-500/20 text-sky-400 border-sky-500' :
-                        'bg-emerald-500/20 text-emerald-400 border-emerald-500'
+                          st === 'in_progress' ? 'bg-sky-500/20 text-sky-400 border-sky-500' :
+                            'bg-emerald-500/20 text-emerald-400 border-emerald-500'
                       : 'bg-transparent text-[#4a4a6a] border-[#1e1e2e] hover:border-[#8888aa]/30'
-                  }`}
+                    }`}
                 >
                   {st.replace('_', ' ')}
                 </button>
@@ -1227,7 +1391,7 @@ const Admin: React.FC = () => {
         supabase.from('products').select('*').order('created_at', { ascending: false }),
         supabase.from('catalogs').select('*').order('created_at', { ascending: false }),
       ]);
-      
+
       if (inqRes.error) throw inqRes.error;
       if (prodRes.error) throw prodRes.error;
       if (catRes.error) throw catRes.error;
@@ -1242,7 +1406,7 @@ const Admin: React.FC = () => {
           .from('categories')
           .select('*')
           .order('created_at', { ascending: true });
-        
+
         if (!catgError && catgData) {
           setCategories(catgData);
         }
@@ -1360,7 +1524,7 @@ const Admin: React.FC = () => {
       d.setDate(d.getDate() - i);
       const dateStr = d.toDateString();
       days.push(d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }));
-      
+
       const count = inquiries.filter(inq => {
         const inqDate = new Date(inq.created_at);
         return inqDate.toDateString() === dateStr;
@@ -1380,7 +1544,7 @@ const Admin: React.FC = () => {
         <div className="absolute w-80 h-80 rounded-full pointer-events-none"
           style={{ bottom: '-10%', left: '5%', background: 'radial-gradient(circle,#C8962E15,transparent)', filter: 'blur(90px)' }} />
         <div className="grain-overlay" />
-        
+
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 w-full max-w-md mx-4">
           <div className="text-center mb-8">
@@ -1397,7 +1561,7 @@ const Admin: React.FC = () => {
             <div className="px-6 py-3 border-b border-[#1c1c2b]" style={{ background: 'linear-gradient(90deg,#1C3A6B22,transparent)' }}>
               <p className="text-[#8888aa] text-[10px] font-bold text-center uppercase tracking-widest">Secure Credentials Area</p>
             </div>
-            
+
             <form onSubmit={handleLogin} className="p-7 space-y-5">
               {loginError && (
                 <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
@@ -1405,7 +1569,7 @@ const Admin: React.FC = () => {
                   <span>⚠️</span><span>{loginError}</span>
                 </motion.div>
               )}
-              
+
               <div>
                 <label className="admin-label">Admin Email Address</label>
                 <input
@@ -1449,7 +1613,7 @@ const Admin: React.FC = () => {
                 {loading ? <span className="flex items-center gap-2 justify-center"><span className="w-4.5 h-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verifying credentials...</span> : '🔐 Sign In to Console'}
               </button>
             </form>
-            
+
             <div className="px-7 py-4 border-t border-[#1c1c2b] flex items-center justify-between">
               <p className="text-[#4a4a6a] text-xs font-semibold">Secure connection established</p>
               <a href="/" className="text-[#C8962E] text-xs hover:underline font-bold">← Homepage</a>
@@ -1498,13 +1662,13 @@ const Admin: React.FC = () => {
     const y = chartHeight - padding - (c * (chartHeight - padding * 2)) / maxVal;
     return { x, y, val: c };
   });
-  
+
   const pathD = points.reduce((acc, p, idx) => {
     return acc + (idx === 0 ? `M ${p.x} ${p.y}` : ` L ${p.x} ${p.y}`);
   }, '');
 
-  const areaD = points.length > 0 
-    ? `${pathD} L ${points[points.length - 1].x} ${chartHeight - padding} L ${points[0].x} ${chartHeight - padding} Z` 
+  const areaD = points.length > 0
+    ? `${pathD} L ${points[points.length - 1].x} ${chartHeight - padding} L ${points[0].x} ${chartHeight - padding} Z`
     : '';
 
   return (
@@ -1521,7 +1685,7 @@ const Admin: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <nav className="flex-1 p-3 space-y-1">
           <p className="text-[#4a4a6a] text-[9px] font-black uppercase tracking-widest px-4 pb-2 pt-1">Menu Sections</p>
           <NavItem id="dashboard" label="Dashboard" icon="📊" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
@@ -1530,7 +1694,7 @@ const Admin: React.FC = () => {
           <NavItem id="catalogs" label="PDF Catalogs Manager" icon="📚" count={catalogs.length} active={activeTab === 'catalogs'} onClick={() => setActiveTab('catalogs')} />
           <NavItem id="categories" label="Categories Manager" icon="🏷️" count={categories.length} active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
         </nav>
-        
+
         <div className="p-4 border-t border-[#1e1e2e] space-y-3">
           <div className="text-[#8888aa] text-xs truncate font-medium">{sessionUser?.email}</div>
           <button onClick={handleLogout} className="btn-danger w-full py-2.5 justify-center text-xs font-bold cursor-pointer">Sign Out</button>
@@ -1564,23 +1728,21 @@ const Admin: React.FC = () => {
               </motion.div>
             ) : activeTab === 'dashboard' ? (
               <motion.div key="dash" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
-                
+
                 {/* Connection Status Banner */}
-                <div className={`p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 ${
-                  dbStatus === 'connected' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
-                  dbStatus === 'checking' ? 'bg-amber-500/5 border-amber-500/20 text-amber-400' :
-                  'bg-rose-500/5 border-rose-500/20 text-rose-400'
-                }`}>
+                <div className={`p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 ${dbStatus === 'connected' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
+                    dbStatus === 'checking' ? 'bg-amber-500/5 border-amber-500/20 text-amber-400' :
+                      'bg-rose-500/5 border-rose-500/20 text-rose-400'
+                  }`}>
                   <div className="flex items-center gap-3">
-                    <span className={`w-2.5 h-2.5 rounded-full ${
-                      dbStatus === 'connected' ? 'bg-emerald-500 animate-pulse' :
-                      dbStatus === 'checking' ? 'bg-amber-500 animate-pulse' :
-                      'bg-rose-500'
-                    }`} />
+                    <span className={`w-2.5 h-2.5 rounded-full ${dbStatus === 'connected' ? 'bg-emerald-500 animate-pulse' :
+                        dbStatus === 'checking' ? 'bg-amber-500 animate-pulse' :
+                          'bg-rose-500'
+                      }`} />
                     <div className="text-xs font-semibold">
                       {dbStatus === 'connected' ? 'Database securely connected · RLS verification passed' :
-                       dbStatus === 'checking' ? 'Verifying secure database link...' :
-                       `Database Connection Error: ${dbErrorMessage}`}
+                        dbStatus === 'checking' ? 'Verifying secure database link...' :
+                          `Database Connection Error: ${dbErrorMessage}`}
                     </div>
                   </div>
                   {dbStatus === 'error' && (
@@ -1694,7 +1856,7 @@ const Admin: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Recent Inquiries */}
                 <div className="admin-card">
                   <div className="px-5 py-4 border-b border-[#1e1e2e] flex items-center justify-between">
@@ -1753,12 +1915,11 @@ const Admin: React.FC = () => {
                               <select
                                 value={inq.status || 'unread'}
                                 onChange={(e) => handleUpdateInquiryStatus(inq.id, e.target.value)}
-                                className={`px-2 py-1 rounded-lg text-xs font-bold border bg-[#111118] cursor-pointer transition-all ${
-                                  inq.status === 'unread' ? 'text-rose-400 border-rose-500/30 bg-rose-500/5' :
-                                  inq.status === 'read' ? 'text-amber-400 border-amber-500/30 bg-amber-500/5' :
-                                  inq.status === 'in_progress' ? 'text-sky-400 border-sky-500/30 bg-sky-500/5' :
-                                  'text-emerald-400 border-emerald-500/30 bg-emerald-500/5'
-                                }`}
+                                className={`px-2 py-1 rounded-lg text-xs font-bold border bg-[#111118] cursor-pointer transition-all ${inq.status === 'unread' ? 'text-rose-400 border-rose-500/30 bg-rose-500/5' :
+                                    inq.status === 'read' ? 'text-amber-400 border-amber-500/30 bg-amber-500/5' :
+                                      inq.status === 'in_progress' ? 'text-sky-400 border-sky-500/30 bg-sky-500/5' :
+                                        'text-emerald-400 border-emerald-500/30 bg-emerald-500/5'
+                                  }`}
                               >
                                 <option value="unread" className="bg-[#0f0f16] text-rose-400 font-bold">🔴 Unread</option>
                                 <option value="read" className="bg-[#0f0f16] text-amber-400 font-bold">🟡 Read</option>
@@ -1920,7 +2081,7 @@ const Admin: React.FC = () => {
 
             {activeTab === 'categories' && (
               <motion.div key="categories" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="space-y-6">
-                
+
                 {/* Information Callout */}
                 <div className="bg-[#C8962E]/5 border border-[#C8962E]/25 rounded-2xl p-5 flex gap-4 cursor-default">
                   <span className="text-2xl mt-0.5 flex-shrink-0">🏷️</span>
@@ -1949,8 +2110,8 @@ const Admin: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {categories.map((cat) => {
-                    const count = cat.id === 'tiles-catalog' 
-                      ? catalogs.length 
+                    const count = cat.id === 'tiles-catalog'
+                      ? catalogs.length
                       : products.filter(p => p.category === cat.id).length;
 
                     return (

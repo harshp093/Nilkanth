@@ -84,7 +84,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* ── CATEGORIES SHOWCASE ── */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-bg transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -96,14 +96,14 @@ const Home: React.FC = () => {
             <span className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-1.5 mb-4">
               <span className="text-primary text-xs font-bold tracking-widest uppercase">Product Categories</span>
             </span>
-            <h2 className="text-4xl md:text-5xl font-heading font-black text-gray-900 mb-4">
+            <h2 className="text-4xl md:text-5xl font-heading font-black text-dark mb-4">
               What We Offer
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
+            <p className="text-text-sub max-w-xl mx-auto">
               Everything for your dream space — under one roof in Nadiad, Gujarat.
             </p>
           </motion.div>
-
+ 
           {/* Category Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {categories.map((cat, i) => (
@@ -115,27 +115,26 @@ const Home: React.FC = () => {
                 transition={{ duration: 0.6, delay: i * 0.08 }}
                 whileHover={{ y: -6 }}
                 onClick={() => navigate(cat.route)}
-                className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
+                className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 bg-surface border border-border/40"
                 style={{ minHeight: '220px' }}
               >
-                {/* Background Image - Only show if items exist in category */}
-                {getCount(cat.id) > 0 && (
+                {/* Background Image - Always show if available */}
+                {cat.image ? (
                   <img
                     src={cat.image}
                     alt={cat.name}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/natural-stone-hero.png'; }}
                   />
+                ) : (
+                  <div className="absolute inset-0 bg-[#C8962E]/10" />
                 )}
-
+ 
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/25" />
-                {getCount(cat.id) === 0 && (
-                  <div className="absolute inset-0 border-2 border-dashed border-[#C8962E]/25 rounded-2xl m-2" />
-                )}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   style={{ background: 'linear-gradient(135deg, rgba(200,150,46,0.3) 0%, transparent 100%)' }} />
-
+ 
                 {/* Content */}
                 <div className="absolute inset-0 p-6 flex flex-col justify-end">
                   <span className="text-2xl mb-2">{cat.emoji}</span>
@@ -181,9 +180,9 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
-
+ 
       {/* ── FEATURED PRODUCTS — FLIPKART STYLE ── */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-bg transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-8">
             <div>
@@ -193,7 +192,7 @@ const Home: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
-                <h2 className="text-3xl md:text-4xl font-heading font-black text-gray-900">
+                <h2 className="text-3xl md:text-4xl font-heading font-black text-dark">
                   Featured Products
                 </h2>
                 <div className="section-divider mt-2" />
@@ -201,7 +200,7 @@ const Home: React.FC = () => {
             </div>
             <Link
               to="/products"
-              className="hidden md:flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all group"
+              className="hidden md:flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all group font-bold"
             >
               View All
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="transition-transform group-hover:translate-x-1">
@@ -209,17 +208,17 @@ const Home: React.FC = () => {
               </svg>
             </Link>
           </div>
-
+ 
           {productsLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200 w-full">
+            <div className="flex flex-col items-center justify-center py-20 bg-surface/50 rounded-2xl border border-border/40 w-full">
               <div className="animate-spin h-10 w-10 border-4 border-[#C8962E] border-t-transparent rounded-full mb-4"></div>
-              <p className="text-gray-500 text-sm">Loading featured products...</p>
+              <p className="text-text-sub text-sm font-semibold">Loading featured collections...</p>
             </div>
           ) : featuredProducts.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200 px-6 w-full">
+            <div className="text-center py-16 bg-surface rounded-2xl border border-border/40 px-6 w-full text-dark">
               <span className="text-4xl mb-4 block">🏛️</span>
-              <h3 className="text-xl font-heading font-bold text-gray-800 mb-2">Catalog Under Construction</h3>
-              <p className="text-gray-500 text-sm max-w-md mx-auto mb-4">
+              <h3 className="text-xl font-heading font-bold text-dark mb-2">Catalog Under Construction</h3>
+              <p className="text-text-sub text-sm max-w-md mx-auto mb-4">
                 We are currently uploading our premium new products and collections. Contact us on WhatsApp or call today for live inventory, photos, and prices!
               </p>
             </div>

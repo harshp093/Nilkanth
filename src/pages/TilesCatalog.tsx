@@ -46,18 +46,24 @@ const TilesCatalog: React.FC = () => {
   // Filter catalogs with 100% accuracy
   const filteredCatalogs = useMemo(() => {
     return catalogs.filter(c => {
+      // Split comma-separated types in case of multiple types assigned to one catalog
+      const assignedTypes = c.catalogType
+        ? c.catalogType.split(',').map((s: string) => s.trim().toLowerCase())
+        : [];
+
       if (activeMainTab === 'sanitary') {
-        return c.catalogType === 'sanitary';
+        return assignedTypes.includes('sanitary');
       }
       if (activeMainTab === 'artificial-stone') {
-        return c.catalogType === 'artificial-stone';
+        return assignedTypes.includes('artificial-stone');
       }
-      // If active main tab is tiles, match tile sub-types
-      const isTileType = ['floor-tiles', 'wall-tiles', 'bathroom-tiles', 'designer-tiles', 'vitrified', 'tiles'].includes(c.catalogType);
-      if (!isTileType) return false;
+      // If active main tab is tiles, match if it contains any tiles catalog subtype
+      const tileSubtypes = ['floor-tiles', 'wall-tiles', 'bathroom-tiles', 'designer-tiles', 'vitrified', 'tiles'];
+      const hasTileType = assignedTypes.some(type => tileSubtypes.includes(type));
+      if (!hasTileType) return false;
 
       if (activeTileSubTab === 'all') return true;
-      return c.catalogType === activeTileSubTab;
+      return assignedTypes.includes(activeTileSubTab);
     });
   }, [catalogs, activeMainTab, activeTileSubTab]);
 

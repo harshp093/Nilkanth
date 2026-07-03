@@ -101,3 +101,6 @@ WHERE category = 'kota-stone';
 
 -- 5. Add is_featured column to catalogs table to support showcasing PDF catalogs on Homepage
 ALTER TABLE catalogs ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE;
+
+-- 6. Add application column to catalogs table to support manual application zones tagging
+ALTER TABLE catalogs ADD COLUMN IF NOT EXISTS application TEXT[] DEFAULT '{}';

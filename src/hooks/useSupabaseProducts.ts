@@ -184,6 +184,8 @@ export function useSupabaseCatalogs() {
           viewCount: c.view_count,
           downloadCount: c.download_count,
           isActive: c.is_active,
+          isFeatured: c.is_featured || false,
+          application: c.application || [],
         }));
 
         setCatalogs(mapped);

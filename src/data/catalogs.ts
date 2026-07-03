@@ -26,6 +26,8 @@ export interface TilesCatalog {
   viewCount: number;
   downloadCount: number;
   isActive: boolean;
+  isFeatured?: boolean;
+  application?: string[];
 }
 
 export const tilesCatalogs: TilesCatalog[] = [
