@@ -651,6 +651,32 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, categories, onClos
             <ImageManager images={form.images} onChange={imgs => set('images', imgs)} />
           </div>
 
+          {/* Visibility & Featured Status */}
+          <div className="space-y-3 pt-2">
+            <h4 className="text-[#C8962E] text-xs font-bold uppercase tracking-wider">Visibility & Featured Status</h4>
+            <div className="grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-xl border border-[#2a2a3a]">
+              <div className="flex items-center gap-3">
+                <div onClick={() => set('is_active', !form.is_active)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_active ? 'bg-emerald-500' : 'bg-[#2a2a3a]'}`}>
+                  <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_active ? 'left-5' : 'left-0.5'}`} />
+                </div>
+                <div>
+                  <span className="text-[#e4e4ef] text-xs font-bold block">Active Showroom Status</span>
+                  <span className="text-[#8888aa] text-[10px]">Product is active and visible on the website catalog.</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div onClick={() => set('is_featured', !form.is_featured)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_featured ? 'bg-[#C8962E]' : 'bg-[#2a2a3a]'}`}>
+                  <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_featured ? 'left-5' : 'left-0.5'}`} />
+                </div>
+                <div>
+                  <span className="text-[#e4e4ef] text-xs font-bold block">★ Feature on Homepage</span>
+                  <span className="text-[#8888aa] text-[10px]">Product will be showcased in the Featured block on the Home page.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e2e]">
             <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-stone-500 hover:text-white transition-all cursor-pointer bg-transparent">Cancel</button>
@@ -689,6 +715,7 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
     catalog_type: catalog?.catalog_type || 'tiles',
     tags: (catalog?.tags || []).join(', '),
     is_active: catalog?.is_active !== false,
+    is_featured: (catalog as any)?.is_featured || false,
   });
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
@@ -697,7 +724,7 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
     e.preventDefault();
     if (!supabase) return;
     setSaving(true);
-    const payload = {
+    const payload: any = {
       id: form.id || `cat-${Date.now()}`,
       title: form.title.trim(),
       company: form.company.trim(),
@@ -707,9 +734,19 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
       catalog_type: form.catalog_type,
       tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
       is_active: form.is_active,
+      is_featured: form.is_featured,
     };
     try {
-      const { error } = await supabase.from('catalogs').upsert(payload, { onConflict: 'id' });
+      let { error } = await supabase.from('catalogs').upsert(payload, { onConflict: 'id' });
+      
+      // Graceful fallback if is_featured column doesn't exist in Supabase catalogs table yet
+      if (error && (error.message.includes('is_featured') || error.code === 'PGRST116')) {
+        console.warn('Fallback: saving catalog without is_featured column');
+        const { is_featured, ...payloadWithoutFeatured } = payload;
+        const res = await supabase.from('catalogs').upsert(payloadWithoutFeatured, { onConflict: 'id' });
+        error = res.error;
+      }
+
       if (error) throw error;
       showToast(isEdit ? 'Catalog updated!' : 'Catalog created!');
       onSaved();
@@ -760,7 +797,7 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
           </div>
           <div><label className="admin-label">Cover Image Thumbnail URL</label><input type="text" value={form.thumbnail_url} onChange={e => set('thumbnail_url', e.target.value)} placeholder="Paste photo link..." className="admin-input" /></div>
           <div><label className="admin-label">Tags / Keywords (comma-sep)</label><input type="text" value={form.tags} onChange={e => set('tags', e.target.value)} placeholder="Glossy, Ceramic, Bathroom" className="admin-input" /></div>
-
+ 
           <div>
             <h4 className="text-[#14b8a6] text-xs font-bold uppercase tracking-wider mb-2">📄 PDF Catalog File</h4>
             {form.pdf_url && (
@@ -772,14 +809,29 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
             )}
             <PdfUploader onUploaded={url => set('pdf_url', url)} />
           </div>
-
-          <div className="flex items-center gap-3 py-2">
-            <div onClick={() => set('is_active', !form.is_active)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_active ? 'bg-emerald-500' : 'bg-[#2a2a3a]'}`}>
-              <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_active ? 'left-5' : 'left-0.5'}`} />
+ 
+          <div className="grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-xl border border-[#2a2a3a]">
+            <div className="flex items-center gap-3">
+              <div onClick={() => set('is_active', !form.is_active)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_active ? 'bg-emerald-500' : 'bg-[#2a2a3a]'}`}>
+                <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_active ? 'left-5' : 'left-0.5'}`} />
+              </div>
+              <div>
+                <span className="text-[#e4e4ef] text-xs font-bold block">Publish immediately</span>
+                <span className="text-[#8888aa] text-[10px]">Visible on PDF catalogs page.</span>
+              </div>
             </div>
-            <span className="text-[#e4e4ef] text-sm font-semibold">Publish immediately (visible on catalog page)</span>
-          </div>
 
+            <div className="flex items-center gap-3">
+              <div onClick={() => set('is_featured', !form.is_featured)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_featured ? 'bg-[#C8962E]' : 'bg-[#2a2a3a]'}`}>
+                <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_featured ? 'left-5' : 'left-0.5'}`} />
+              </div>
+              <div>
+                <span className="text-[#e4e4ef] text-xs font-bold block">★ Feature on Homepage</span>
+                <span className="text-[#8888aa] text-[10px]">Catalogue featured on Home.</span>
+              </div>
+            </div>
+          </div>
+ 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e2e]">
             <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-stone-500 hover:text-white transition-all cursor-pointer bg-transparent">Cancel</button>
             <button type="submit" disabled={saving} className="btn-accent px-7 py-2.5 text-sm disabled:opacity-60">

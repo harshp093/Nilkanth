@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { NProduct } from '../../data/products';
-import { productEnquiryWhatsApp, CALL_LINK } from '../../utils/whatsapp';
+import { productEnquiryWhatsApp, catalogEnquiryWhatsApp, CALL_LINK } from '../../utils/whatsapp';
 
 interface ProductCardProps {
   product: NProduct;
@@ -29,18 +29,27 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) => {
   const navigate = useNavigate();
+  const isCatalog = !!product.isCatalog;
   const primaryImage = product.images[0] || '/marble-calacatta.png';
-  const catColor = CATEGORY_COLORS[product.category] || '#1C3A6B';
-  const catLabel = CATEGORY_LABELS[product.category] || product.category;
+  const catColor = isCatalog ? '#ef4444' : (CATEGORY_COLORS[product.category] || '#1C3A6B');
+  const catLabel = isCatalog ? (product.brand || 'CATALOG') : (CATEGORY_LABELS[product.category] || product.category);
 
-  const waUrl = productEnquiryWhatsApp({
-    name: product.name,
-    slug: product.slug,
-    category: catLabel,
-    priceRange: product.priceRange,
-  });
+  const waUrl = isCatalog
+    ? catalogEnquiryWhatsApp({ title: product.name, id: product.id })
+    : productEnquiryWhatsApp({
+        name: product.name,
+        slug: product.slug,
+        category: catLabel,
+        priceRange: product.priceRange,
+      });
 
-  const handleCardClick = () => navigate(`/products/${product.slug}`);
+  const handleCardClick = () => {
+    if (isCatalog && product.pdfUrl) {
+      window.open(product.pdfUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      navigate(`/products/${product.slug}`);
+    }
+  };
 
   return (
     <motion.div
@@ -68,7 +77,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         {product.isFeatured && (
           <div className="absolute top-2 left-2 z-10">
             <span className="bg-accent text-white text-[9px] font-black tracking-wider px-2 py-0.5 rounded shadow-sm">
-              ★ FEATURED
+              {isCatalog ? '★ FEATURED CATALOG' : '★ FEATURED'}
             </span>
           </div>
         )}
@@ -79,7 +88,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
             className="bg-white text-primary text-xs font-bold px-3.5 py-1.5 rounded-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-200 shadow-lg"
           >
-            Quick View →
+            {isCatalog ? '👁 View PDF →' : 'Quick View →'}
           </button>
         </div>
       </div>
@@ -111,7 +120,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         </h3>
 
         {/* Color Swatch Dots */}
-        {product.colors && product.colors.length > 0 && (
+        {!isCatalog && product.colors && product.colors.length > 0 && (
           <div className="flex items-center gap-1 mt-1.5">
             {product.colors.slice(0, 5).map((color, i) => (
               <div
@@ -129,15 +138,28 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
 
         {/* Product Details (Price & Origin) */}
         <div className="mt-2 space-y-0.5">
-          {product.priceRange && (
-            <p className="text-primary font-bold" style={{ fontSize: compact ? '11px' : '12px' }}>
-              {product.priceRange}
-            </p>
-          )}
-          {product.origin && (
-            <p className="text-dark/40" style={{ fontSize: '9px' }}>
-              📍 {product.origin}
-            </p>
+          {isCatalog ? (
+            <>
+              <p className="text-red-500 font-bold" style={{ fontSize: compact ? '11px' : '12px' }}>
+                📄 PDF Catalog Document
+              </p>
+              <p className="text-dark/40" style={{ fontSize: '9px' }}>
+                📥 View & Download
+              </p>
+            </>
+          ) : (
+            <>
+              {product.priceRange && (
+                <p className="text-primary font-bold" style={{ fontSize: compact ? '11px' : '12px' }}>
+                  {product.priceRange}
+                </p>
+              )}
+              {product.origin && (
+                <p className="text-dark/40" style={{ fontSize: '9px' }}>
+                  📍 {product.origin}
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -165,11 +187,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
           </a>
           <button
             onClick={handleCardClick}
-            title="View Product Page"
+            title={isCatalog ? "Open PDF Document" : "View Product Page"}
             className="flex items-center justify-center bg-bg hover:bg-primary/10 text-dark/70 hover:text-primary rounded-lg transition-colors p-1.5"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              {isCatalog ? (
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6" />
+              ) : (
+                <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+              )}
             </svg>
           </button>
         </div>

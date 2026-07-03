@@ -35,6 +35,8 @@ export interface NProduct {
   isActive: boolean;
   images: string[];        // First image = primary
   viewCount?: number;
+  isCatalog?: boolean;
+  pdfUrl?: string;
 }
 
 // ─── MARBLE PRODUCTS ─────────────────────────────────────────

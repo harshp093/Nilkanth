@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { useSupabaseProducts, useSupabaseCategories, useSupabaseCatalogs } from '../hooks/useSupabaseProducts';
 import ProductCard from '../components/products/ProductCard';
+import type { NProduct } from '../data/products';
 import ThreeHero from '../components/ThreeHero';
 
 // ─── Counter Component ───
@@ -40,7 +41,26 @@ const Home: React.FC = () => {
     return (products || []).filter((p) => p.category === catId).length;
   };
 
-  const featuredProducts = (products || []).filter(p => p.isFeatured).slice(0, 8);
+  const featuredProducts = useMemo(() => {
+    const dbFeatured = (products || []).filter(p => p.isFeatured);
+    const catFeatured = (catalogs || [])
+      .filter(c => (c as any).isFeatured || (c as any).is_featured)
+      .map(c => ({
+        id: c.id,
+        slug: c.id,
+        name: c.title,
+        description: c.description || '',
+        category: 'marble' as any, // fallback category
+        subcategory: c.catalogType,
+        brand: c.company,
+        isFeatured: true,
+        isActive: true,
+        images: [c.thumbnailUrl],
+        isCatalog: true,
+        pdfUrl: c.pdfUrl || undefined,
+      } as NProduct));
+    return [...dbFeatured, ...catFeatured].slice(0, 8);
+  }, [products, catalogs]);
 
   const waGeneralUrl = `https://wa.me/919974142777?text=${encodeURIComponent('Hi Nilkanth Marble! 👋\n\nI am interested in your products. Please share details.')}`;
 
