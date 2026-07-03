@@ -10,9 +10,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   granite: 'Granite',
   stone: 'Stone',
   'adhesives-chemicals': 'Chemicals',
-  'kota-others': 'Kota Stone',
-  'sanitary-ware': 'Sanitary Ware',
-  'tiles-catalog': 'Tiles',
+  'kota-stone': 'Kota Stone',
+  'cladding-stone': 'Natural Cladding Stone',
 };
 
 const ProductDetail: React.FC = () => {
@@ -93,7 +92,7 @@ const ProductDetail: React.FC = () => {
             <span>›</span>
             <Link to="/products" className="hover:text-primary transition-colors">Products</Link>
             <span>›</span>
-            <Link to={product.category === 'kota-others' ? '/kota-stone' : `/${product.category}`} className="hover:text-primary transition-colors capitalize">
+            <Link to={['kota-others', 'kota-stone'].includes(product.category) ? '/kota-stone' : (product.category === 'cladding-stone' ? '/cladding-stone' : `/${product.category}`)} className="hover:text-primary transition-colors capitalize">
               {catLabel}
             </Link>
             <span>›</span>

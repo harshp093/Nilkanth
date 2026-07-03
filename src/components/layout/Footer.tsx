@@ -55,7 +55,7 @@ const Footer: React.FC = () => {
               {[
                 { to: '/', label: 'Home' },
                 { to: '/products', label: 'All Products' },
-                { to: '/tiles-catalog', label: 'Tiles Catalog' },
+                { to: '/catalogs', label: 'PDF Catalogs' },
                 { to: '/about', label: 'About Us' },
                 { to: '/contact', label: 'Contact Us' },
               ].map(item => (
@@ -77,11 +77,10 @@ const Footer: React.FC = () => {
               {[
                 { to: '/marble', label: '🪨 Marble' },
                 { to: '/granite', label: '⬛ Granite' },
-                { to: '/stone', label: '🪨 Stone' },
-                { to: '/adhesives-chemicals', label: '🧪 Chemicals' },
                 { to: '/kota-stone', label: '🟫 Kota Stone' },
-                { to: '/sanitary-ware', label: '🚿 Sanitary Ware' },
-                { to: '/tiles-catalog', label: '🔲 Tiles Catalog' },
+                { to: '/cladding-stone', label: '🧱 Cladding Stone' },
+                { to: '/adhesives-chemicals', label: '🧪 Chemicals' },
+                { to: '/catalogs', label: '📁 PDF Catalogs' },
               ].map(item => (
                 <li key={item.to}>
                   <Link to={item.to} className="text-text-sub hover:text-accent transition-colors text-sm">

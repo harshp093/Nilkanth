@@ -1,32 +1,43 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../Logo';
+import { useSupabaseCategories } from '../../hooks/useSupabaseProducts';
 
 const PHONE = '+91 94084 61000';
 const WA_NUMBER = '919974142777';
 const EMAIL = 'nilkanth1marble@gmail.com';
 
-const productsDropdown = [
-  { to: '/marble', label: 'Marble', desc: 'Premium Italian & Indian marble', icon: '🪨' },
-  { to: '/granite', label: 'Granite', desc: 'Natural granite slabs', icon: '⬛' },
-  { to: '/stone', label: 'Stone', desc: 'Natural & engineered stones', icon: '🪨' },
-  { to: '/kota-stone', label: 'Kota Stone', desc: 'Kota stone, slate & more', icon: '🟫' },
-  { to: '/sanitary-ware', label: 'Sanitary Ware', desc: 'Closets, basins, faucets', icon: '🚿' },
-  { to: '/adhesives-chemicals', label: 'Chemicals', desc: 'Tile adhesives & construction chemicals', icon: '🧪' },
+// Static fallback product categories grouped
+const staticProductCategories = [
+  { id: 'marble', slug: 'marble', name: 'Marble', desc: 'Premium Italian & Indian marble', emoji: '🪨', route: '/marble', group: 'Natural Stone' },
+  { id: 'granite', slug: 'granite', name: 'Granite', desc: 'Natural granite slabs', emoji: '⬛', route: '/granite', group: 'Natural Stone' },
+  { id: 'kota-stone', slug: 'kota-stone', name: 'Kota Stone', desc: 'Kota stone & outdoor flooring', emoji: '🟫', route: '/kota-stone', group: 'Natural Stone' },
+  { id: 'cladding-stone', slug: 'cladding-stone', name: 'Natural Cladding Stone', desc: 'Wall cladding & roofing slate', emoji: '🧱', route: '/category/cladding-stone', group: 'Natural Stone' },
+  { id: 'adhesives-chemicals', slug: 'adhesives-chemicals', name: 'Chemicals', desc: 'Tile adhesives & construction chemicals', emoji: '🧪', route: '/adhesives-chemicals', group: 'Chemicals' },
+];
+
+const pdfCatalogsDropdown = [
+  { to: '/catalogs?tab=tile', label: 'Tile Catalogs', desc: 'Floor, wall, bathroom & designer tiles', icon: '🔲' },
+  { to: '/catalogs?tab=sanitary', label: 'Sanitary Ware Catalogs', desc: 'Closets, basins, faucets & showers', icon: '🚿' },
+  { to: '/catalogs?tab=artificial-stone', label: 'Artificial Stone Catalogs', desc: 'Quartz & engineered stone catalogs', icon: '⚗️' },
 ];
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
+  const [catalogsOpen, setCatalogsOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [mobileCatalogsOpen, setMobileCatalogsOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
   });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const catalogsRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const { categories } = useSupabaseCategories();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -34,11 +45,14 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Dropdown click outside listener
+  // Dropdowns click outside listeners
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setProductsOpen(false);
+      }
+      if (catalogsRef.current && !catalogsRef.current.contains(e.target as Node)) {
+        setCatalogsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
@@ -50,7 +64,9 @@ const Navbar: React.FC = () => {
     const timer = setTimeout(() => {
       setIsOpen(false);
       setProductsOpen(false);
+      setCatalogsOpen(false);
       setMobileProductsOpen(false);
+      setMobileCatalogsOpen(false);
     }, 0);
     return () => clearTimeout(timer);
   }, [location.pathname]);
@@ -69,14 +85,38 @@ const Navbar: React.FC = () => {
   const toggleTheme = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
 
   const isActive = (path: string) =>
-    location.pathname === path || location.pathname.startsWith(path + '/');
+    location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
 
-  const isProductsActive = ['/marble', '/granite', '/kota-stone', '/sanitary-ware', '/products'].some(
+  // Compute products list grouped by group
+  const groupedProducts = useMemo(() => {
+    const list = categories.length > 0 ? categories.map(c => ({
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      desc: c.description,
+      emoji: c.emoji || '🪨',
+      route: c.route || `/category/${c.slug}`,
+      group: c.groupName || (['marble', 'granite', 'kota-stone', 'cladding-stone'].includes(c.id) ? 'Natural Stone' : (c.id === 'adhesives-chemicals' ? 'Chemicals' : 'Other')),
+    })) : staticProductCategories;
+
+    const groups: Record<string, typeof list> = {};
+    list.forEach(c => {
+      const g = c.group || 'Natural Stone';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(c);
+    });
+    return groups;
+  }, [categories]);
+
+  const isProductsActive = ['/marble', '/granite', '/kota-stone', '/cladding-stone', '/products', '/category'].some(
+    p => location.pathname.startsWith(p)
+  );
+
+  const isCatalogsActive = ['/tiles-catalog', '/catalogs'].some(
     p => location.pathname.startsWith(p)
   );
 
   const navLinks = [
-    { to: '/tiles-catalog', label: 'Tiles Catalog' },
     { to: '/about', label: 'About' },
     { to: '/contact', label: 'Contact' },
   ];
@@ -151,7 +191,7 @@ const Navbar: React.FC = () => {
               {/* Products Dropdown */}
               <div ref={dropdownRef} className="relative">
                 <button
-                  onClick={() => setProductsOpen(!productsOpen)}
+                  onClick={() => { setProductsOpen(!productsOpen); setCatalogsOpen(false); }}
                   className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isProductsActive
                       ? 'text-primary bg-primary/10'
@@ -177,26 +217,91 @@ const Navbar: React.FC = () => {
                       transition={{ duration: 0.15 }}
                       className="absolute top-full left-0 mt-2 w-64 bg-surface border border-border rounded-xl shadow-2xl overflow-hidden z-50"
                     >
-                      <div className="py-2">
+                      <div className="py-2 max-h-[80vh] overflow-y-auto">
                         <Link
                           to="/products"
                           onClick={() => setProductsOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors border-b border-border/40"
+                          className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/10 transition-colors border-b border-border/40"
                         >
                           <span>🛍️</span>
                           <span>All Products</span>
                         </Link>
-                        {productsDropdown.map(item => (
+                        {Object.entries(groupedProducts).map(([groupName, items]) => (
+                          <div key={groupName} className="mt-2 first:mt-0">
+                            <div className="px-4 py-1 text-[9px] font-bold uppercase tracking-wider text-dark/40 bg-dark/2">
+                              {groupName}
+                            </div>
+                            {items.map(item => (
+                              <Link
+                                key={item.id}
+                                to={item.route}
+                                onClick={() => setProductsOpen(false)}
+                                className="flex items-start gap-3 px-4 py-2 hover:bg-primary/5 transition-colors group/item"
+                              >
+                                <span className="mt-0.5 text-sm group-hover/item:scale-110 transition-transform">{item.emoji}</span>
+                                <div>
+                                  <p className="text-xs font-semibold text-dark group-hover/item:text-primary transition-colors">{item.name}</p>
+                                  <p className="text-[10px] text-dark/40 line-clamp-1 mt-0.5">{item.desc}</p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* PDF Catalogs Dropdown */}
+              <div ref={catalogsRef} className="relative">
+                <button
+                  onClick={() => { setCatalogsOpen(!catalogsOpen); setProductsOpen(false); }}
+                  className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isCatalogsActive
+                      ? 'text-primary bg-primary/10'
+                      : 'text-dark/70 hover:text-primary hover:bg-primary/5'
+                  }`}
+                >
+                  PDF Catalogs
+                  <motion.svg
+                    animate={{ rotate: catalogsOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"/>
+                  </motion.svg>
+                </button>
+
+                <AnimatePresence>
+                  {catalogsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 mt-2 w-72 bg-surface border border-border rounded-xl shadow-2xl overflow-hidden z-50"
+                    >
+                      <div className="py-2">
+                        <Link
+                          to="/catalogs"
+                          onClick={() => setCatalogsOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/10 transition-colors border-b border-border/40"
+                        >
+                          <span>📁</span>
+                          <span>All PDF Catalogs</span>
+                        </Link>
+                        {pdfCatalogsDropdown.map(item => (
                           <Link
                             key={item.to}
                             to={item.to}
-                            onClick={() => setProductsOpen(false)}
-                            className="flex items-start gap-3 px-4 py-2.5 hover:bg-primary/5 transition-colors"
+                            onClick={() => setCatalogsOpen(false)}
+                            className="flex items-start gap-3 px-4 py-2 hover:bg-primary/5 transition-colors group/item"
                           >
-                            <span className="mt-0.5 text-base">{item.icon}</span>
+                            <span className="mt-0.5 text-sm group-hover/item:scale-110 transition-transform">{item.icon}</span>
                             <div>
-                              <p className="text-sm font-semibold text-dark">{item.label}</p>
-                              <p className="text-xs text-dark/40 mt-0.5">{item.desc}</p>
+                              <p className="text-xs font-semibold text-dark group-hover/item:text-primary transition-colors">{item.label}</p>
+                              <p className="text-[10px] text-dark/40 mt-0.5 leading-snug">{item.desc}</p>
                             </div>
                           </Link>
                         ))}
@@ -328,7 +433,7 @@ const Navbar: React.FC = () => {
                 {/* Mobile Products Accordion */}
                 <div>
                   <button
-                    onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
+                    onClick={() => { setMobileProductsOpen(!mobileProductsOpen); setMobileCatalogsOpen(false); }}
                     className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-dark hover:bg-primary/5 transition-colors"
                   >
                     Products
@@ -346,13 +451,56 @@ const Navbar: React.FC = () => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden ml-3 mt-1 space-y-0.5"
+                        className="overflow-hidden ml-3 mt-1 space-y-1"
                       >
-                        <Link to="/products" className="block px-3 py-2 rounded-lg text-sm text-primary font-bold hover:bg-primary/10 transition-colors">
+                        <Link to="/products" className="block px-3 py-2 rounded-lg text-xs text-primary font-bold hover:bg-primary/10 transition-colors">
                           🛍️ All Products
                         </Link>
-                        {productsDropdown.map(item => (
-                          <Link key={item.to} to={item.to} className="block px-3 py-2 rounded-lg text-sm text-dark/80 hover:bg-primary/5 hover:text-primary transition-colors">
+                        {Object.entries(groupedProducts).map(([groupName, items]) => (
+                          <div key={groupName} className="mt-1 first:mt-0">
+                            <div className="px-3 py-1 text-[8px] font-bold uppercase tracking-wider text-dark/30">
+                              {groupName}
+                            </div>
+                            {items.map(item => (
+                              <Link key={item.id} to={item.route} className="block px-5 py-1.5 rounded-lg text-xs text-dark/80 hover:bg-primary/5 hover:text-primary transition-colors">
+                                {item.emoji} {item.name}
+                              </Link>
+                            ))}
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Mobile PDF Catalogs Accordion */}
+                <div>
+                  <button
+                    onClick={() => { setMobileCatalogsOpen(!mobileCatalogsOpen); setMobileProductsOpen(false); }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-dark hover:bg-primary/5 transition-colors"
+                  >
+                    PDF Catalogs
+                    <motion.svg
+                      animate={{ rotate: mobileCatalogsOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                    >
+                      <polyline points="6 9 12 15 18 9"/>
+                    </motion.svg>
+                  </button>
+                  <AnimatePresence>
+                    {mobileCatalogsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden ml-3 mt-1 space-y-0.5"
+                      >
+                        <Link to="/catalogs" className="block px-3 py-2 rounded-lg text-xs text-primary font-bold hover:bg-primary/10 transition-colors">
+                          📁 All PDF Catalogs
+                        </Link>
+                        {pdfCatalogsDropdown.map(item => (
+                          <Link key={item.to} to={item.to} className="block px-3 py-2 rounded-lg text-xs text-dark/80 hover:bg-primary/5 hover:text-primary transition-colors">
                             {item.icon} {item.label}
                           </Link>
                         ))}

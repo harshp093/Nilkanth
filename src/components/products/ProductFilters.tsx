@@ -11,9 +11,8 @@ interface ProductFiltersProps {
 const CATEGORY_OPTIONS = [
   { value: 'marble', label: '🪨 Marble' },
   { value: 'granite', label: '⬛ Granite' },
-  { value: 'stone', label: '🪨 Stone' },
-  { value: 'kota-others', label: '🟫 Kota Stone' },
-  { value: 'sanitary-ware', label: '🚿 Sanitary Ware' },
+  { value: 'kota-stone', label: '🟫 Kota Stone' },
+  { value: 'cladding-stone', label: '🧱 Cladding Stone' },
   { value: 'adhesives-chemicals', label: '🧪 Chemicals' },
 ];
 

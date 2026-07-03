@@ -138,6 +138,7 @@ async function seed() {
         image: cat.image,
         product_count: cat.productCount || 0,
         route: cat.route,
+        group_name: cat.groupName || 'Natural Stone',
         is_active: true,
       };
 

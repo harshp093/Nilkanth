@@ -6,21 +6,12 @@
 export type ProductCategory =
   | 'marble'
   | 'granite'
-  | 'stone'
-  | 'kota-others'
-  | 'sanitary-ware'
-  | 'tiles-catalog'
+  | 'kota-stone'
+  | 'cladding-stone'
   | 'adhesives-chemicals';
 
-export type StoneSubcategory = 'natural-stone' | 'artificial-stone';
-export type SanitarySubcategory =
-  | 'water-closets'
-  | 'wash-basins'
-  | 'faucets-mixers'
-  | 'shower-systems'
-  | 'bathroom-accessories'
-  | 'bathtubs';
-export type KotaSubcategory = 'kota-stone' | 'slate';
+export type KotaSubcategory = 'kota-stone';
+export type CladdingSubcategory = 'roofing-slate' | 'wall-cladding';
 
 export interface NProduct {
   id: string;
@@ -277,7 +268,7 @@ const stoneProducts: NProduct[] = [
     slug: 'calacatta-artificial-stone',
     name: 'Calacatta Engineered Quartz',
     description: 'Engineered quartz with Calacatta marble appearance — non-porous, stain-proof, and consistent colour. Zero maintenance. Perfect for busy kitchens.',
-    category: 'stone',
+    category: 'granite', // Map to granite as fallback, but set inactive
     subcategory: 'artificial-stone',
     priceRange: '₹80 – ₹200 per sq.ft',
     origin: 'Engineered',
@@ -288,7 +279,7 @@ const stoneProducts: NProduct[] = [
     colorNames: ['White', 'Grey Vein'],
     application: ['Counter Top', 'Kitchen Slab', 'Bathroom Vanity'],
     isFeatured: true,
-    isActive: true,
+    isActive: false, // Inactive since Artificial Stone is PDF-only
     images: ['/artificial-stone-hero.png'],
   },
   {
@@ -296,7 +287,7 @@ const stoneProducts: NProduct[] = [
     slug: 'statuario-artificial-stone',
     name: 'Statuario Engineered Quartz',
     description: 'Statuario look engineered quartz with ultra-consistent white base and fine grey veining. Scratch-resistant, heat-resistant and completely non-porous.',
-    category: 'stone',
+    category: 'granite', // Map to granite as fallback, but set inactive
     subcategory: 'artificial-stone',
     priceRange: '₹90 – ₹220 per sq.ft',
     origin: 'Engineered',
@@ -307,7 +298,7 @@ const stoneProducts: NProduct[] = [
     colorNames: ['Pure White', 'Grey Vein'],
     application: ['Counter Top', 'Kitchen Slab', 'Bathroom Vanity'],
     isFeatured: false,
-    isActive: true,
+    isActive: false, // Inactive since Artificial Stone is PDF-only
     images: ['/artificial-stone-hero.png'],
   },
 ];
@@ -319,7 +310,7 @@ const kotaProducts: NProduct[] = [
     slug: 'kota-blue-stone',
     name: 'Kota Blue Stone',
     description: 'Natural fine-grained limestone from Kota, Rajasthan. Blue-grey colour with excellent durability for outdoor and commercial applications. Non-slip surface.',
-    category: 'kota-others',
+    category: 'kota-stone',
     subcategory: 'kota-stone',
     priceRange: '₹25 – ₹55 per sq.ft',
     origin: 'Kota, Rajasthan',
@@ -338,7 +329,7 @@ const kotaProducts: NProduct[] = [
     slug: 'kota-green-stone',
     name: 'Kota Green Stone',
     description: 'Green-toned natural limestone from Kota. Harder than blue variety, ideal for areas with heavy foot traffic. Perfect for gardens, paths and commercial spaces.',
-    category: 'kota-others',
+    category: 'kota-stone',
     subcategory: 'kota-stone',
     priceRange: '₹28 – ₹60 per sq.ft',
     origin: 'Kota, Rajasthan',
@@ -357,8 +348,8 @@ const kotaProducts: NProduct[] = [
     slug: 'roofing-slate',
     name: 'Natural Roofing Slate',
     description: 'Premium natural slate for roofing, cladding and landscaping. Available in charcoal, rustic green and multicolour varieties. Exceptionally durable.',
-    category: 'kota-others',
-    subcategory: 'slate',
+    category: 'cladding-stone',
+    subcategory: 'roofing-slate',
     priceRange: '₹35 – ₹80 per sq.ft',
     origin: 'Himachal Pradesh, India',
     thicknessOptions: ['6mm', '8mm', '10mm'],
@@ -374,144 +365,7 @@ const kotaProducts: NProduct[] = [
 ];
 
 // ─── SANITARY WARE ───────────────────────────────────────────
-const sanitaryProducts: NProduct[] = [
-  {
-    id: 's-1',
-    slug: 'wall-hung-water-closet',
-    name: 'Wall-Hung Water Closet',
-    description: 'Modern wall-hung toilet with concealed cistern. Water-saving dual flush — 3L/6L. Ergonomic design with soft close seat. Easy to clean floor for hygiene.',
-    category: 'sanitary-ware',
-    subcategory: 'water-closets',
-    priceRange: '₹8,500 – ₹25,000',
-    brand: 'Premium Series',
-    material: 'Vitreous China',
-    finishOptions: ['White', 'Ivory'],
-    colors: ['#FFFFFF', '#F5F0E8'],
-    colorNames: ['White', 'Ivory'],
-    isFeatured: true,
-    isActive: true,
-    images: ['/tile-hero.png'],
-  },
-  {
-    id: 's-2',
-    slug: 'one-piece-closet',
-    name: 'One-Piece Water Closet',
-    description: 'Seamless one-piece toilet design for easy cleaning. Syphonic flushing system for powerful and quiet flush. Includes soft-close seat cover.',
-    category: 'sanitary-ware',
-    subcategory: 'water-closets',
-    priceRange: '₹6,500 – ₹18,000',
-    brand: 'Standard Series',
-    material: 'Vitreous China',
-    finishOptions: ['White'],
-    colors: ['#FFFFFF'],
-    colorNames: ['White'],
-    isFeatured: false,
-    isActive: true,
-    images: ['/tile-hero.png'],
-  },
-  {
-    id: 's-3',
-    slug: 'pedestal-wash-basin',
-    name: 'Pedestal Wash Basin',
-    description: 'Classic pedestal wash basin with full pedestal. Ceramic glaze finish for long-lasting shine. Available in multiple sizes for different bathroom configurations.',
-    category: 'sanitary-ware',
-    subcategory: 'wash-basins',
-    priceRange: '₹3,500 – ₹12,000',
-    brand: 'Classic Series',
-    material: 'Ceramic',
-    finishOptions: ['White', 'Ivory', 'Black'],
-    colors: ['#FFFFFF', '#F5F0E8', '#1A1A1A'],
-    colorNames: ['White', 'Ivory', 'Black'],
-    isFeatured: true,
-    isActive: true,
-    images: ['/tile-hero.png'],
-  },
-  {
-    id: 's-4',
-    slug: 'counter-top-wash-basin',
-    name: 'Counter Top Wash Basin',
-    description: 'Stylish counter-top basin for modern vanities. Available in round, oval and rectangular shapes. Smooth glaze finish, easy to maintain.',
-    category: 'sanitary-ware',
-    subcategory: 'wash-basins',
-    priceRange: '₹2,800 – ₹9,500',
-    brand: 'Modern Series',
-    material: 'Ceramic',
-    finishOptions: ['White', 'Black Matte'],
-    colors: ['#FFFFFF', '#2A2A2A'],
-    colorNames: ['White', 'Black Matte'],
-    isFeatured: true,
-    isActive: true,
-    images: ['/tile-hero.png'],
-  },
-  {
-    id: 's-5',
-    slug: 'single-lever-basin-faucet',
-    name: 'Single Lever Basin Faucet',
-    description: 'Single lever ceramic cartridge faucet with 360° swivel spout. Solid brass body with chrome plating. Easy installation, compatible with all standard basins.',
-    category: 'sanitary-ware',
-    subcategory: 'faucets-mixers',
-    priceRange: '₹1,800 – ₹6,500',
-    brand: 'Fittings Series',
-    material: 'Brass / Chrome',
-    finishOptions: ['Chrome', 'Rose Gold', 'Matt Black'],
-    colors: ['#C0C0C0', '#B76E79', '#2A2A2A'],
-    colorNames: ['Chrome', 'Rose Gold', 'Matt Black'],
-    isFeatured: true,
-    isActive: true,
-    images: ['/tile-hero.png'],
-  },
-  {
-    id: 's-6',
-    slug: 'rain-shower-system',
-    name: 'Rain Shower System',
-    description: 'Complete overhead rain shower system with 12-inch shower head, thermostatic mixer, body jets and handheld shower. Transforms your bathroom into a spa.',
-    category: 'sanitary-ware',
-    subcategory: 'shower-systems',
-    priceRange: '₹12,000 – ₹45,000',
-    brand: 'Luxury Series',
-    material: 'Stainless Steel / ABS',
-    finishOptions: ['Chrome', 'Brushed Nickel', 'Matt Black'],
-    colors: ['#C0C0C0', '#A8A8A0', '#1A1A1A'],
-    colorNames: ['Chrome', 'Brushed Nickel', 'Matt Black'],
-    isFeatured: true,
-    isActive: true,
-    images: ['/tile-hero.png'],
-  },
-  {
-    id: 's-7',
-    slug: 'towel-ring-set',
-    name: 'Bathroom Accessories Set',
-    description: 'Complete 5-piece bathroom accessories set: towel ring, towel bar, toilet paper holder, soap dish, and robe hook. Matching design for cohesive look.',
-    category: 'sanitary-ware',
-    subcategory: 'bathroom-accessories',
-    priceRange: '₹3,500 – ₹12,000 (set)',
-    brand: 'Accessories Series',
-    material: 'Stainless Steel',
-    finishOptions: ['Chrome', 'Rose Gold', 'Matt Black', 'Brushed Gold'],
-    colors: ['#C0C0C0', '#B76E79', '#1A1A1A', '#C8962E'],
-    colorNames: ['Chrome', 'Rose Gold', 'Matt Black', 'Brushed Gold'],
-    isFeatured: false,
-    isActive: true,
-    images: ['/tile-hero.png'],
-  },
-  {
-    id: 's-8',
-    slug: 'freestanding-bathtub',
-    name: 'Freestanding Bathtub',
-    description: 'Elegant oval freestanding bathtub with glossy acrylic surface. Ergonomic interior slope for comfortable bathing. Floor-mount faucet compatible. The centrepiece of luxury bathrooms.',
-    category: 'sanitary-ware',
-    subcategory: 'bathtubs',
-    priceRange: '₹35,000 – ₹1,20,000',
-    brand: 'Luxury Series',
-    material: 'Acrylic / Cast Iron',
-    finishOptions: ['Gloss White', 'Matte White', 'Black'],
-    colors: ['#FFFFFF', '#F5F5F5', '#1A1A1A'],
-    colorNames: ['Gloss White', 'Matte White', 'Black'],
-    isFeatured: true,
-    isActive: true,
-    images: ['/tile-hero.png'],
-  },
-];
+const sanitaryProducts: NProduct[] = [];
 
 // ─── ADHESIVES & CHEMICALS PRODUCTS ───────────────────────────
 const chemicalProducts: NProduct[] = [

@@ -9,6 +9,8 @@ export type CatalogType =
   | 'bathroom-tiles'
   | 'designer-tiles'
   | 'vitrified'
+  | 'sanitary'
+  | 'artificial-stone'
   | 'all';
 
 export interface TilesCatalog {

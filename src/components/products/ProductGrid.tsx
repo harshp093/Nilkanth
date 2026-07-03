@@ -33,10 +33,9 @@ const staticCategoryTabs = [
   { value: 'all', label: '🛍️ All Products', route: '/products' },
   { value: 'marble', label: '🪨 Marble', route: '/marble' },
   { value: 'granite', label: '⬛ Granite', route: '/granite' },
-  { value: 'stone', label: '🪨 Stone', route: '/stone' },
-  { value: 'kota-others', label: '🟫 Kota & Slate', route: '/kota-stone' },
-  { value: 'sanitary-ware', label: '🚿 Sanitary Ware', route: '/sanitary-ware' },
-  { value: 'tiles-catalog', label: '🔲 Tiles Catalog', route: '/tiles-catalog' },
+  { value: 'kota-stone', label: '🟫 Kota Stone', route: '/kota-stone' },
+  { value: 'cladding-stone', label: '🧱 Cladding Stone', route: '/cladding-stone' },
+  { value: 'adhesives-chemicals', label: '🧪 Chemicals', route: '/adhesives-chemicals' },
 ];
 
 const ProductGrid: React.FC<ProductGridProps> = ({
@@ -63,10 +62,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 
     if (location.pathname.startsWith('/marble')) return 'marble';
     if (location.pathname.startsWith('/granite')) return 'granite';
-    if (location.pathname.startsWith('/stone')) return 'stone';
-    if (location.pathname.startsWith('/kota-stone')) return 'kota-others';
-    if (location.pathname.startsWith('/sanitary-ware')) return 'sanitary-ware';
-    if (location.pathname.startsWith('/tiles-catalog')) return 'tiles-catalog';
+    if (location.pathname.startsWith('/cladding-stone')) return 'cladding-stone';
+    if (location.pathname.startsWith('/adhesives-chemicals')) return 'adhesives-chemicals';
+    if (location.pathname.startsWith('/kota-stone')) return 'kota-stone';
     return 'all';
   }, [location.pathname, categories]);
 
@@ -89,7 +87,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   const initialBrand = searchParams.get('brand') || '';
 
   const [filters, setFilters] = useState<FilterState>({
-    categories: defaultCategory ? [defaultCategory] : (currentTab !== 'all' ? [currentTab] : []),
+    categories: defaultCategory ? [(defaultCategory as string) === 'kota-others' ? 'kota-stone' : defaultCategory] : (currentTab !== 'all' ? [currentTab] : []),
     colors: [],
     finishes: [],
     applications: [],

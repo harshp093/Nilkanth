@@ -12,17 +12,19 @@ interface ProductCardProps {
 const CATEGORY_LABELS: Record<string, string> = {
   marble: 'Marble',
   granite: 'Granite',
+  'kota-stone': 'Kota Stone',
   'kota-others': 'Kota Stone',
-  'sanitary-ware': 'Sanitary',
-  'tiles-catalog': 'Tiles',
+  'cladding-stone': 'Natural Cladding Stone',
+  'adhesives-chemicals': 'Chemicals',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
   marble: '#1C3A6B',
   granite: '#374151',
+  'kota-stone': '#C8962E',
   'kota-others': '#C8962E',
-  'sanitary-ware': '#0E7490',
-  'tiles-catalog': '#7C3AED',
+  'cladding-stone': '#78350f',
+  'adhesives-chemicals': '#059669',
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) => {

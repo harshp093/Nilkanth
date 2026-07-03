@@ -23,9 +23,9 @@ interface SearchOverlayProps {
 const CATEGORY_COLOR: Record<string, string> = {
   marble:       '#1C3A6B',
   granite:      '#374151',
-  'kota-others':'#b45309',
-  'sanitary-ware':'#0891b2',
-  'tiles-catalog':'#059669',
+  'kota-stone':  '#b45309',
+  'cladding-stone':'#78350f',
+  'adhesives-chemicals':'#059669',
 };
 
 const POPULAR_SEARCHES = [

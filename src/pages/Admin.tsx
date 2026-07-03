@@ -83,7 +83,7 @@ type ActiveTab = 'dashboard' | 'inquiries' | 'products' | 'catalogs' | 'categori
    CONSTANTS & HELPERS
 ────────────────────────────────────────────────────────────────── */
 const CATALOG_BUCKETS = ['tile-catalogs', 'tile-catalogs-b', 'tile-catalogs-c', 'tile-catalogs-kajaria', 'tile-catalogs-somany', 'tile-catalogs-johnson'];
-const CATEGORY_OPTIONS = ['marble', 'granite', 'stone', 'adhesives-chemicals', 'kota-others', 'sanitary-ware', 'tiles-catalog'];
+const CATEGORY_OPTIONS = ['marble', 'granite', 'kota-stone', 'cladding-stone', 'adhesives-chemicals'];
 const APPLICATION_OPTIONS = ['Floor', 'Wall', 'Outdoor', 'Kitchen', 'Bathroom', 'Living Room', 'Elevation', 'Staircase', 'Swimming Pool'];
 
 const normalizeSubcategory = (val: string): string => {
@@ -738,6 +738,26 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
           <div><label className="admin-label">Catalog Title *</label><input type="text" required value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Kajaria Glossy floor catalog" className="admin-input" /></div>
           <div><label className="admin-label">Company / Brand *</label><input type="text" required value={form.company} onChange={e => set('company', e.target.value)} placeholder="e.g. Kajaria, ColorTiles" className="admin-input" /></div>
           <div><label className="admin-label">Description</label><textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} placeholder="Brief catalog description..." className="admin-input resize-none" /></div>
+          <div>
+            <label className="admin-label">Catalog Type *</label>
+            <select
+              value={form.catalog_type}
+              onChange={e => set('catalog_type', e.target.value)}
+              className="admin-input"
+            >
+              <optgroup label="Tiles">
+                <option value="floor-tiles">🔲 Floor Tiles</option>
+                <option value="wall-tiles">🔳 Wall Tiles</option>
+                <option value="bathroom-tiles">🛁 Bathroom Tiles</option>
+                <option value="designer-tiles">🎨 Designer Tiles</option>
+                <option value="vitrified">✨ Vitrified Tiles</option>
+              </optgroup>
+              <optgroup label="Other Catalogs">
+                <option value="sanitary">🚿 Sanitary Ware</option>
+                <option value="artificial-stone">⚗️ Artificial Stone</option>
+              </optgroup>
+            </select>
+          </div>
           <div><label className="admin-label">Cover Image Thumbnail URL</label><input type="text" value={form.thumbnail_url} onChange={e => set('thumbnail_url', e.target.value)} placeholder="Paste photo link..." className="admin-input" /></div>
           <div><label className="admin-label">Tags / Keywords (comma-sep)</label><input type="text" value={form.tags} onChange={e => set('tags', e.target.value)} placeholder="Glossy, Ceramic, Bathroom" className="admin-input" /></div>
 
@@ -843,6 +863,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
     accent_color: category?.accent_color || '#C8962E',
     image: category?.image || '',
     is_active: category?.is_active !== false,
+    group_name: (category as any)?.group_name || 'Natural Stone',
   });
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
@@ -868,7 +889,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
     }
     setSaving(true);
     try {
-      const payload = {
+      const payload: any = {
         id: form.id,
         slug: form.slug.trim() || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         name: form.name.trim(),
@@ -880,12 +901,23 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
         image: form.image.trim(),
         route: `/category/${form.slug.trim() || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`,
         is_active: form.is_active,
+        group_name: form.group_name,
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
+      let { error } = await supabase
         .from('categories')
         .upsert(payload, { onConflict: 'id' });
+
+      // Gracefully fall back if group_name column doesn't exist in Supabase yet
+      if (error && (error.message.includes('group_name') || error.code === 'PGRST116')) {
+        console.warn('Fallback: saving category without group_name column');
+        const { group_name, ...payloadWithoutGroup } = payload;
+        const res = await supabase
+          .from('categories')
+          .upsert(payloadWithoutGroup, { onConflict: 'id' });
+        error = res.error;
+      }
 
       if (error) throw error;
 
@@ -944,6 +976,19 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
               <label className="admin-label">Slug (URL segment)</label>
               <input type="text" required disabled value={form.slug} className="admin-input opacity-60" />
             </div>
+          </div>
+
+          <div>
+            <label className="admin-label">Parent Group (Grouping in Navbar)</label>
+            <select
+              value={form.group_name}
+              onChange={e => set('group_name', e.target.value)}
+              className="admin-input"
+            >
+              <option value="Natural Stone">Natural Stone</option>
+              <option value="Chemicals">Chemicals</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
           <div>
@@ -1430,7 +1475,7 @@ const Admin: React.FC = () => {
           <NavItem id="dashboard" label="Dashboard" icon="📊" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
           <NavItem id="inquiries" label="Inquiries" icon="📥" count={inquiries.filter(i => i.status === 'unread' || !i.status).length} active={activeTab === 'inquiries'} onClick={() => setActiveTab('inquiries')} />
           <NavItem id="products" label="Products" icon="💎" count={products.length} active={activeTab === 'products'} onClick={() => setActiveTab('products')} />
-          <NavItem id="catalogs" label="Tile Catalogs" icon="📚" count={catalogs.length} active={activeTab === 'catalogs'} onClick={() => setActiveTab('catalogs')} />
+          <NavItem id="catalogs" label="PDF Catalogs Manager" icon="📚" count={catalogs.length} active={activeTab === 'catalogs'} onClick={() => setActiveTab('catalogs')} />
           <NavItem id="categories" label="Categories Manager" icon="🏷️" count={categories.length} active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
         </nav>
         
@@ -1446,7 +1491,7 @@ const Admin: React.FC = () => {
           style={{ background: 'rgba(10,10,15,0.96)', backdropFilter: 'blur(12px)' }}>
           <div>
             <h2 className="text-white font-heading font-black text-lg">
-              {activeTab === 'dashboard' ? '📊 Dashboard Overview' : activeTab === 'inquiries' ? '📥 Customer Inquiries' : activeTab === 'products' ? '💎 Product Catalogue' : activeTab === 'catalogs' ? '📚 Tile Catalogs' : '🏷️ Homepage Categories'}
+              {activeTab === 'dashboard' ? '📊 Dashboard Overview' : activeTab === 'inquiries' ? '📥 Customer Inquiries' : activeTab === 'products' ? '💎 Product Catalogue' : activeTab === 'catalogs' ? '📚 PDF Catalogs Manager' : '🏷️ Homepage Categories'}
             </h2>
             <p className="text-[#8888aa] text-xs font-medium mt-0.5">
               {activeTab === 'dashboard' ? 'Real-time overview of database records' : activeTab === 'inquiries' ? `${inquiries.length} queries received` : activeTab === 'products' ? `${products.length} items listed` : activeTab === 'catalogs' ? `${catalogs.length} catalogs uploaded` : `${categories.length} categories on homepage`}
