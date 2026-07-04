@@ -92,6 +92,23 @@ const InquiryForm: React.FC<InquiryFormProps> = ({
 
     setLoading(false);
     setSubmitted(true);
+
+    // Redirect to WhatsApp with inquiry details
+    const waNumber = '919974142777';
+    const reqLabels: Record<string, string> = {
+      single: 'Single Purchase 🏠',
+      bulk: 'Bulk Order 📦',
+      sample: 'Sample Request 🔍',
+    };
+    const waText = `Hi Hitesh Shah,
+
+I would like to make an inquiry from the website:
+• *Name:* ${form.name}
+• *Phone:* +91 ${form.phone}
+${form.email ? `• *Email:* ${form.email}\n` : ''}${form.city ? `• *City:* ${form.city}\n` : ''}${form.product ? `• *Interest:* ${form.product}\n` : ''}• *Type:* ${reqLabels[form.type] || form.type}
+${form.message ? `• *Details:* ${form.message}` : ''}`;
+
+    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`, '_blank', 'noopener,noreferrer');
   };
 
   const update = (field: keyof FormState, value: string) => {

@@ -188,17 +188,24 @@ const GraniteCrystals = () => {
   useFrame((state) => {
     if (!ref.current) return;
     ref.current.rotation.y = state.clock.getElapsedTime() * 0.15;
+    ref.current.rotation.x = state.clock.getElapsedTime() * 0.08;
   });
   return (
     <group ref={ref}>
       {[
-        { pos: [-2.2, 1, 0.5], scale: 0.35, color: '#C8962E' },
-        { pos: [2.5, -0.5, 0.8], scale: 0.25, color: '#374151' },
-        { pos: [1.8, 2, -0.5], scale: 0.3, color: '#8B6914' },
+        { pos: [-2.2, 1.2, 0.5], scale: 0.45, color: '#C8962E', emissive: '#6e4f10' },
+        { pos: [2.5, -0.5, 0.8], scale: 0.35, color: '#4B5563', emissive: '#111827' },
+        { pos: [1.8, 2.2, -0.5], scale: 0.4, color: '#D4AF37', emissive: '#805b10' },
       ].map((c, i) => (
         <mesh key={i} position={c.pos as [number, number, number]} scale={c.scale}>
-          <octahedronGeometry />
-          <meshStandardMaterial color={c.color} roughness={0.05} metalness={0.95} />
+          <dodecahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial
+            color={c.color}
+            roughness={0.02}
+            metalness={0.98}
+            emissive={c.emissive}
+            emissiveIntensity={0.5}
+          />
         </mesh>
       ))}
     </group>
@@ -209,18 +216,36 @@ const GraniteCrystals = () => {
    Sanitary Ware Ceramic Bowl & Gold Tap
 ────────────────────────────────────────────────────────────────── */
 const CeramicBasin = () => {
-  const ref = useRef<THREE.Mesh>(null!);
+  const ref = useRef<THREE.Group>(null!);
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.getElapsedTime();
-    ref.current.rotation.y = t * 0.2;
-    ref.current.rotation.x = Math.sin(t * 0.5) * 0.12 + 0.2;
+    ref.current.rotation.y = t * 0.18;
+    ref.current.rotation.x = Math.sin(t * 0.4) * 0.08 + 0.15;
   });
   return (
-    <mesh ref={ref} position={[0.2, -0.2, -0.5]}>
-      <cylinderGeometry args={[1.5, 1.1, 0.9, 24, 1, true]} />
-      <meshStandardMaterial color="#FFFFFF" roughness={0.03} metalness={0.05} side={THREE.DoubleSide} />
-    </mesh>
+    <group ref={ref} position={[0.2, -0.2, -0.5]}>
+      {/* Basin Bowl */}
+      <mesh>
+        <cylinderGeometry args={[1.5, 1.1, 0.7, 64, 1, true]} />
+        <meshStandardMaterial color="#FFFFFF" roughness={0.02} metalness={0.05} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Basin Inside Bottom */}
+      <mesh position={[0, -0.34, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[1.1, 64]} />
+        <meshStandardMaterial color="#EEEEEE" roughness={0.05} metalness={0.05} />
+      </mesh>
+      {/* Gold Drain Cap */}
+      <mesh position={[0, -0.33, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.18, 32]} />
+        <meshStandardMaterial color="#C8962E" roughness={0.05} metalness={0.95} />
+      </mesh>
+      {/* Glowing Base Halo Ring */}
+      <mesh position={[0, -0.36, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.15, 1.25, 64]} />
+        <meshStandardMaterial color="#C8962E" emissive="#C8962E" emissiveIntensity={3} roughness={0.1} />
+      </mesh>
+    </group>
   );
 };
 
@@ -256,21 +281,29 @@ const TilesGridShowcase = () => {
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.getElapsedTime();
-    ref.current.rotation.y = t * 0.12;
-    ref.current.rotation.x = Math.sin(t * 0.25) * 0.08;
+    ref.current.rotation.y = t * 0.15;
+    ref.current.rotation.x = Math.sin(t * 0.2) * 0.06;
   });
   return (
     <group ref={ref} position={[0.2, 0.1, -1]}>
       {[
         { pos: [-1.1, 1.1, 0], color: '#FAFAFA', r: 0.02, m: 0.1 },
         { pos: [1.1, 1.1, 0], color: '#16161f', r: 0.05, m: 0.95 },
-        { pos: [-1.1, -1.1, 0], color: '#8B6914', r: 0.1, m: 0.8 },
+        { pos: [-1.1, -1.1, 0], color: '#C8962E', r: 0.05, m: 0.85 },
         { pos: [1.1, -1.1, 0], color: '#374151', r: 0.08, m: 0.5 },
       ].map((tile, i) => (
-        <mesh key={i} position={tile.pos as [number, number, number]}>
-          <boxGeometry args={[1.8, 1.8, 0.05]} />
-          <meshStandardMaterial color={tile.color} roughness={tile.r} metalness={tile.m} />
-        </mesh>
+        <group key={i} position={tile.pos as [number, number, number]}>
+          {/* Gold Frame backing */}
+          <mesh position={[0, 0, -0.015]}>
+            <boxGeometry args={[1.86, 1.86, 0.04]} />
+            <meshStandardMaterial color="#C8962E" roughness={0.05} metalness={1.0} />
+          </mesh>
+          {/* Tile Surface */}
+          <mesh>
+            <boxGeometry args={[1.78, 1.78, 0.04]} />
+            <meshStandardMaterial color={tile.color} roughness={tile.r} metalness={tile.m} />
+          </mesh>
+        </group>
       ))}
     </group>
   );

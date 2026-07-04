@@ -93,13 +93,13 @@ const Logo: React.FC<{ className?: string; size?: number; variant?: 'full' | 'ic
         </g>
 
         {/* Text */}
-        <text x="46" y="17" fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight="900" fontSize="13.5" fill="currentColor" letterSpacing="0.2">
+        <text x="46" y="17" fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight="900" fontSize="14.5" fill="currentColor" letterSpacing="0.2">
           NILKANTH
         </text>
-        <text x="46" y="30" fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight="600" fontSize="9.5" fill="#C8962E" letterSpacing="3.5">
+        <text x="46" y="30" fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight="600" fontSize="10.5" fill="#C8962E" letterSpacing="3.5">
           MARBLE
         </text>
-        <text x="46" y="39" fontFamily="'Inter', sans-serif" fontWeight="400" fontSize="6.5" fill="currentColor" opacity="0.5" letterSpacing="1">
+        <text x="46" y="39" fontFamily="'Inter', sans-serif" fontWeight="400" fontSize="7.5" fill="currentColor" opacity="0.5" letterSpacing="1">
           THE QUALITY FOREVER
         </text>
       </svg>

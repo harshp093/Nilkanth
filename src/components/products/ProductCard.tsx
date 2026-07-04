@@ -98,13 +98,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         {/* Category & Subcategory Badge */}
         <div className="flex items-center gap-1.5 mb-1.5 flex-wrap min-w-0">
           <span
-            className="text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider"
+            className="text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider"
             style={{ backgroundColor: catColor }}
           >
             {catLabel}
           </span>
           {product.subcategory && (
-            <span className="text-dark/40 text-[9px] font-semibold truncate uppercase tracking-wider">
+            <span className="text-dark/40 text-[11px] font-semibold truncate uppercase tracking-wider">
               {product.subcategory.replace(/-/g, ' ')}
             </span>
           )}
@@ -113,7 +113,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         {/* Product Name */}
         <h3
           className="font-heading font-extrabold text-dark line-clamp-2 cursor-pointer hover:text-primary transition-colors flex-1"
-          style={{ fontSize: compact ? '12px' : '13.5px', lineHeight: '1.3' }}
+          style={{ fontSize: compact ? '13px' : '15px', lineHeight: '1.3' }}
           onClick={handleCardClick}
         >
           {product.name}
@@ -140,22 +140,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         <div className="mt-2 space-y-0.5">
           {isCatalog ? (
             <>
-              <p className="text-red-500 font-bold" style={{ fontSize: compact ? '11px' : '12px' }}>
+              <p className="text-red-500 font-bold" style={{ fontSize: compact ? '12px' : '13px' }}>
                 📄 PDF Catalog Document
               </p>
-              <p className="text-dark/40" style={{ fontSize: '9px' }}>
+              <p className="text-dark/40" style={{ fontSize: '11px' }}>
                 📥 View & Download
               </p>
             </>
           ) : (
             <>
               {product.priceRange && (
-                <p className="text-primary font-bold" style={{ fontSize: compact ? '11px' : '12px' }}>
+                <p className="text-primary font-bold" style={{ fontSize: compact ? '12px' : '13px' }}>
                   {product.priceRange}
                 </p>
               )}
               {product.origin && (
-                <p className="text-dark/40" style={{ fontSize: '9px' }}>
+                <p className="text-dark/40" style={{ fontSize: '11px' }}>
                   📍 {product.origin}
                 </p>
               )}
@@ -170,7 +170,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             onClick={(e) => e.stopPropagation()}
             title="Call Showroom"
             className="flex-1 flex items-center justify-center gap-1 bg-primary hover:brightness-110 text-white rounded-lg transition-colors py-1.5"
-            style={{ fontSize: '9px', fontWeight: 700 }}
+            style={{ fontSize: '11px', fontWeight: 700 }}
           >
             Call
           </a>
@@ -181,7 +181,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             onClick={(e) => e.stopPropagation()}
             title="WhatsApp Inquiry"
             className="flex-1 flex items-center justify-center gap-1 text-white bg-wa-green hover:brightness-110 rounded-lg transition-colors py-1.5"
-            style={{ fontSize: '9px', fontWeight: 700 }}
+            style={{ fontSize: '11px', fontWeight: 700 }}
           >
             WA
           </a>

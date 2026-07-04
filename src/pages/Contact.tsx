@@ -64,7 +64,7 @@ const Contact: React.FC = () => {
                     Gujarat, INDIA
                   </p>
                   <a
-                    href="https://maps.google.com/?q=Nilkanth+Marble+Nadiad+Gujarat"
+                    href="https://maps.app.goo.gl/7KZeY4LQAkGFS1fT8?g_st=ic"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary text-xs font-semibold mt-1.5 inline-flex items-center gap-1 hover:underline"
@@ -131,7 +131,7 @@ const Contact: React.FC = () => {
             {/* Google Maps Embed */}
             <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29394.0!2d72.863406!3d22.691640!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e4e9f1f1f1f1f%3A0x0!2sNilkanth+Marble+Nadiad!5e0!3m2!1sen!2sin!4v1"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3681.518510342!2d72.8568082!3d22.6717339!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e5af9660e2805%3A0xc48dee0dbe0d45!2sNilkanth%20Marble%20%3A%20The%20Quality%20Forever!5e0!3m2!1sen!2sin!4v1783148002669!5m2!1sen!2sin"
                 width="100%"
                 height="250"
                 style={{ border: 0 }}
