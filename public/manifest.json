@@ -1,0 +1,37 @@
+{
+  "name": "Nilkanth Marble — Nadiad",
+  "short_name": "Nilkanth Marble",
+  "description": "Premium marble, granite, tiles and sanitaryware dealer in Nadiad, Gujarat",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1C3A6B",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Marble",
+      "url": "/marble",
+      "description": "Browse our marble collection"
+    },
+    {
+      "name": "Browse Granite",
+      "url": "/granite",
+      "description": "Browse our granite collection"
+    },
+    {
+      "name": "Contact Us",
+      "url": "/contact",
+      "description": "Get in touch with Nilkanth Marble"
+    }
+  ]
+}

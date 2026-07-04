@@ -36,6 +36,66 @@ const ProductDetail: React.FC = () => {
     }
   }, [product]);
 
+  // Dynamic SEO & structured data markup
+  React.useEffect(() => {
+    if (product) {
+      // 1. Set document title
+      document.title = `${product.name} | Nilkanth Marble Nadiad`;
+
+      // 2. Set meta description
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      const descText = product.description || `Purchase high quality ${product.name} at Nilkanth Marble in Nadiad, Gujarat. Premium marble and granite collections.`;
+      metaDesc.setAttribute('content', descText.slice(0, 160));
+
+      // 3. Set canonical url
+      let canonical = document.querySelector('link[rel="canonical"]');
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute('href', `https://nilkanthmarble.com/product/${product.slug}`);
+
+      // 4. Inject JSON-LD Rich Structured Data
+      let schemaScript = document.getElementById('jsonld-product-schema');
+      if (!schemaScript) {
+        schemaScript = document.createElement('script');
+        schemaScript.id = 'jsonld-product-schema';
+        schemaScript.setAttribute('type', 'application/ld+json');
+        document.head.appendChild(schemaScript);
+      }
+      const schemaData = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": product.name,
+        "description": product.description || `Premium stone collection.`,
+        "brand": product.brand ? { "@type": "Brand", "name": product.brand } : undefined,
+        "image": product.images?.[0] || 'https://nilkanthmarble.com/og-image.jpg',
+        "url": `https://nilkanthmarble.com/product/${product.slug}`,
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": "INR",
+          "priceSpecification": {
+            "@type": "PriceSpecification",
+            "description": product.priceRange || "Contact for price",
+          },
+          "availability": "https://schema.org/InStock",
+          "seller": {
+            "@type": "Organization",
+            "name": "Nilkanth Marble",
+            "url": "https://nilkanthmarble.com"
+          }
+        }
+      };
+      schemaScript.innerHTML = JSON.stringify(schemaData);
+    }
+  }, [product]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center text-center px-4">
