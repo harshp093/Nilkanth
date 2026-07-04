@@ -85,7 +85,7 @@ const ThreeHero: React.FC = () => {
             className="absolute inset-0 w-full h-full"
           >
             <img
-              src={`/hero_${activeSlide.imageKey}.png`}
+              src={`/hero_${activeSlide.imageKey}.webp`}
               alt={activeSlide.heading1}
               className="w-full h-full object-cover object-center"
             />

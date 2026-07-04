@@ -133,9 +133,14 @@ const Footer: React.FC = () => {
       {/* Bottom bar */}
       <div className="border-t border-border/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-text-sub text-sm text-center md:text-left">
-            © {new Date().getFullYear()} Nilkanth Marble. All rights reserved.
-          </p>
+          <div className="flex flex-col md:items-start gap-1">
+            <p className="text-text-sub text-sm text-center md:text-left">
+              © 2026 Nilkanth Marble. All rights reserved. Registered Copyright Policy.
+            </p>
+            <p className="text-text-sub/70 text-xs text-center md:text-left">
+              Built & SEO Optimized by <span className="text-primary font-bold">Harsh Prajapati</span>
+            </p>
+          </div>
           <div className="flex gap-5 text-sm text-text-sub">
             <Link to="/marble" className="hover:text-accent transition-colors">Marble</Link>
             <Link to="/granite" className="hover:text-accent transition-colors">Granite</Link>
