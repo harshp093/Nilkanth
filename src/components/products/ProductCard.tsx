@@ -27,7 +27,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   'adhesives-chemicals': '#059669',
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const navigate = useNavigate();
   const isCatalog = !!product.isCatalog;
   const primaryImage = product.images[0] || '/marble-calacatta.png';
@@ -59,8 +59,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
     >
       {/* Image Container */}
       <div
-        className="relative overflow-hidden cursor-pointer bg-bg"
-        style={{ height: compact ? '135px' : '175px' }}
+        className="relative overflow-hidden cursor-pointer bg-bg w-full aspect-[3/4]"
         onClick={handleCardClick}
       >
         <img
@@ -113,7 +112,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         {/* Product Name */}
         <h3
           className="font-heading font-extrabold text-dark line-clamp-2 cursor-pointer hover:text-primary transition-colors flex-1"
-          style={{ fontSize: compact ? '13px' : '15px', lineHeight: '1.3' }}
+          style={{ fontSize: '15px', lineHeight: '1.3' }}
           onClick={handleCardClick}
         >
           {product.name}
@@ -140,7 +139,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         <div className="mt-2 space-y-0.5">
           {isCatalog ? (
             <>
-              <p className="text-red-500 font-bold" style={{ fontSize: compact ? '12px' : '13px' }}>
+              <p className="text-red-500 font-bold" style={{ fontSize: '13px' }}>
                 📄 PDF Catalog Document
               </p>
               <p className="text-dark/40" style={{ fontSize: '11px' }}>
@@ -150,7 +149,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
           ) : (
             <>
               {product.priceRange && (
-                <p className="text-primary font-bold" style={{ fontSize: compact ? '12px' : '13px' }}>
+                <p className="text-primary font-bold" style={{ fontSize: '13px' }}>
                   {product.priceRange}
                 </p>
               )}

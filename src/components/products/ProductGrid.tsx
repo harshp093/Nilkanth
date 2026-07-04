@@ -108,7 +108,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   const [page, setPage] = useState(1);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [isCompact, setIsCompact] = useState(true);
 
   // Derive available colors dynamically
   const availableColors = useMemo(() => {
@@ -336,23 +335,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 )}
               </AnimatePresence>
             </div>
-
-            {/* Layout density Toggle */}
-            <button
-              onClick={() => setIsCompact(!isCompact)}
-              className="p-2 border border-border/60 rounded-xl hover:bg-primary/5 hover:border-primary/30 text-dark/70 transition-all cursor-pointer"
-              title={isCompact ? 'Detailed Grid Layout' : 'Compact Catalog Grid'}
-            >
-              {isCompact ? (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-                </svg>
-              ) : (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-                </svg>
-              )}
-            </button>
           </div>
         </div>
 
@@ -558,11 +540,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className={`grid gap-3 transition-all duration-300 ${
-              isCompact
-                ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
-                : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-            }`}
+            className="grid gap-3 transition-all duration-300 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
           >
             <AnimatePresence mode="popLayout">
               {paginatedProducts.map((product, i) => (
@@ -574,7 +552,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.22, delay: Math.min(i * 0.03, 0.2) }}
                 >
-                  <ProductCard product={product} compact={isCompact} />
+                  <ProductCard product={product} compact={false} />
                 </motion.div>
               ))}
             </AnimatePresence>
