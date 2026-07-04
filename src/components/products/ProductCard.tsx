@@ -59,7 +59,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       {/* Image Container */}
       <div
-        className="relative overflow-hidden cursor-pointer bg-bg w-full aspect-[3/4]"
+        className="relative overflow-hidden cursor-pointer bg-bg w-full aspect-[4/3]"
         onClick={handleCardClick}
       >
         <img
