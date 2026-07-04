@@ -16,7 +16,7 @@ const useSEO = ({ title, description, keywords, image, url }: SEOProps) => {
   useEffect(() => {
     const SITE = 'Nilkanth Marble & Tiles';
     const fullTitle = title.includes(SITE) ? title : `${title} | ${SITE}`;
-    const baseUrl = 'https://nilkanthmarbel.com';
+    const baseUrl = 'https://nilkanthmarble.com';
 
     // Title
     document.title = fullTitle;
