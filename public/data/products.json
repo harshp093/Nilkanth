@@ -1,0 +1,40 @@
+[
+  {
+    "id": "prod-1783075628956",
+    "slug": "tender",
+    "name": "Tender",
+    "description": null,
+    "category": "granite",
+    "subcategory": "natural-stone",
+    "priceRange": null,
+    "origin": "India",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [
+      "Matt",
+      "Finished"
+    ],
+    "colors": [
+      "#ccb293",
+      "#C8962E"
+    ],
+    "colorNames": [
+      "Matt",
+      "Soft Texture"
+    ],
+    "application": [
+      "Swimming Pool",
+      "Bathroom",
+      "Outdoor"
+    ],
+    "brand": "Marfil",
+    "modelNumber": null,
+    "material": "Granite",
+    "isFeatured": true,
+    "isActive": true,
+    "images": [
+      "https://drive.google.com/file/d/1vQFNQ5aCPFhQ5ephS5KqijETvbLGZ_72/view?usp=sharing"
+    ],
+    "viewCount": 0
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "id": "cat-1783159315793",
+    "title": "Colortile-60x120-GVT-Catalogue-2020 vol1",
+    "company": "ColorTiles",
+    "description": "Inspired from\nthe beauty and\nnatural stone\naround the world.",
+    "pdfUrl": "https://drive.google.com/file/d/1u7EUg8UbnwyK0GKLaikciCDWPTHfX_F6/view?usp=sharing",
+    "thumbnailUrl": "https://placehold.co/400x300/111/C8962E?text=Catalog",
+    "catalogType": "tiles, floor-tiles, wall-tiles, bathroom-tiles, Glazzed Vitrified Tiles.",
+    "tags": [],
+    "pageCount": null,
+    "viewCount": 0,
+    "downloadCount": 0,
+    "isActive": true,
+    "isFeatured": true,
+    "application": [
+      "Floor",
+      "Wall"
+    ]
+  },
+  {
+    "id": "cat-1783080127488",
+    "title": "Colortile 600x1200mm GVT E-Catalogue July 21 (Vol-2)",
+    "company": "ColorTiles",
+    "description": null,
+    "pdfUrl": "https://nbmvvwvhjiubedlyfuyb.supabase.co/storage/v1/object/public/tile-catalogs/catalog_1783017497932_Colortile_600x1200mm_GVT_E-Catalogue_July_21_(Vol-2).pdf",
+    "thumbnailUrl": "https://nbmvvwvhjiubedlyfuyb.supabase.co/storage/v1/object/public/tile-catalogs/catalog_1783017497932_Colortile_600x1200mm_GVT_E-Catalogue_July_21_(Vol-2).pdf",
+    "catalogType": "tiles, vitrified, floor-tiles, wall-tiles",
+    "tags": [
+      "Glossy",
+      "Rustic Carving",
+      "High Gloss",
+      "Rustic Matt"
+    ],
+    "pageCount": null,
+    "viewCount": 0,
+    "downloadCount": 0,
+    "isActive": true,
+    "isFeatured": true,
+    "application": [
+      "Floor",
+      "Wall"
+    ]
+  }
+]

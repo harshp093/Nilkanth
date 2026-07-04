@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node generate-sitemap.js && tsc -b && vite build",
+    "build": "node generate-static-data.js && node generate-sitemap.js && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "db-seed": "tsc --ignoreConfig --target ES2022 --module ESNext src/data/products.ts src/data/catalogs.ts src/data/categories.ts --outDir dist-temp && node seedSupabase.js"
