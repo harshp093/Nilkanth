@@ -1503,6 +1503,26 @@ const Admin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [showPass, setShowPass] = useState(false);
+  // Brute-force protection: track failed attempts, lock out after 5
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState(0);
+  const [lockoutSecsLeft, setLockoutSecsLeft] = useState(0);
+
+  // Countdown timer for lockout display
+  useEffect(() => {
+    if (lockoutUntil <= 0) return;
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+      setLockoutSecsLeft(remaining);
+      if (remaining === 0) {
+        setLockoutUntil(0);
+        setLoginAttempts(0);
+        setLoginError('');
+        clearInterval(interval);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutUntil]);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [products, setProducts] = useState<ProductRecord[]>([]);
@@ -1591,6 +1611,13 @@ const Admin: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) { setLoginError('Supabase not configured. Check configuration keys.'); return; }
+
+    // Lockout check
+    if (Date.now() < lockoutUntil) {
+      setLoginError(`Too many failed attempts. Please wait ${lockoutSecsLeft} seconds.`);
+      return;
+    }
+
     loading || setLoading(true);
     setLoginError('');
 
@@ -1603,8 +1630,22 @@ const Admin: React.FC = () => {
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (error) setLoginError(error.message);
-      else setSessionUser(data.user);
+      if (error) {
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+        if (newAttempts >= 5) {
+          const lockUntil = Date.now() + 60_000; // 60-second lockout
+          setLockoutUntil(lockUntil);
+          setLockoutSecsLeft(60);
+          setLoginError(`Too many failed attempts. Account locked for 60 seconds.`);
+        } else {
+          setLoginError(`${error.message} (${5 - newAttempts} attempts remaining)`);
+        }
+      } else {
+        setLoginAttempts(0);
+        setLockoutUntil(0);
+        setSessionUser(data.user);
+      }
     } catch (err: any) {
       setLoginError(err.message);
     } finally {
@@ -1719,8 +1760,17 @@ const Admin: React.FC = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={loading} className="w-full btn-accent py-3.5 justify-center text-xs font-bold disabled:opacity-60 mt-4 shadow-lg cursor-pointer">
-                {loading ? <span className="flex items-center gap-2 justify-center"><span className="w-4.5 h-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verifying credentials...</span> : '🔐 Sign In to Console'}
+              <button
+                type="submit"
+                disabled={loading || Date.now() < lockoutUntil}
+                className="w-full btn-accent py-3.5 justify-center text-xs font-bold disabled:opacity-60 mt-4 shadow-lg cursor-pointer"
+              >
+                {loading
+                  ? <span className="flex items-center gap-2 justify-center"><span className="w-4.5 h-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verifying credentials...</span>
+                  : lockoutUntil > Date.now()
+                    ? `🔒 Locked — wait ${lockoutSecsLeft}s`
+                    : '🔐 Sign In to Console'
+                }
               </button>
             </form>
 

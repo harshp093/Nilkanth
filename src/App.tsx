@@ -8,7 +8,7 @@ import TilesCatalog from './pages/TilesCatalog';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
-import SeedDatabase from './pages/SeedDatabase';
+// SeedDatabase removed from public routes — run `node seedSupabase.js` locally instead
 import Brands from './pages/Brands';
 import Catalog from './pages/Catalog';
 import Tiles from './pages/Tiles';
@@ -21,7 +21,7 @@ function App() {
       <Routes>
         {/* Admin — full-screen, no layout navbar/footer */}
         <Route path="/admin" element={<Admin />} />
-        <Route path="/seed" element={<SeedDatabase />} />
+        {/* /seed route removed — seeding is CLI-only (node seedSupabase.js) */}
 
         {/* Main website with Layout (navbar + footer) */}
         <Route path="/" element={<Layout />}>

@@ -37,18 +37,41 @@ const InquiryForm: React.FC<InquiryFormProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  // Spam prevention: honeypot field (bots fill it, humans don't see it)
+  const [honeypot, setHoneypot] = useState('');
+  // Cooldown: prevent rapid resubmission (45 seconds)
+  const [cooldownUntil, setCooldownUntil] = useState<number>(0);
 
   const validate = () => {
     const errs: typeof errors = {};
     if (!form.name.trim()) errs.name = 'Name is required';
+    else if (form.name.trim().length > 100) errs.name = 'Name must be under 100 characters';
     if (!form.phone.trim()) errs.phone = 'Phone is required';
     else if (!/^[6-9]\d{9}$/.test(form.phone.replace(/\s/g, '').replace(/^\+91/, '')))
       errs.phone = 'Enter valid 10-digit Indian mobile number';
+    if (form.email && form.email.length > 200) errs.email = 'Email address is too long';
+    if (form.city && form.city.length > 100) errs.city = 'City must be under 100 characters';
+    if (form.message && form.message.length > 1000) errs.message = 'Message must be under 1000 characters';
     return errs;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot check — if this hidden field is filled, it's a bot
+    if (honeypot) {
+      // Silently succeed to confuse bots
+      setSubmitted(true);
+      return;
+    }
+
+    // Cooldown check — prevent rapid resubmission
+    if (Date.now() < cooldownUntil) {
+      const secsLeft = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      setErrors({ name: `Please wait ${secsLeft} seconds before submitting again.` });
+      return;
+    }
+
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
@@ -92,6 +115,8 @@ const InquiryForm: React.FC<InquiryFormProps> = ({
 
     setLoading(false);
     setSubmitted(true);
+    // Set cooldown — 45 seconds before next submission
+    setCooldownUntil(Date.now() + 45_000);
 
     // Redirect to WhatsApp with inquiry details
     const waNumber = '919974142777';
@@ -158,6 +183,19 @@ ${form.message ? `• *Details:* ${form.message}` : ''}`;
 
   return (
     <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
+      {/* Honeypot field — hidden from real users; bots fill it, triggering silent drop */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', tabIndex: -1 }}>
+        <label htmlFor="nm_website">Leave this blank</label>
+        <input
+          type="text"
+          id="nm_website"
+          name="website"
+          value={honeypot}
+          onChange={e => setHoneypot(e.target.value)}
+          autoComplete="off"
+          tabIndex={-1}
+        />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Name */}
         <div>
@@ -169,6 +207,7 @@ ${form.message ? `• *Details:* ${form.message}` : ''}`;
             value={form.name}
             onChange={e => update('name', e.target.value)}
             placeholder="Your name"
+            maxLength={100}
             className={`w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${
               errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200'
             }`}
@@ -190,6 +229,7 @@ ${form.message ? `• *Details:* ${form.message}` : ''}`;
               value={form.phone}
               onChange={e => update('phone', e.target.value)}
               placeholder="99741 42777"
+              maxLength={15}
               className={`flex-1 px-3.5 py-2.5 border rounded-r-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${
                 errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200'
               }`}
@@ -208,6 +248,7 @@ ${form.message ? `• *Details:* ${form.message}` : ''}`;
             value={form.email}
             onChange={e => update('email', e.target.value)}
             placeholder="your@email.com"
+            maxLength={200}
             className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
@@ -220,6 +261,7 @@ ${form.message ? `• *Details:* ${form.message}` : ''}`;
             value={form.city}
             onChange={e => update('city', e.target.value)}
             placeholder="Your city"
+            maxLength={100}
             className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
@@ -235,6 +277,7 @@ ${form.message ? `• *Details:* ${form.message}` : ''}`;
           value={form.product}
           onChange={e => update('product', e.target.value)}
           placeholder="Which product are you interested in?"
+          maxLength={200}
           className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
       </div>
@@ -272,6 +315,7 @@ ${form.message ? `• *Details:* ${form.message}` : ''}`;
           onChange={e => update('message', e.target.value)}
           placeholder="Tell us about your project — area size, usage, timeline, any specific requirements…"
           rows={3}
+          maxLength={1000}
           className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
         />
       </div>
