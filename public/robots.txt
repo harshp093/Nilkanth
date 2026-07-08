@@ -1,10 +1,12 @@
+# Nilkanth Marble — robots.txt
+# https://nilkanthmarble.com
+
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /admin/*
-Disallow: /api/*
-Disallow: /*?*
 
-# Sitemap location
+# Block only admin panel and server-side API
+Disallow: /admin/
+Disallow: /api/
+
+# XML Sitemap
 Sitemap: https://nilkanthmarble.com/sitemap.xml
-Host: https://nilkanthmarble.com
