@@ -2,24 +2,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../utils/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import * as tus from 'tus-js-client';
 
 /* ═══════════════════════════════════════════════════════════════
    TYPES
    (Typed structures matching the Postgres schemas)
 ────────────────────────────────────────────────────────────────── */
-interface InquiryRecord {
-  id: string;
-  name: string;
-  phone: string;
-  email: string | null;
-  city: string | null;
-  product: string | null;
-  requirement_type: string | null;
-  message: string | null;
-  created_at: string;
-  status?: string;
-}
 
 interface ProductRecord {
   id: string;
@@ -54,6 +41,8 @@ interface CatalogRecord {
   pdf_url: string | null;
   thumbnail_url: string;
   catalog_type: string;
+  catalog_type_label: string | null;
+  parent_tab: string;
   tags: string[];
   page_count: number | null;
   view_count: number;
@@ -77,12 +66,11 @@ interface CategoryRecord {
   is_active: boolean;
 }
 
-type ActiveTab = 'dashboard' | 'inquiries' | 'products' | 'catalogs' | 'categories';
+type ActiveTab = 'dashboard' | 'products' | 'catalogs' | 'categories';
 
 /* ═══════════════════════════════════════════════════════════════
    CONSTANTS & HELPERS
 ────────────────────────────────────────────────────────────────── */
-const CATALOG_BUCKETS = ['tile-catalogs', 'tile-catalogs-b', 'tile-catalogs-c', 'tile-catalogs-kajaria', 'tile-catalogs-somany', 'tile-catalogs-johnson'];
 const CATEGORY_OPTIONS = ['marble', 'granite', 'kota-stone', 'cladding-stone', 'adhesives-chemicals'];
 
 const normalizeSubcategory = (val: string): string => {
@@ -96,14 +84,6 @@ const normalizeSubcategory = (val: string): string => {
   return clean.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 };
 
-const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
 
 const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
   const el = document.createElement('div');
@@ -162,6 +142,62 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, sub }) =
 );
 
 /* ═══════════════════════════════════════════════════════════════
+   CLOUDFLARE R2 SECURE UPLOADER HELPER
+────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   DIRECT BROWSER-TO-S3 UPLOADER HELPER (with CORS & ACL support)
+────────────────────────────────────────────────────────────────── */
+const uploadDirectToS3 = async (
+  file: File | Blob,
+  fileName: string,
+  contentType: string,
+  onProgress?: (percent: number) => void
+): Promise<string> => {
+  if (!supabase) {
+    throw new Error('Supabase client is not initialized');
+  }
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || '';
+
+  const res = await fetch(`/api/get-presigned-url?fileName=${encodeURIComponent(fileName)}&contentType=${encodeURIComponent(contentType)}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!res.ok) {
+    const errData = await res.json();
+    throw new Error(errData.error || 'Failed to get presigned upload URL');
+  }
+  const { uploadUrl, publicUrl } = await res.json();
+
+  await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', uploadUrl, true);
+    xhr.setRequestHeader('Content-Type', contentType);
+    xhr.setRequestHeader('x-amz-acl', 'public-read'); // Must match signed ACL (since Object Writer is enabled)
+    if (onProgress && xhr.upload) {
+      xhr.upload.onprogress = (progressEvent) => {
+        if (progressEvent.lengthComputable) {
+          const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+          onProgress(percent);
+        }
+      };
+    }
+    xhr.onload = () => {
+      if (xhr.status === 200 || xhr.status === 201 || xhr.status === 204) {
+        resolve(null);
+      } else {
+        reject(new Error(`Upload failed with status ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(file);
+  });
+
+  return publicUrl;
+};
+
+/* ═══════════════════════════════════════════════════════════════
    IMAGE MANAGER & HEIC CONVERTER FOR IPHONE
 ────────────────────────────────────────────────────────────────── */
 interface ImageManagerProps {
@@ -192,7 +228,7 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
     setProgress(5);
     setConversionState('Preparing image file...');
 
-    let fileToUpload = file;
+    let fileToUpload: File | Blob = file;
 
     // Detect iPhone .HEIC / .HEIF files and convert client-side using CDN heic2any
     const filenameLower = file.name.toLowerCase();
@@ -229,27 +265,35 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
       }
     }
 
+    // ── Compress image via Canvas (skip SVG / GIF which don't benefit) ──
+    const skipCompress = filenameLower.endsWith('.svg') || filenameLower.endsWith('.gif');
+    if (!skipCompress) {
+      try {
+        const originalSizeKb = Math.round((fileToUpload as File | Blob).size / 1024);
+        setConversionState(`Compressing image (${originalSizeKb} KB → optimising)...`);
+        setProgress(55);
+        const compressed = await compressImage(fileToUpload as File | Blob);
+        const compressedSizeKb = Math.round(compressed.size / 1024);
+        fileToUpload = compressed;
+        setConversionState(`✅ Compressed: ${originalSizeKb} KB → ${compressedSizeKb} KB. Uploading...`);
+        setProgress(65);
+      } catch (compErr: any) {
+        console.warn('Image compression skipped:', compErr.message);
+        setConversionState('Uploading to Datnass Cloud...');
+      }
+    }
+
     try {
-      setConversionState('Uploading to Supabase...');
-      const ext = fileToUpload.name.split('.').pop() || 'jpg';
-      const name = `prod_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      setConversionState(prev => prev.includes('Uploading') ? prev : 'Uploading to Datnass Cloud...');
+      const name = `prod_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
 
-      const { data, error } = await supabase.storage.from('product-images').upload(name, fileToUpload, {
-        cacheControl: '3600',
-        upsert: false,
-        onUploadProgress: (progressEvent: any) => {
-          const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-          setProgress(Math.min(95, percent));
-        }
-      } as any);
+      const publicUrl = await uploadDirectToS3(fileToUpload as File, name, 'image/jpeg', (pct) => {
+        setProgress(65 + Math.round(pct * 0.35));
+      });
 
-      if (error) throw error;
-
-      setProgress(98);
-      const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(data.path);
-      onChange([...images, publicUrl]);
       setProgress(100);
-      showToast('Image uploaded successfully!');
+      onChange([...images, publicUrl]);
+      showToast('Image compressed & uploaded to Datnass Cloud!');
       setTimeout(() => { setUploading(false); setProgress(0); setConversionState(''); }, 800);
     } catch (err: any) {
       showToast('Upload failed: ' + err.message, 'error');
@@ -273,7 +317,7 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
       <label className="upload-zone flex items-center justify-center gap-3 cursor-pointer p-6 border-2 border-dashed border-[#2a2a3a] hover:border-[#C8962E]/50 rounded-2xl bg-white/[0.02] transition-all" onClick={() => fileRef.current?.click()}>
         {uploading ? (
           <div className="w-full space-y-2">
-            <div className="text-[#C8962E] text-xs font-semibold text-center">{conversionState || 'Uploading to Supabase...'}</div>
+            <div className="text-[#C8962E] text-xs font-semibold text-center">{conversionState || 'Uploading to Datnass Cloud...'}</div>
             <div className="progress-bar-track"><div className="progress-bar-fill" style={{ width: `${progress}%` }} /></div>
             <div className="text-[#8888aa] text-[10px] text-center">{progress}% completed</div>
           </div>
@@ -351,6 +395,138 @@ const ImageManager: React.FC<ImageManagerProps> = ({ images, onChange }) => {
 
 
 
+/* ═══════════════════════════════════════════════════════════════
+   IMAGE COMPRESSOR — Canvas-based, max 1920px, JPEG 85% quality
+────────────────────────────────────────────────────────────────── */
+const compressImage = (file: File | Blob, maxWidth = 1920, quality = 0.85): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { reject(new Error('Canvas context unavailable')); return; }
+      // White background for images with transparency (PNG)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => { if (blob) resolve(blob); else reject(new Error('Canvas toBlob failed')); },
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+    img.src = url;
+  });
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   PDF COMPRESSOR — Re-renders all pages via PDF.js → jsPDF rebuild
+   Reduces file size by removing metadata bloat, re-encoding pages
+   as JPEG images at 85% quality at 150 DPI equivalent scale
+────────────────────────────────────────────────────────────────── */
+const loadScript = (src: string): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`) && (window as any)['pdfjs-dist/build/pdf']) {
+      resolve(); return;
+    }
+    const el = document.createElement('script');
+    el.src = src; el.onload = () => resolve(); el.onerror = () => reject(new Error(`Failed to load: ${src}`));
+    document.head.appendChild(el);
+  });
+
+const compressPdf = async (
+  file: File,
+  onProgress?: (msg: string, pct: number) => void
+): Promise<Blob> => {
+  // Ensure PDF.js is loaded
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  const pdfjsLib = (window as any)['pdfjs-dist/build/pdf'];
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // Ensure jsPDF is loaded
+  if (!(window as any).jspdf) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  }
+  const { jsPDF } = (window as any).jspdf;
+
+  onProgress?.('Reading PDF pages...', 10);
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const totalPages = pdf.numPages;
+
+  // Scale 1.0 = 96 DPI — enough quality, far less canvas data than 1.56x.
+  // Lower scale + lower JPEG quality = smaller JPEG chunks inside jsPDF.
+  const SCALE = 1.0;
+  // 0.68 JPEG quality keeps text readable and images acceptable.
+  // jsPDF adds ~5–10% PDF wrapper overhead, so we need JPEG quality low
+  // enough that the total output beats the original.
+  const JPEG_QUALITY = 0.68;
+
+  let doc: any = null;
+
+  for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+    const pct = 10 + Math.round((pageNum / totalPages) * 80);
+    onProgress?.(`Compressing page ${pageNum} of ${totalPages}...`, pct);
+
+    const page = await pdf.getPage(pageNum);
+    const viewport = page.getViewport({ scale: SCALE });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+
+    const imgData = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+
+    // Page dimensions in mm (at 1pt = 0.352778mm, 72pt/inch)
+    const widthMm = (viewport.width / SCALE / 72) * 25.4;
+    const heightMm = (viewport.height / SCALE / 72) * 25.4;
+
+    if (!doc) {
+      doc = new jsPDF({
+        orientation: widthMm > heightMm ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: [widthMm, heightMm],
+        compress: true,
+      });
+    } else {
+      doc.addPage([widthMm, heightMm], widthMm > heightMm ? 'landscape' : 'portrait');
+    }
+    doc.addImage(imgData, 'JPEG', 0, 0, widthMm, heightMm, undefined, 'FAST');
+  }
+
+  onProgress?.('Comparing sizes...', 96);
+  const outputBytes = doc.output('arraybuffer');
+  const compressedBlob = new Blob([outputBytes], { type: 'application/pdf' });
+
+  // ── Smart guard: if rebuilt PDF is NOT smaller, return the original ──
+  // This happens when the source PDF already has well-compressed images
+  // (jsPDF adds PDF-structure overhead that can exceed the JPEG savings).
+  if (compressedBlob.size >= file.size * 0.97) {
+    onProgress?.('Already optimised — using original file.', 98);
+    console.info(
+      `[PDF compress] Skipped: rebuilt ${(compressedBlob.size / 1024 / 1024).toFixed(1)} MB ≥ original ${(file.size / 1024 / 1024).toFixed(1)} MB`
+    );
+    return file; // return original unchanged
+  }
+
+  return compressedBlob;
+};
+
 const extractPdfCover = (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const runExtraction = async () => {
@@ -403,100 +579,92 @@ interface PdfUploaderProps {
 }
 
 const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
-  const [bucket, setBucket] = useState(CATALOG_BUCKETS[0]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [urlInput, setUrlInput] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [statusMsg, setStatusMsg] = useState('');
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    const client = supabase;
-    if (!file || !client) return;
+    if (!file || !supabase) return;
     setUploading(true);
     setProgress(5);
+    setStatusMsg('Loading PDF processor...');
     try {
-      const cleanName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._()-]/g, '');
-      const name = `catalog_${Date.now()}_${cleanName}`;
-      
-      const { data: { session } } = await client.auth.getSession();
-      const token = session?.access_token || '';
+      const coverTimestamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-      const projectIdMatch = supabaseUrl.match(/https:\/\/([^.]+)\.supabase/);
-      const projectId = projectIdMatch ? projectIdMatch[1] : '';
-      const endpoint = projectId
-        ? `https://${projectId}.storage.supabase.co/storage/v1/upload/resumable`
-        : `${supabaseUrl}/storage/v1/upload/resumable`;
+      // Step 1: Extract PDF cover FIRST (from original file, best quality)
+      let coverBlob: Blob | null = null;
+      try {
+        setStatusMsg('Rendering cover page thumbnail...');
+        setProgress(10);
+        coverBlob = await extractPdfCover(file);
+        setProgress(20);
+      } catch (coverErr) {
+        console.warn('PDF cover extraction failed (will use placeholder):', coverErr);
+      }
 
-      const upload = new tus.Upload(file, {
-        endpoint,
-        retryDelays: [0, 3000, 5000, 10000, 20000],
-        headers: {
-          authorization: `Bearer ${token}`,
-          'x-upsert': 'true',
-        },
-        metadata: {
-          bucketName: bucket,
-          objectName: name,
-          contentType: 'application/pdf',
-          cacheControl: '3600',
-        },
-        chunkSize: 6 * 1024 * 1024, // 6MB chunks
-        uploadDataDuringCreation: true,
-        removeFingerprintOnSuccess: true,
-        onProgress: (bytesUploaded, bytesTotal) => {
-          const percent = Math.round((bytesUploaded / bytesTotal) * 100);
-          setProgress(Math.min(95, percent));
-        },
-        onSuccess: async () => {
-          const { data: { publicUrl } } = client.storage.from(bucket).getPublicUrl(name);
-          setProgress(97);
-          
-          let extractedThumbnail = '';
-          try {
-            const coverBlob = await extractPdfCover(file);
-            const coverFile = new File([coverBlob], `cover_${Date.now()}.jpg`, { type: 'image/jpeg' });
-            const thumbName = `catalog_cover_${Date.now()}.jpg`;
-            const { data: thumbData, error: thumbErr } = await client.storage.from('product-images').upload(thumbName, coverFile, {
-              cacheControl: '3600',
-              upsert: false
-            } as any);
-            if (!thumbErr && thumbData) {
-              const { data: { publicUrl: thumbUrl } } = client.storage.from('product-images').getPublicUrl(thumbData.path);
-              extractedThumbnail = thumbUrl;
-            }
-          } catch (coverErr) {
-            console.error('Failed to generate cover page thumbnail:', coverErr);
-          }
-
-          setProgress(100);
-          onUploaded(publicUrl, extractedThumbnail);
-          showToast(`PDF catalog uploaded to "${bucket}"!`);
-          setTimeout(() => { setUploading(false); setProgress(0); }, 800);
-        },
-        onError: (err) => {
-          showToast('PDF upload failed: ' + err.message, 'error');
-          setUploading(false); setProgress(0);
+      // Step 2: Compress cover thumbnail
+      let extractedThumbnail = '';
+      if (coverBlob) {
+        try {
+          setStatusMsg('Compressing cover thumbnail...');
+          const compressedCover = await compressImage(coverBlob, 1200, 0.88);
+          const thumbName = `catalog_cover_${coverTimestamp}.jpg`;
+          extractedThumbnail = await uploadDirectToS3(compressedCover, thumbName, 'image/jpeg');
+          setProgress(35);
+        } catch (thumbErr: any) {
+          console.error('Thumbnail upload failed:', thumbErr);
         }
+      }
+
+      // Step 3: Compress PDF (re-render pages via PDF.js → jsPDF)
+      let pdfToUpload: Blob = file;
+      const originalMb = (file.size / 1024 / 1024).toFixed(1);
+      try {
+        setStatusMsg(`Compressing PDF (${originalMb} MB → optimising pages)...`);
+        setProgress(40);
+        const compressed = await compressPdf(file, (msg, pct) => {
+          setStatusMsg(msg);
+          setProgress(40 + Math.round(pct * 0.35)); // 40% → 75%
+        });
+        pdfToUpload = compressed;
+        const compressedMb = (compressed.size / 1024 / 1024).toFixed(1);
+        const isOriginal = compressed.size >= file.size * 0.97;
+        setStatusMsg(
+          isOriginal
+            ? `📄 PDF already optimised (${originalMb} MB). Uploading...`
+            : `✅ PDF: ${originalMb} MB → ${compressedMb} MB saved. Uploading...`
+        );
+        setProgress(76);
+      } catch (compErr: any) {
+        console.warn('PDF compression skipped, uploading original:', compErr.message);
+        setStatusMsg('Uploading original PDF to cloud...');
+      }
+
+      // Step 4: Upload compressed (or original) PDF to S3
+      const cleanName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._()-]/g, '');
+      const name = `catalog_${coverTimestamp}_${cleanName}`;
+      const publicUrl = await uploadDirectToS3(pdfToUpload as File, name, 'application/pdf', (pct) => {
+        setProgress(76 + Math.round(pct * 0.22)); // 76% → 98%
       });
 
-      upload.start();
+      setProgress(100);
+      setStatusMsg('Upload complete!');
+      onUploaded(publicUrl, extractedThumbnail);
+      showToast('✅ PDF compressed & uploaded with cover thumbnail!');
+      setTimeout(() => { setUploading(false); setProgress(0); setStatusMsg(''); }, 800);
     } catch (err: any) {
-      showToast('PDF upload failed: ' + err.message, 'error');
-      setUploading(false); setProgress(0);
+      showToast('❌ PDF upload failed: ' + (err.message || 'Unknown error'), 'error');
+      setUploading(false); setProgress(0); setStatusMsg('');
     }
     if (fileRef.current) fileRef.current.value = '';
   };
 
   return (
     <div className="space-y-3">
-      <div>
-        <label className="admin-label">Target Storage Bucket</label>
-        <select value={bucket} onChange={e => setBucket(e.target.value)} className="admin-select cursor-pointer">
-          {CATALOG_BUCKETS.map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
-      </div>
       <div className="flex gap-2">
         <input type="url" value={urlInput} onChange={e => setUrlInput(e.target.value)}
           placeholder="Or paste existing catalog PDF link..." className="admin-input flex-1 placeholder-white/20" />
@@ -506,7 +674,7 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
       <label className="upload-zone flex items-center justify-center gap-3 cursor-pointer p-5 border border-dashed border-[#2a2a3a] hover:border-[#C8962E]/50 rounded-2xl bg-white/[0.02]" onClick={() => fileRef.current?.click()}>
         {uploading ? (
           <div className="w-full space-y-2">
-            <div className="text-[#C8962E] text-xs font-semibold text-center">Uploading PDF & Rendering Cover...</div>
+            <div className="text-[#C8962E] text-xs font-semibold text-center">{statusMsg || 'Processing PDF...'}</div>
             <div className="progress-bar-track"><div className="progress-bar-fill" style={{ width: `${progress}%` }} /></div>
             <div className="text-[#8888aa] text-[10px] text-center">{progress}% completed</div>
           </div>
@@ -515,7 +683,7 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({ onUploaded }) => {
             <span className="text-3xl">📄</span>
             <div>
               <div className="text-[#e4e4ef] text-sm font-semibold">Upload PDF Document</div>
-              <div className="text-[#8888aa] text-xs mt-0.5">Auto-generates cover page thumbnail. Click to browse.</div>
+              <div className="text-[#8888aa] text-xs mt-0.5">Auto-compresses & generates cover thumbnail. Click to browse.</div>
             </div>
           </>
         )}
@@ -811,6 +979,8 @@ interface CatalogModalProps {
 const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }) => {
   const isEdit = !!catalog?.id;
   const [saving, setSaving] = useState(false);
+  const [thumbPreviewError, setThumbPreviewError] = useState(false);
+
   const [form, setForm] = useState({
     id: catalog?.id || '',
     title: catalog?.title || '',
@@ -818,8 +988,9 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
     description: catalog?.description || '',
     pdf_url: catalog?.pdf_url || '',
     thumbnail_url: catalog?.thumbnail_url || '',
-    catalog_type: catalog?.catalog_type || 'tiles',
-    custom_catalog_type: '',
+    parent_tab: (catalog as any)?.parent_tab || 'tiles',
+    catalog_type: catalog?.catalog_type || '',
+    catalog_type_label: (catalog as any)?.catalog_type_label || '',
     tags: (catalog?.tags || []).join(', '),
     application: ((catalog as any)?.application || []).join(', '),
     is_active: catalog?.is_active !== false,
@@ -828,22 +999,21 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
-  const handleTypeCheckboxToggle = (type: string) => {
-    const currentList = form.catalog_type.split(',').map((s: string) => s.trim()).filter(Boolean);
-    const newList = currentList.includes(type)
-      ? currentList.filter((t: string) => t !== type)
-      : [...currentList, type];
-    set('catalog_type', newList.join(', '));
-  };
+  // Parent tab options — the broad page sections
+  const PARENT_TABS = [
+    { id: 'tiles',            label: '🔲 Tiles',             suggestions: ['floor-tiles', 'wall-tiles', 'bathroom-tiles', 'designer-tiles', 'vitrified', 'outdoor-tiles', 'mosaic-tiles', 'wooden-tiles', 'terrracotta-tiles', 'parking-tiles'] },
+    { id: 'sanitary',         label: '🚿 Sanitary Ware',      suggestions: ['water-closets', 'wash-basins', 'faucets', 'bathtubs', 'shower-panels', 'bathroom-accessories'] },
+    { id: 'stone',            label: '🪨 Natural Stone',       suggestions: ['natural-cladding-stone', 'slate-tiles', 'quartzite', 'sandstone', 'limestone', 'schist', 'kota-stone'] },
+    { id: 'artificial-stone', label: '⚗️ Artificial Stone',   suggestions: ['quartz-slabs', 'engineered-stone', 'composite-stone', 'solid-surface'] },
+    { id: 'other',            label: '📦 Other',               suggestions: ['adhesives', 'chemicals', 'grouting', 'waterproofing'] },
+  ];
+
+  const currentParentTab = PARENT_TABS.find(p => p.id === form.parent_tab);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
     setSaving(true);
-
-    const typesList = form.catalog_type.split(',').map((s: string) => s.trim()).filter(Boolean);
-    const customTypes = form.custom_catalog_type.split(',').map((s: string) => s.trim()).filter(Boolean);
-    const mergedTypes = Array.from(new Set([...typesList, ...customTypes])).join(', ') || 'tiles';
 
     const payload: any = {
       id: form.id || `cat-${Date.now()}`,
@@ -852,24 +1022,33 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
       description: form.description.trim() || null,
       pdf_url: form.pdf_url.trim() || null,
       thumbnail_url: form.thumbnail_url.trim() || 'https://placehold.co/400x300/111/C8962E?text=Catalog',
-      catalog_type: mergedTypes,
+      parent_tab: form.parent_tab,
+      catalog_type: form.catalog_type.trim() || form.parent_tab,
+      catalog_type_label: form.catalog_type_label.trim() || null,
       tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
       application: form.application.split(',').map((s: string) => s.trim()).filter(Boolean),
       is_active: form.is_active,
       is_featured: form.is_featured,
     };
+
     try {
       let { error } = await supabase.from('catalogs').upsert(payload, { onConflict: 'id' });
 
-      // Graceful fallback if columns don't exist in Supabase yet
-      if (error && (error.message.includes('is_featured') || error.code === 'PGRST116')) {
-        console.warn('Fallback: saving catalog without is_featured column');
-        const { is_featured, ...payloadWithoutFeatured } = payload;
-        const res = await supabase.from('catalogs').upsert(payloadWithoutFeatured, { onConflict: 'id' });
+      // Graceful fallback for older DB schema without new columns
+      if (error && (error.message.includes('parent_tab') || error.message.includes('catalog_type_label'))) {
+        console.warn('Fallback: saving without new columns (run migration SQL)');
+        const { parent_tab, catalog_type_label, ...legacy } = payload;
+        const res = await supabase.from('catalogs').upsert(legacy, { onConflict: 'id' });
         error = res.error;
       }
+      if (error && error.message.includes('is_featured')) {
+        const { is_featured, parent_tab, catalog_type_label, ...minimal } = payload;
+        const res = await supabase.from('catalogs').upsert(minimal, { onConflict: 'id' });
+        if (res.error) throw res.error;
+      } else {
+        if (error) throw error;
+      }
 
-      if (error) throw error;
       showToast(isEdit ? 'Catalog updated!' : 'Catalog created!');
       onSaved();
       onClose();
@@ -881,92 +1060,186 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)' }}>
       <motion.div initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
-        className="w-full max-w-xl my-8 rounded-2xl overflow-hidden shadow-2xl"
+        className="w-full max-w-2xl my-8 rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: 'linear-gradient(135deg, #0d131f 0%, #080c14 100%)', border: '1px solid rgba(20, 184, 166, 0.25)' }}>
+
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4"
-          style={{ background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, rgba(15, 23, 42, 0.15) 100%)', borderBottom: '1px solid rgba(20, 184, 166, 0.15)' }}>
+          style={{ background: 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(15,23,42,0.15))', borderBottom: '1px solid rgba(20,184,166,0.15)' }}>
           <div>
-            <span className="text-[#14b8a6] text-[10px] font-black tracking-widest uppercase block mb-1">📖 DOCUMENT ARCHIVE PUBLISHER</span>
-            <h3 className="text-white font-heading font-bold text-lg">{isEdit ? '✏️ Edit Catalog Document' : '📖 Publish New Catalog'}</h3>
+            <span className="text-[#14b8a6] text-[10px] font-black tracking-widest uppercase block mb-1">📖 CATALOG PUBLISHER</span>
+            <h3 className="text-white font-heading font-bold text-lg">{isEdit ? '✏️ Edit Catalog' : '📖 Publish New Catalog'}</h3>
           </div>
           <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
         </div>
+
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div><label className="admin-label">Catalog Title *</label><input type="text" required value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Kajaria Floor tiles collection" className="admin-input" /></div>
-          <div><label className="admin-label">Company / Brand *</label><input type="text" required value={form.company} onChange={e => set('company', e.target.value)} placeholder="e.g. Kajaria, ColorTiles" className="admin-input" /></div>
-          <div><label className="admin-label">Description</label><textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} placeholder="Brief catalog description..." className="admin-input resize-none" /></div>
-          
-          <div>
-            <label className="admin-label">Catalog Types * (Select one or more)</label>
-            <div className="grid grid-cols-2 gap-2 bg-white/[0.02] p-3 rounded-xl border border-[#2a2a3a]">
-              {[
-                { id: 'floor-tiles', label: '🔲 Floor Tiles' },
-                { id: 'wall-tiles', label: '🔳 Wall Tiles' },
-                { id: 'bathroom-tiles', label: '🛁 Bathroom Tiles' },
-                { id: 'designer-tiles', label: '🎨 Designer Tiles' },
-                { id: 'vitrified', label: '✨ Vitrified Tiles' },
-                { id: 'sanitary', label: '🚿 Sanitary Ware' },
-                { id: 'artificial-stone', label: '⚗️ Artificial Stone' },
-              ].map((opt) => {
-                const currentList = form.catalog_type.split(',').map(s => s.trim()).filter(Boolean);
-                const isChecked = currentList.includes(opt.id);
-                return (
-                  <label key={opt.id} className="flex items-center gap-2 text-xs font-semibold text-admin-text cursor-pointer select-none">
-                     <input
-                       type="checkbox"
-                       checked={isChecked}
-                       onChange={() => handleTypeCheckboxToggle(opt.id)}
-                       className="rounded border-[#2a2a3a] text-[#14b8a6] focus:ring-0 focus:ring-offset-0 bg-[#0d0d16]"
-                     />
-                     {opt.label}
-                  </label>
-                );
-              })}
+
+          {/* Row 1: Title + Company */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="admin-label">Catalog Title *</label>
+              <input type="text" required value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Kajaria Floor Collection 2025" className="admin-input" />
             </div>
-            <div className="mt-2.5">
-              <label className="admin-label">Additional Custom Sub-types (comma-sep)</label>
-              <input
-                type="text"
-                value={form.custom_catalog_type}
-                onChange={e => set('custom_catalog_type', e.target.value)}
-                placeholder="e.g. wall-panels, terrace-tiles"
-                className="admin-input"
-              />
-              <p className="text-[#4a4a6a] text-[9px] mt-1">* Optional custom categories. These will be merged with the selected checkboxes.</p>
+            <div>
+              <label className="admin-label">Company / Brand *</label>
+              <input type="text" required value={form.company} onChange={e => set('company', e.target.value)} placeholder="e.g. Kajaria, ColorTiles" className="admin-input" />
             </div>
           </div>
 
           <div>
-            <label className="admin-label">Cover Image Thumbnail URL (Auto-fills on upload)</label>
-            <input type="text" value={form.thumbnail_url} onChange={e => set('thumbnail_url', e.target.value)} placeholder="Auto-generated on file upload..." className="admin-input" />
-          </div>
-          
-          <div>
-            <label className="admin-label">Tags / Keywords (comma-sep)</label>
-            <input type="text" value={form.tags} onChange={e => set('tags', e.target.value)} placeholder="Glossy, Ceramic, Bathroom" className="admin-input" />
+            <label className="admin-label">Description</label>
+            <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} placeholder="Brief catalog description..." className="admin-input resize-none" />
           </div>
 
-          <div>
-            <label className="admin-label">Application Zones (comma-sep)</label>
-            <input
-              type="text"
-              value={form.application}
-              onChange={e => set('application', e.target.value)}
-              placeholder="e.g. Floor, Wall, Bathroom, Swimming Pool, Bar & Restaurants"
-              className="admin-input"
-            />
-            <p className="text-[#4a4a6a] text-[10px]">* Enter application tags (e.g. Swimming Pool, Bathroom) separated by commas.</p>
+          {/* ─── DYNAMIC CATALOG TYPE SYSTEM ─── */}
+          <div className="bg-white/[0.03] p-4 rounded-xl border border-[#2a2a3a] space-y-4">
+            <h4 className="text-[#14b8a6] text-xs font-black uppercase tracking-wider">🗂️ Catalog Category System</h4>
+            <p className="text-[#4a4a6a] text-[10px] leading-relaxed">
+              Choose the <strong className="text-[#8888aa]">Parent Section</strong> (main tab on the catalog page), then enter the <strong className="text-[#8888aa]">Specific Sub-type</strong>. Any new sub-type you enter will automatically create a new filter tab on the website.
+            </p>
+
+            {/* Parent Tab selector */}
+            <div>
+              <label className="admin-label">Parent Section (Main Tab) *</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {PARENT_TABS.map(pt => (
+                  <button
+                    key={pt.id}
+                    type="button"
+                    onClick={() => { set('parent_tab', pt.id); set('catalog_type', ''); }}
+                    className={`px-3 py-2 rounded-lg text-xs font-bold text-left transition-all border cursor-pointer ${
+                      form.parent_tab === pt.id
+                        ? 'bg-[#14b8a6]/15 border-[#14b8a6] text-[#14b8a6]'
+                        : 'bg-white/[0.02] border-[#2a2a3a] text-[#8888aa] hover:border-[#4a4a6a]'
+                    }`}
+                  >
+                    {pt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Specific sub-type */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="admin-label">Specific Sub-type Slug *</label>
+                <input
+                  type="text"
+                  required
+                  list="catalog-type-suggestions"
+                  value={form.catalog_type}
+                  onChange={e => set('catalog_type', e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                  placeholder="e.g. floor-tiles, wooden-tiles"
+                  className="admin-input"
+                />
+                <datalist id="catalog-type-suggestions">
+                  {(currentParentTab?.suggestions || []).map(s => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+                <p className="text-[#4a4a6a] text-[9px] mt-1">Use kebab-case: wooden-tiles, kota-stone</p>
+              </div>
+              <div>
+                <label className="admin-label">Display Label (shown as sub-tab)</label>
+                <input
+                  type="text"
+                  value={form.catalog_type_label}
+                  onChange={e => set('catalog_type_label', e.target.value)}
+                  placeholder={form.catalog_type ? form.catalog_type.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'e.g. Wooden Floor Tiles'}
+                  className="admin-input"
+                />
+                <p className="text-[#4a4a6a] text-[9px] mt-1">Human-readable label shown on the catalog page</p>
+              </div>
+            </div>
           </div>
 
+          {/* ─── Thumbnail ─── */}
+          <div>
+            <label className="admin-label">Cover Image / Thumbnail URL</label>
+            <input type="text" value={form.thumbnail_url}
+              onChange={e => { set('thumbnail_url', e.target.value); setThumbPreviewError(false); }}
+              placeholder="Auto-fills on PDF upload, or paste image URL..."
+              className="admin-input" />
+            {/* Live thumbnail preview */}
+            {form.thumbnail_url && !thumbPreviewError && (
+              <div className="mt-2 w-32 h-20 rounded-lg overflow-hidden border border-[#2a2a3a] bg-[#0d0d16]">
+                <img
+                  src={form.thumbnail_url}
+                  alt="Thumbnail preview"
+                  className="w-full h-full object-cover"
+                  onError={() => setThumbPreviewError(true)}
+                  loading="lazy"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Tags + Application */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="admin-label">Tags / Keywords (comma-sep)</label>
+              <input type="text" value={form.tags} onChange={e => set('tags', e.target.value)} placeholder="Glossy, Ceramic, Bathroom" className="admin-input" />
+            </div>
+            <div>
+              <label className="admin-label">Application Zones (comma-sep)</label>
+              <input type="text" value={form.application} onChange={e => set('application', e.target.value)} placeholder="Floor, Wall, Bathroom, Pool" className="admin-input" />
+            </div>
+          </div>
+
+          {/* ─── PDF File ─── */}
           <div>
             <h4 className="text-[#14b8a6] text-xs font-bold uppercase tracking-wider mb-2">📄 PDF Catalog File</h4>
             {form.pdf_url && (
               <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <span className="text-emerald-400 text-xs font-semibold">✅ Linked:</span>
+                <span className="text-emerald-400 text-xs font-bold">✅</span>
                 <a href={form.pdf_url} target="_blank" rel="noopener noreferrer" className="text-[#14b8a6] text-xs underline truncate flex-1">{form.pdf_url}</a>
-                <button type="button" onClick={() => set('pdf_url', '')} className="text-red-400 text-xs hover:text-red-300">✕</button>
+                <button type="button" onClick={() => set('pdf_url', '')} className="text-red-400 text-xs hover:text-red-300">✕ Remove</button>
+              </div>
+            )}
+            <PdfUploader onUploaded={(url, thumb) => {
+              set('pdf_url', url);
+              if (thumb) { set('thumbnail_url', thumb); setThumbPreviewError(false); }
+            }} />
+          </div>
+
+          {/* Toggles */}
+          <div className="grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-xl border border-[#2a2a3a]">
+            <div className="flex items-center gap-3">
+              <div onClick={() => set('is_active', !form.is_active)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_active ? 'bg-emerald-500' : 'bg-[#2a2a3a]'}`}>
+                <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_active ? 'left-5' : 'left-0.5'}`} />
+              </div>
+              <div>
+                <span className="text-[#e4e4ef] text-xs font-bold block">Publish immediately</span>
+                <span className="text-[#8888aa] text-[10px]">Visible on catalog page.</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div onClick={() => set('is_featured', !form.is_featured)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_featured ? 'bg-[#C8962E]' : 'bg-[#2a2a3a]'}`}>
+                <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_featured ? 'left-5' : 'left-0.5'}`} />
+              </div>
+              <div>
+                <span className="text-[#e4e4ef] text-xs font-bold block">★ Feature on Homepage</span>
+                <span className="text-[#8888aa] text-[10px]">Shown in homepage catalogs.</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e2e]">
+            <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-stone-500 hover:text-white transition-all cursor-pointer bg-transparent">Cancel</button>
+            <button type="submit" disabled={saving} className="btn-accent px-7 py-2.5 text-sm disabled:opacity-60">
+              {saving ? 'Saving...' : isEdit ? 'Update Catalog' : 'Create & Publish Catalog'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};
+
               </div>
             )}
             <PdfUploader onUploaded={(url, thumb) => {
@@ -1017,43 +1290,62 @@ const CategoryCoverUploader: React.FC<{ onUploaded: (url: string) => void }> = (
   const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [statusMsg, setStatusMsg] = useState('');
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !supabase) return;
 
     setUploading(true);
     setProgress(10);
+    setStatusMsg('Preparing image...');
     try {
-      const ext = file.name.split('.').pop() || 'jpg';
-      const name = `cat_${Date.now()}.${ext}`;
-      const { data, error } = await supabase.storage.from('product-images').upload(name, file, {
-        cacheControl: '3600',
-        upsert: false,
-        onUploadProgress: (progressEvent: any) => {
-          const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-          setProgress(Math.min(95, percent));
-        }
-      } as any);
+      let fileToUpload: Blob = file;
+      const originalKb = Math.round(file.size / 1024);
+      // Compress if it's not SVG/GIF
+      const lname = file.name.toLowerCase();
+      if (!lname.endsWith('.svg') && !lname.endsWith('.gif')) {
+        try {
+          setStatusMsg(`Compressing (${originalKb} KB)...`);
+          setProgress(20);
+          const compressed = await compressImage(file, 1600, 0.88);
+          const compressedKb = Math.round(compressed.size / 1024);
+          fileToUpload = compressed;
+          setStatusMsg(`✅ ${originalKb} KB → ${compressedKb} KB. Uploading...`);
+          setProgress(40);
+        } catch { /* skip compression, use original */ }
+      }
 
-      if (error) throw error;
-      setProgress(98);
-      const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(data.path);
-      onUploaded(publicUrl);
+      const name = `cat_${Date.now()}.jpg`;
+      const publicUrl = await uploadDirectToS3(fileToUpload as File, name, 'image/jpeg', (pct) => {
+        setProgress(40 + Math.round(pct * 0.6));
+      });
+
       setProgress(100);
-      showToast('Cover photo uploaded successfully!');
-      setTimeout(() => { setUploading(false); setProgress(0); }, 500);
+      onUploaded(publicUrl);
+      showToast('Cover photo compressed & uploaded!');
+      setTimeout(() => { setUploading(false); setProgress(0); setStatusMsg(''); }, 500);
     } catch (err: any) {
       showToast('Cover upload failed: ' + err.message, 'error');
       setUploading(false);
       setProgress(0);
+      setStatusMsg('');
     }
   };
 
   return (
     <div>
       <button type="button" onClick={() => fileRef.current?.click()} className="btn-outline px-4 py-2 text-xs flex items-center gap-2 cursor-pointer mt-1">
-        {uploading ? `Uploading (${progress}%)` : '📤 Upload Cover Photo File'}
+        {uploading ? (statusMsg || `Uploading (${progress}%)`) : '📤 Upload Cover Photo File'}
       </button>
+      {uploading && (
+        <div className="mt-2 space-y-1">
+          <div className="progress-bar-track" style={{ height: 6, borderRadius: 4, background: '#1e1e2e' }}>
+            <div className="progress-bar-fill" style={{ width: `${progress}%`, height: '100%', borderRadius: 4, background: 'linear-gradient(90deg,#C8962E,#e8b84b)', transition: 'width 0.3s ease' }} />
+          </div>
+          <div className="text-[#8888aa] text-[10px]">{progress}% — {statusMsg}</div>
+        </div>
+      )}
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
     </div>
   );
@@ -1242,106 +1534,6 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ category, onClose, onSave
   );
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN ADMIN COMPONENT
-────────────────────────────────────────────────────────────────── */
-
-/* ═══════════════════════════════════════════════════════════════
-   INQUIRY DETAIL MODAL
-────────────────────────────────────────────────────────────────── */
-interface InquiryModalProps {
-  inquiry: InquiryRecord;
-  onClose: () => void;
-  onStatusChanged: (status: string) => void;
-}
-
-const InquiryModal: React.FC<InquiryModalProps> = ({ inquiry, onClose, onStatusChanged }) => {
-  const whatsappLink = `https://wa.me/${inquiry.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(inquiry.name)}%2C%20thank%20you%20for%20writing%20to%20Nilkanth%20Marble!`;
-  const emailLink = inquiry.email ? `mailto:${inquiry.email}?subject=Nilkanth%20Marble%20-%20Inquiry%20Response&body=Hi%20${encodeURIComponent(inquiry.name)}%2C` : null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
-      <motion.div initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
-        className="w-full max-w-lg my-8 rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e1e2e]" style={{ background: 'linear-gradient(135deg,#1C3A6B22,#C8962E11)' }}>
-          <div>
-            <h3 className="text-white font-heading font-bold text-lg">📥 Inquiry Details</h3>
-            <p className="text-[#8888aa] text-xs mt-0.5">Received on {formatDate(inquiry.created_at)}</p>
-          </div>
-          <button onClick={onClose} className="text-[#8888aa] hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer">✕</button>
-        </div>
-
-        <div className="p-6 space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="admin-label">Customer Name</label>
-              <div className="text-white text-sm font-bold bg-[#171725] p-3 rounded-xl border border-[#1e1e2e]">{inquiry.name}</div>
-            </div>
-            <div>
-              <label className="admin-label">Phone Number</label>
-              <div className="text-white text-sm font-bold bg-[#171725] p-3 rounded-xl border border-[#1e1e2e]">{inquiry.phone}</div>
-            </div>
-            <div>
-              <label className="admin-label">Email Address</label>
-              <div className="text-white text-sm font-bold bg-[#171725] p-3 rounded-xl border border-[#1e1e2e] truncate">{inquiry.email || '—'}</div>
-            </div>
-            <div>
-              <label className="admin-label">Location / City</label>
-              <div className="text-white text-sm font-bold bg-[#171725] p-3 rounded-xl border border-[#1e1e2e]">{inquiry.city || '—'}</div>
-            </div>
-            <div>
-              <label className="admin-label">Interested Product</label>
-              <div className="text-white text-sm font-bold bg-[#171725] p-3 rounded-xl border border-[#1e1e2e]">{inquiry.product || 'General Enquiry'}</div>
-            </div>
-            <div>
-              <label className="admin-label">Requirement Type</label>
-              <div className="text-[#C8962E] text-sm font-bold bg-[#171725] p-3 rounded-xl border border-[#1e1e2e] capitalize">{inquiry.requirement_type || '—'}</div>
-            </div>
-          </div>
-
-          <div>
-            <label className="admin-label">Message Content</label>
-            <div className="text-white text-sm bg-[#171725] p-3 rounded-xl border border-[#1e1e2e] min-h-[80px] whitespace-pre-wrap leading-relaxed">{inquiry.message || '—'}</div>
-          </div>
-
-          <div className="flex items-center gap-3 py-1">
-            <span className="text-[#8888aa] text-xs font-bold uppercase tracking-wider">Status:</span>
-            <div className="flex gap-1.5 flex-1">
-              {['unread', 'read', 'in_progress', 'replied'].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => onStatusChanged(st)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-black border transition-all cursor-pointer capitalize flex-1 text-center ${inquiry.status === st
-                      ? st === 'unread' ? 'bg-rose-500/20 text-rose-400 border-rose-500' :
-                        st === 'read' ? 'bg-amber-500/20 text-amber-400 border-amber-500' :
-                          st === 'in_progress' ? 'bg-sky-500/20 text-sky-400 border-sky-500' :
-                            'bg-emerald-500/20 text-emerald-400 border-emerald-500'
-                      : 'bg-transparent text-[#4a4a6a] border-[#1e1e2e] hover:border-[#8888aa]/30'
-                    }`}
-                >
-                  {st.replace('_', ' ')}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex justify-between gap-3 pt-4 border-t border-[#1e1e2e]">
-            <div className="flex gap-2">
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="btn-success px-4 py-2 text-xs font-bold shadow-sm">WhatsApp Reply</a>
-              {emailLink && (
-                <a href={emailLink} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-xs font-bold rounded-xl shadow-sm flex items-center justify-center transition-all">
-                  Email Reply
-                </a>
-              )}
-            </div>
-            <button type="button" onClick={onClose} className="px-5 py-2 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-xs font-semibold hover:border-[#444] hover:text-white transition-all cursor-pointer">Close</button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
 
 /* ═══════════════════════════════════════════════════════════════
    MAIN ADMIN COMPONENT
@@ -1356,7 +1548,6 @@ const Admin: React.FC = () => {
   const [showPass, setShowPass] = useState(false);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
-  const [inquiries, setInquiries] = useState<InquiryRecord[]>([]);
   const [products, setProducts] = useState<ProductRecord[]>([]);
   const [catalogs, setCatalogs] = useState<CatalogRecord[]>([]);
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
@@ -1365,19 +1556,20 @@ const Admin: React.FC = () => {
   const [fetchLoading, setFetchLoading] = useState(false);
 
   const [productSearch, setProductSearch] = useState('');
-  const [inquirySearch, setInquirySearch] = useState('');
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [catalogTypeFilter, setCatalogTypeFilter] = useState('all');
+  const [catalogSort, setCatalogSort] = useState<'newest' | 'az'>('newest');
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<ProductRecord> | null>(null);
   const [showCatalogModal, setShowCatalogModal] = useState(false);
   const [editingCatalog, setEditingCatalog] = useState<Partial<CatalogRecord> | null>(null);
 
-  // Connection & Detail Status
+  // Connection Status
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error'>('checking');
   const [dbErrorMessage, setDbErrorMessage] = useState('');
-  const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
 
-  // Fetch Database Data from Supabase
+  // Fetch Database Data from Supabase (products, catalogs, categories only)
   const fetchData = useCallback(async () => {
     if (!supabase) {
       setDbStatus('error');
@@ -1386,17 +1578,14 @@ const Admin: React.FC = () => {
     }
     setFetchLoading(true);
     try {
-      const [inqRes, prodRes, catRes] = await Promise.all([
-        supabase.from('inquiries').select('*').order('created_at', { ascending: false }),
+      const [prodRes, catRes] = await Promise.all([
         supabase.from('products').select('*').order('created_at', { ascending: false }),
         supabase.from('catalogs').select('*').order('created_at', { ascending: false }),
       ]);
 
-      if (inqRes.error) throw inqRes.error;
       if (prodRes.error) throw prodRes.error;
       if (catRes.error) throw catRes.error;
 
-      setInquiries(inqRes.data || []);
       setProducts(prodRes.data || []);
       setCatalogs(catRes.data || []);
 
@@ -1497,42 +1686,6 @@ const Admin: React.FC = () => {
     fetchData();
   };
 
-  const handleDeleteInquiry = async (id: string) => {
-    if (!supabase || !confirm('Delete customer inquiry record?')) return;
-    const { error } = await supabase.from('inquiries').delete().eq('id', id);
-    if (error) { showToast('Error: ' + error.message, 'error'); return; }
-    showToast('Inquiry deleted successfully.');
-    fetchData();
-  };
-
-  const handleUpdateInquiryStatus = async (id: string, newStatus: string) => {
-    if (!supabase) return;
-    const { error } = await supabase.from('inquiries').update({ status: newStatus }).eq('id', id);
-    if (error) {
-      showToast('Failed to update status: ' + error.message, 'error');
-      return;
-    }
-    showToast('Status updated!');
-    fetchData();
-  };
-
-  const getInquiriesLast7Days = () => {
-    const days = [];
-    const counts = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toDateString();
-      days.push(d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }));
-
-      const count = inquiries.filter(inq => {
-        const inqDate = new Date(inq.created_at);
-        return inqDate.toDateString() === dateStr;
-      }).length;
-      counts.push(count);
-    }
-    return { days, counts };
-  };
 
   /* ─── PREMIUM NEON-3D ADMIN LOGIN VIEW ─── */
   if (!sessionUser) {
@@ -1645,31 +1798,6 @@ const Admin: React.FC = () => {
     p.category.toLowerCase().includes(productSearch.toLowerCase()) ||
     (p.brand || '').toLowerCase().includes(productSearch.toLowerCase())
   );
-  const filteredInquiries = inquiries.filter(i =>
-    i.name.toLowerCase().includes(inquirySearch.toLowerCase()) ||
-    i.phone.includes(inquirySearch) ||
-    (i.product || '').toLowerCase().includes(inquirySearch.toLowerCase())
-  );
-
-  // SVG Chart Computations
-  const chartData = getInquiriesLast7Days();
-  const maxVal = Math.max(3, ...chartData.counts);
-  const chartWidth = 500;
-  const chartHeight = 150;
-  const padding = 25;
-  const points = chartData.counts.map((c, idx) => {
-    const x = padding + (idx * (chartWidth - padding * 2)) / 6;
-    const y = chartHeight - padding - (c * (chartHeight - padding * 2)) / maxVal;
-    return { x, y, val: c };
-  });
-
-  const pathD = points.reduce((acc, p, idx) => {
-    return acc + (idx === 0 ? `M ${p.x} ${p.y}` : ` L ${p.x} ${p.y}`);
-  }, '');
-
-  const areaD = points.length > 0
-    ? `${pathD} L ${points[points.length - 1].x} ${chartHeight - padding} L ${points[0].x} ${chartHeight - padding} Z`
-    : '';
 
   return (
     <div className="min-h-screen flex" style={{ background: '#0a0a0f' }}>
@@ -1689,7 +1817,7 @@ const Admin: React.FC = () => {
         <nav className="flex-1 p-3 space-y-1">
           <p className="text-[#4a4a6a] text-[9px] font-black uppercase tracking-widest px-4 pb-2 pt-1">Menu Sections</p>
           <NavItem id="dashboard" label="Dashboard" icon="📊" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-          <NavItem id="inquiries" label="Inquiries" icon="📥" count={inquiries.filter(i => i.status === 'unread' || !i.status).length} active={activeTab === 'inquiries'} onClick={() => setActiveTab('inquiries')} />
+
           <NavItem id="products" label="Products" icon="💎" count={products.length} active={activeTab === 'products'} onClick={() => setActiveTab('products')} />
           <NavItem id="catalogs" label="PDF Catalogs Manager" icon="📚" count={catalogs.length} active={activeTab === 'catalogs'} onClick={() => setActiveTab('catalogs')} />
           <NavItem id="categories" label="Categories Manager" icon="🏷️" count={categories.length} active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
@@ -1707,10 +1835,10 @@ const Admin: React.FC = () => {
           style={{ background: 'rgba(10,10,15,0.96)', backdropFilter: 'blur(12px)' }}>
           <div>
             <h2 className="text-white font-heading font-black text-lg">
-              {activeTab === 'dashboard' ? '📊 Dashboard Overview' : activeTab === 'inquiries' ? '📥 Customer Inquiries' : activeTab === 'products' ? '💎 Product Catalogue' : activeTab === 'catalogs' ? '📚 PDF Catalogs Manager' : '🏷️ Homepage Categories'}
+              {activeTab === 'dashboard' ? '📊 Dashboard Overview' : activeTab === 'products' ? '💎 Product Catalogue' : activeTab === 'catalogs' ? '📚 PDF Catalogs Manager' : '🏷️ Homepage Categories'}
             </h2>
             <p className="text-[#8888aa] text-xs font-medium mt-0.5">
-              {activeTab === 'dashboard' ? 'Real-time overview of database records' : activeTab === 'inquiries' ? `${inquiries.length} queries received` : activeTab === 'products' ? `${products.length} items listed` : activeTab === 'catalogs' ? `${catalogs.length} catalogs uploaded` : `${categories.length} categories on homepage`}
+              {activeTab === 'dashboard' ? 'Real-time overview of database records' : activeTab === 'products' ? `${products.length} items listed` : activeTab === 'catalogs' ? `${catalogs.length} catalogs uploaded` : `${categories.length} categories on homepage`}
             </p>
           </div>
           <div className="text-[#4a4a6a] text-xs text-right font-medium">
@@ -1753,192 +1881,41 @@ const Admin: React.FC = () => {
                   <button onClick={fetchData} className="text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-white/10 cursor-pointer">🔄 Refresh Link</button>
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                   <StatCard label="Total Products" value={products.length} icon="💎" color="#1C3A6B" sub={`${products.filter(p => p.is_active).length} visible items`} />
-                  <StatCard label="Customer Queries" value={inquiries.length} icon="📥" color="#C8962E" sub={`${inquiries.filter(i => i.status === 'unread' || !i.status).length} unread leads`} />
                   <StatCard label="Featured Stones" value={products.filter(p => p.is_featured).length} icon="⭐" color="#C8962E" sub="Featured on homepage" />
                   <StatCard label="PDF Catalogs" value={catalogs.length} icon="📄" color="#1C3A6B" sub={`${catalogs.filter(c => c.is_active).length} active`} />
                 </div>
 
-                {/* SVG Chart & Details Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Visual Chart Card */}
-                  <div className="admin-card p-5 lg:col-span-2">
-                    <div className="flex items-center justify-between mb-4">
+                {/* Info Cards Grid */}
+                <div className="admin-card p-5">
+                  <h3 className="text-white font-bold text-sm mb-3">Database Verification</h3>
+                  <div className="space-y-3.5">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs font-bold">✓</span>
                       <div>
-                        <h3 className="text-white font-bold text-sm">Customer Lead Analytics</h3>
-                        <p className="text-[#8888aa] text-xs mt-0.5">Inquiries submitted over the last 7 days</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="flex items-center gap-1.5 text-xs text-[#C8962E] font-bold">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#C8962E]" /> Leads
-                        </span>
+                        <div className="text-[#e4e4ef] text-xs font-bold">Row-Level Security (RLS)</div>
+                        <div className="text-[#8888aa] text-[10px] mt-0.5">Enabled on all backend tables.</div>
                       </div>
                     </div>
-                    <div className="relative">
-                      {inquiries.length > 0 ? (
-                        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto overflow-visible">
-                          <defs>
-                            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#C8962E" stopOpacity="0.25" />
-                              <stop offset="100%" stopColor="#C8962E" stopOpacity="0.0" />
-                            </linearGradient>
-                          </defs>
-                          {/* Grid lines */}
-                          {[0, 0.5, 1].map((r, idx) => {
-                            const y = padding + r * (chartHeight - padding * 2);
-                            return (
-                              <line key={idx} x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="#1e1e2e" strokeWidth="1" strokeDasharray="4 4" />
-                            );
-                          })}
-                          {/* Area under the curve */}
-                          {areaD && <path d={areaD} fill="url(#chartGrad)" />}
-                          {/* Main Line */}
-                          {pathD && <path d={pathD} fill="none" stroke="#C8962E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
-                          {/* Interactive dots */}
-                          {points.map((p, idx) => (
-                            <g key={idx} className="group/dot cursor-pointer">
-                              <circle cx={p.x} cy={p.y} r="5" fill="#111118" stroke="#C8962E" strokeWidth="3" />
-                              <circle cx={p.x} cy={p.y} r="10" fill="#C8962E" className="opacity-0 group-hover/dot:opacity-20 transition-opacity" />
-                              {/* Tooltip */}
-                              <text x={p.x} y={p.y - 12} textAnchor="middle" fill="#fff" className="text-[10px] font-black opacity-0 group-hover/dot:opacity-100 transition-opacity pointer-events-none">
-                                {p.val}
-                              </text>
-                            </g>
-                          ))}
-                          {/* X-axis labels */}
-                          {chartData.days.map((day, idx) => {
-                            const x = padding + (idx * (chartWidth - padding * 2)) / 6;
-                            return (
-                              <text key={idx} x={x} y={chartHeight - 4} textAnchor="middle" fill="#4a4a6a" className="text-[9px] font-bold">
-                                {day}
-                              </text>
-                            );
-                          })}
-                        </svg>
-                      ) : (
-                        <div className="h-[120px] flex items-center justify-center text-[#4a4a6a] text-xs font-semibold">No lead data to display</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Quick Info / Tips Card */}
-                  <div className="admin-card p-5 flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-white font-bold text-sm mb-3">Database Verification</h3>
-                      <div className="space-y-3.5">
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs font-bold">✓</span>
-                          <div>
-                            <div className="text-[#e4e4ef] text-xs font-bold">Row-Level Security (RLS)</div>
-                            <div className="text-[#8888aa] text-[10px] mt-0.5">Enabled on all backend tables.</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-lg bg-[#C8962E]/10 text-[#C8962E] flex items-center justify-center text-xs font-bold">ℹ</span>
-                          <div>
-                            <div className="text-[#e4e4ef] text-xs font-bold">Sync Action Plan</div>
-                            <div className="text-[#8888aa] text-[10px] mt-0.5">Run "admin_setup.sql" to reset policies.</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-xs font-bold">🔒</span>
-                          <div>
-                            <div className="text-[#e4e4ef] text-xs font-bold">Access Level</div>
-                            <div className="text-[#8888aa] text-[10px] mt-0.5">Admin CRUD authorization enabled.</div>
-                          </div>
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-lg bg-[#C8962E]/10 text-[#C8962E] flex items-center justify-center text-xs font-bold">☁</span>
+                      <div>
+                        <div className="text-[#e4e4ef] text-xs font-bold">File Storage</div>
+                        <div className="text-[#8888aa] text-[10px] mt-0.5">All files hosted on Datnass GDX Cloud.</div>
                       </div>
                     </div>
-                    <div className="pt-4 border-t border-[#1e1e2e] mt-4 flex items-center justify-between text-[11px] text-[#4a4a6a]">
-                      <span className="font-bold">Project Ref:</span>
-                      <span className="text-white/50 select-all font-mono font-black">nbmvvwvhjiubedlyfuyb</span>
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-xs font-bold">🔒</span>
+                      <div>
+                        <div className="text-[#e4e4ef] text-xs font-bold">Access Level</div>
+                        <div className="text-[#8888aa] text-[10px] mt-0.5">Admin CRUD authorization enabled.</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Recent Inquiries */}
-                <div className="admin-card">
-                  <div className="px-5 py-4 border-b border-[#1e1e2e] flex items-center justify-between">
-                    <h3 className="text-white font-bold text-sm">Recent Inquiries</h3>
-                    <button onClick={() => setActiveTab('inquiries')} className="text-[#C8962E] text-xs hover:underline font-bold cursor-pointer">View All →</button>
-                  </div>
-                  <div className="divide-y divide-[#1e1e2e]">
-                    {inquiries.slice(0, 5).map(inq => (
-                      <div key={inq.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-white/[0.015] transition-colors cursor-pointer" onClick={() => setSelectedInquiry(inq)}>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1C3A6B] to-[#C8962E] flex items-center justify-center text-white font-black text-xs flex-shrink-0">{inq.name.charAt(0).toUpperCase()}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[#e4e4ef] text-sm font-bold flex items-center gap-2">
-                            {inq.name}
-                            {(inq.status === 'unread' || !inq.status) && (
-                              <span className="w-2 h-2 rounded-full bg-rose-500" title="Unread Lead" />
-                            )}
-                          </div>
-                          <div className="text-[#8888aa] text-xs mt-0.5">{inq.product || 'General Enquiry'} · {inq.city || 'Location unprovided'}</div>
-                        </div>
-                        <div className="text-[#4a4a6a] text-xs font-bold">{formatDate(inq.created_at)}</div>
-                      </div>
-                    ))}
-                    {inquiries.length === 0 && <div className="px-5 py-10 text-center text-[#4a4a6a] text-xs font-semibold">No inquiries received yet</div>}
-                  </div>
-                </div>
-              </motion.div>
-            ) : activeTab === 'inquiries' ? (
-              <motion.div key="inq" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div className="mb-4"><input type="search" value={inquirySearch} onChange={e => setInquirySearch(e.target.value)} placeholder="🔍 Search queries by customer name, phone, product..." className="admin-input max-w-sm placeholder-white/20" /></div>
-                <div className="admin-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm border-collapse">
-                      <thead style={{ background: '#0d0d16' }}>
-                        <tr>{['Date', 'Customer', 'Contact details', 'Product', 'Message Text', 'Status', 'Actions'].map(h => <th key={h} className="px-5 py-3.5 text-left text-[9px] font-bold text-[#4a4a6a] uppercase tracking-wider">{h}</th>)}</tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#1e1e2e]">
-                        {filteredInquiries.map(inq => (
-                          <tr key={inq.id} className="hover:bg-white/[0.01] transition-colors">
-                            <td className="px-5 py-4 text-[#4a4a6a] text-xs font-bold whitespace-nowrap">{formatDate(inq.created_at)}</td>
-                            <td className="px-5 py-4 cursor-pointer" onClick={() => setSelectedInquiry(inq)}>
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1C3A6B] to-[#C8962E] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">{inq.name.charAt(0).toUpperCase()}</div>
-                                <div className="font-bold text-[#e4e4ef] text-xs">{inq.name}</div>
-                              </div>
-                            </td>
-                            <td className="px-5 py-4">
-                              <div className="text-[#e4e4ef] text-xs font-bold">📞 {inq.phone}</div>
-                              {inq.email && <div className="text-[#8888aa] text-xs mt-0.5">✉️ {inq.email}</div>}
-                              {inq.city && <div className="text-[#8888aa] text-xs mt-0.5">📍 {inq.city}</div>}
-                            </td>
-                            <td className="px-5 py-4"><span className="px-2 py-0.5 rounded-lg text-xs font-bold" style={{ background: '#1C3A6B22', color: '#6ba3f5' }}>{inq.product || 'General'}</span></td>
-                            <td className="px-5 py-4 max-w-[200px] cursor-pointer" onClick={() => setSelectedInquiry(inq)}>
-                              <div className="text-[#8888aa] text-xs truncate hover:text-[#C8962E] transition-colors">{inq.message || '—'}</div>
-                            </td>
-                            <td className="px-5 py-4">
-                              <select
-                                value={inq.status || 'unread'}
-                                onChange={(e) => handleUpdateInquiryStatus(inq.id, e.target.value)}
-                                className={`px-2 py-1 rounded-lg text-xs font-bold border bg-[#111118] cursor-pointer transition-all ${inq.status === 'unread' ? 'text-rose-400 border-rose-500/30 bg-rose-500/5' :
-                                    inq.status === 'read' ? 'text-amber-400 border-amber-500/30 bg-amber-500/5' :
-                                      inq.status === 'in_progress' ? 'text-sky-400 border-sky-500/30 bg-sky-500/5' :
-                                        'text-emerald-400 border-emerald-500/30 bg-emerald-500/5'
-                                  }`}
-                              >
-                                <option value="unread" className="bg-[#0f0f16] text-rose-400 font-bold">🔴 Unread</option>
-                                <option value="read" className="bg-[#0f0f16] text-amber-400 font-bold">🟡 Read</option>
-                                <option value="in_progress" className="bg-[#0f0f16] text-sky-400 font-bold">🔵 In Progress</option>
-                                <option value="replied" className="bg-[#0f0f16] text-emerald-400 font-bold">🟢 Replied</option>
-                              </select>
-                            </td>
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <div className="flex items-center gap-1.5">
-                                <a href={`https://wa.me/${inq.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(inq.name)}%2C%20thank%20you%20for%20writing%20to%20Nilkanth%20Marble!`}
-                                  target="_blank" rel="noopener noreferrer" className="btn-success py-1.5 px-3 text-xs font-bold rounded-lg shadow-sm">WhatsApp</a>
-                                <button onClick={() => handleDeleteInquiry(inq.id)} className="btn-icon bg-red-500/10 text-red-400 hover:bg-red-500/20 p-1.5 rounded-lg">🗑️</button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {filteredInquiries.length === 0 && <tr><td colSpan={7} className="text-center py-16 text-[#4a4a6a] text-xs font-semibold">No inquiries match search metrics.</td></tr>}
-                      </tbody>
-                    </table>
+                  <div className="pt-4 border-t border-[#1e1e2e] mt-4 flex items-center justify-between text-[11px] text-[#4a4a6a]">
+                    <span className="font-bold">Project Ref:</span>
+                    <span className="text-white/50 select-all font-mono font-black">nbmvvwvhjiubedlyfuyb</span>
                   </div>
                 </div>
               </motion.div>
@@ -2041,41 +2018,129 @@ const Admin: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end mb-4">
-                  <button onClick={() => { setEditingCatalog(null); setShowCatalogModal(true); }} className="btn-accent text-xs font-bold px-5 py-3 shadow-md shadow-[#C8962E]/10 cursor-pointer">➕ Add New Catalog</button>
+
+                {/* ── Catalog Toolbar: Search + Filter + Sort ── */}
+                <div className="flex flex-wrap gap-3 mb-5 items-center">
+                  {/* Search */}
+                  <div className="relative flex-1 min-w-[200px]">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a4a6a] text-xs pointer-events-none">🔍</span>
+                    <input
+                      type="search"
+                      value={catalogSearch}
+                      onChange={e => setCatalogSearch(e.target.value)}
+                      placeholder="Search catalogs by title or company..."
+                      className="admin-input pl-8 placeholder-white/20 text-xs"
+                    />
+                    {catalogSearch && (
+                      <button
+                        onClick={() => setCatalogSearch('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4a4a6a] hover:text-white text-[10px] font-bold transition-colors"
+                      >✕</button>
+                    )}
+                  </div>
+
+                  {/* Type Filter */}
+                  <select
+                    value={catalogTypeFilter}
+                    onChange={e => setCatalogTypeFilter(e.target.value)}
+                    className="admin-select text-xs cursor-pointer"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="floor-tiles">🔲 Floor Tiles</option>
+                    <option value="wall-tiles">🔳 Wall Tiles</option>
+                    <option value="bathroom-tiles">🛁 Bathroom Tiles</option>
+                    <option value="designer-tiles">🎨 Designer Tiles</option>
+                    <option value="vitrified">✨ Vitrified</option>
+                    <option value="sanitary">🚿 Sanitary Ware</option>
+                    <option value="artificial-stone">⚗️ Artificial Stone</option>
+                    <option value="natural-cladding-stone">🪨 Natural Cladding Stone</option>
+                  </select>
+
+                  {/* Sort */}
+                  <select
+                    value={catalogSort}
+                    onChange={e => setCatalogSort(e.target.value as 'newest' | 'az')}
+                    className="admin-select text-xs cursor-pointer"
+                  >
+                    <option value="newest">🕐 Newest First</option>
+                    <option value="az">🔤 A – Z</option>
+                  </select>
+
+                  {/* Add button */}
+                  <button
+                    onClick={() => { setEditingCatalog(null); setShowCatalogModal(true); }}
+                    className="btn-accent text-xs font-bold px-5 py-3 shadow-md shadow-[#C8962E]/10 cursor-pointer whitespace-nowrap ml-auto"
+                  >➕ Add New Catalog</button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {catalogs.map(cat => (
-                    <div key={cat.id} className="admin-card overflow-hidden group border border-[#1e1e2e]/85">
-                      <div className="aspect-[4/3] relative overflow-hidden bg-[#0d0d16]">
-                        <img src={cat.thumbnail_url || ''} alt={cat.title}
-                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-102 transition-all duration-300"
-                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                        <div className="absolute top-3 right-3">{cat.is_active ? <span className="status-active">● Active</span> : <span className="status-draft">● Draft</span>}</div>
-                        {cat.pdf_url && (
-                          <a href={cat.pdf_url} target="_blank" rel="noopener noreferrer"
-                            className="absolute bottom-3 left-3 bg-[#C8962E] text-white text-xs font-bold px-2.5 py-1.5 rounded-lg hover:bg-[#b08226] transition-colors shadow-md">📄 View PDF Document</a>
+
+                {/* Result count pill */}
+                {(() => {
+                  const q = catalogSearch.toLowerCase();
+                  const filtered = catalogs
+                    .filter(c =>
+                      (!q || c.title.toLowerCase().includes(q) || c.company.toLowerCase().includes(q)) &&
+                      (catalogTypeFilter === 'all' || c.catalog_type?.split(',').map((s: string) => s.trim()).includes(catalogTypeFilter))
+                    )
+                    .sort((a, b) => catalogSort === 'az' ? a.title.localeCompare(b.title) : 0);
+
+                  return (
+                    <>
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="inline-flex items-center gap-1.5 bg-[#C8962E]/10 border border-[#C8962E]/20 text-[#C8962E] text-[10px] font-bold px-3 py-1.5 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C8962E] inline-block" />
+                          {filtered.length} catalog{filtered.length !== 1 ? 's' : ''}
+                        </span>
+                        {(catalogSearch || catalogTypeFilter !== 'all' || catalogSort !== 'newest') && (
+                          <button
+                            onClick={() => { setCatalogSearch(''); setCatalogTypeFilter('all'); setCatalogSort('newest'); }}
+                            className="text-[10px] text-[#4a4a6a] hover:text-[#C8962E] transition-colors font-bold underline underline-offset-2"
+                          >Clear filters</button>
                         )}
                       </div>
-                      <div className="p-4">
-                        <h3 className="text-[#e4e4ef] font-bold text-sm truncate">{cat.title}</h3>
-                        <p className="text-[#8888aa] text-xs mt-0.5">{cat.company} · {cat.catalog_type}</p>
-                        <div className="flex gap-2 mt-4">
-                          <button onClick={() => { setEditingCatalog(cat); setShowCatalogModal(true); }}
-                            className="flex-1 py-2 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-xs font-semibold hover:border-[#C8962E] hover:text-[#C8962E] transition-all cursor-pointer">✏️ Edit Catalog</button>
-                          <button onClick={() => handleDeleteCatalog(cat.id)} className="btn-icon bg-red-500/10 text-red-400 hover:bg-red-500/20 p-2 rounded-xl cursor-pointer">🗑️</button>
-                        </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filtered.map(cat => (
+                          <div key={cat.id} className="admin-card overflow-hidden group border border-[#1e1e2e]/85">
+                            <div className="aspect-[4/3] relative overflow-hidden bg-[#0d0d16]">
+                              <img src={cat.thumbnail_url || ''} alt={cat.title}
+                                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-102 transition-all duration-300"
+                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                              <div className="absolute top-3 right-3">{cat.is_active ? <span className="status-active">● Active</span> : <span className="status-draft">● Draft</span>}</div>
+                              {/* Type badge */}
+                              {cat.catalog_type?.includes('natural-cladding-stone') && (
+                                <div className="absolute top-3 left-3">
+                                  <span className="bg-amber-600/90 text-white text-[9px] font-black px-1.5 py-0.5 rounded">🪨 Cladding</span>
+                                </div>
+                              )}
+                              {cat.pdf_url && (
+                                <a href={cat.pdf_url} target="_blank" rel="noopener noreferrer"
+                                  className="absolute bottom-3 left-3 bg-[#C8962E] text-white text-xs font-bold px-2.5 py-1.5 rounded-lg hover:bg-[#b08226] transition-colors shadow-md">📄 View PDF Document</a>
+                              )}
+                            </div>
+                            <div className="p-4">
+                              <h3 className="text-[#e4e4ef] font-bold text-sm truncate">{cat.title}</h3>
+                              <p className="text-[#8888aa] text-xs mt-0.5">{cat.company} · <span className="text-[#4a4a6a]">{cat.catalog_type}</span></p>
+                              <div className="flex gap-2 mt-4">
+                                <button onClick={() => { setEditingCatalog(cat); setShowCatalogModal(true); }}
+                                  className="flex-1 py-2 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-xs font-semibold hover:border-[#C8962E] hover:text-[#C8962E] transition-all cursor-pointer">✏️ Edit Catalog</button>
+                                <button onClick={() => handleDeleteCatalog(cat.id)} className="btn-icon bg-red-500/10 text-red-400 hover:bg-red-500/20 p-2 rounded-xl cursor-pointer">🗑️</button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {filtered.length === 0 && (
+                          <div className="col-span-3 text-center py-20 text-[#4a4a6a]">
+                            <div className="text-5xl mb-3">{catalogSearch ? '🔍' : '📚'}</div>
+                            <p className="text-xs font-bold">
+                              {catalogSearch ? `No catalogs match "${catalogSearch}"` : 'No catalogs listed in the database. Add your first PDF file above.'}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
-                  {catalogs.length === 0 && (
-                    <div className="col-span-3 text-center py-20 text-[#4a4a6a]">
-                      <div className="text-5xl mb-3">📚</div>
-                      <p className="text-xs font-bold">No catalogs listed in the database. Add your first PDF file above.</p>
-                    </div>
-                  )}
-                </div>
+                    </>
+                  );
+                })()}
               </motion.div>
             )}
 
@@ -2157,13 +2222,6 @@ const Admin: React.FC = () => {
         {showProductModal && <ProductModal product={editingProduct} categories={categories} onClose={() => { setShowProductModal(false); setEditingProduct(null); }} onSaved={fetchData} />}
         {showCatalogModal && <CatalogModal catalog={editingCatalog} onClose={() => { setShowCatalogModal(false); setEditingCatalog(null); }} onSaved={fetchData} />}
         {showCategoryModal && <CategoryModal category={editingCategory} onClose={() => { setShowCategoryModal(false); setEditingCategory(null); }} onSaved={fetchData} />}
-        {selectedInquiry && (
-          <InquiryModal
-            inquiry={selectedInquiry}
-            onClose={() => setSelectedInquiry(null)}
-            onStatusChanged={(status) => handleUpdateInquiryStatus(selectedInquiry.id, status)}
-          />
-        )}
       </AnimatePresence>
     </div>
   );

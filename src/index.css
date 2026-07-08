@@ -98,6 +98,17 @@
   ::selection { background-color: rgba(200, 150, 46, 0.2); color: var(--dark-text); }
 }
 
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Performance: skip rendering off-screen heavy sections */
+.product-grid-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+}
+
 @layer components {
 
   /* ═══════════════════════════════════════════════════

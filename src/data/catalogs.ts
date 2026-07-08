@@ -3,24 +3,23 @@
 // ColorTiles Company Catalogs
 // ═══════════════════════════════════════════════════════════════
 
-export type CatalogType =
-  | 'floor-tiles'
-  | 'wall-tiles'
-  | 'bathroom-tiles'
-  | 'designer-tiles'
-  | 'vitrified'
-  | 'sanitary'
-  | 'artificial-stone'
-  | 'all';
+// CatalogType is now open-ended — any string is a valid sub-type.
+// The rigid union is replaced by a string so admins can define new types freely.
+export type CatalogType = string;
+
+// Parent tab groups — the broad sections on the PDF catalog page.
+export type ParentTab = 'tiles' | 'sanitary' | 'stone' | 'artificial-stone' | 'other' | string;
 
 export interface TilesCatalog {
   id: string;
   title: string;
   company: string;
   description: string;
-  pdfUrl?: string;         // Will be Supabase Storage URL when available
+  pdfUrl?: string;
   thumbnailUrl: string;
-  catalogType: CatalogType;
+  catalogType: CatalogType;       // specific sub-type e.g. "floor-tiles", "wooden-tiles"
+  catalogTypeLabel?: string;      // human-readable label e.g. "Wooden Floor Tiles"
+  parentTab?: ParentTab;          // parent section e.g. "tiles", "sanitary", "stone"
   tags: string[];
   pageCount?: number;
   viewCount: number;

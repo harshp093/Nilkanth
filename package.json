@@ -11,6 +11,8 @@
     "db-seed": "tsc --ignoreConfig --target ES2022 --module ESNext src/data/products.ts src/data/catalogs.ts src/data/categories.ts --outDir dist-temp && node seedSupabase.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1079.0",
+    "@aws-sdk/s3-request-presigner": "^3.1079.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.108.2",
@@ -19,8 +21,7 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.17.0",
-    "three": "^0.184.0",
-    "tus-js-client": "^4.3.1"
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

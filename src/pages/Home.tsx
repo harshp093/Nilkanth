@@ -1,8 +1,7 @@
 import React, { useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
-import { useSupabaseProducts, useSupabaseCategories, useSupabaseCatalogs } from '../hooks/useSupabaseProducts';
-import ProductCard from '../components/products/ProductCard';
+import { useSupabaseCategories, useSupabaseCatalogs } from '../hooks/useSupabaseProducts';
 import ThreeHero from '../components/ThreeHero';
 
 // ─── Counter Component ───
@@ -29,20 +28,16 @@ const Counter: React.FC<{ end: number; suffix?: string; label: string; prefix?: 
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { products, loading: productsLoading } = useSupabaseProducts();
   const { categories } = useSupabaseCategories();
-  const { catalogs } = useSupabaseCatalogs();
+  const { catalogs, loading: productsLoading } = useSupabaseCatalogs();
 
   const getCount = (catId: string) => {
     if (catId === 'tiles-catalog') {
       return (catalogs || []).length;
     }
-    return (products || []).filter((p) => p.category === catId).length;
+    return 0; // products count per category — visit Products page for details
   };
 
-  const featuredProductsOnly = useMemo(() => {
-    return (products || []).filter(p => p.isFeatured).slice(0, 8);
-  }, [products]);
 
   const featuredCatalogsOnly = useMemo(() => {
     const list = (catalogs || []).filter(c => (c as any).isFeatured || (c as any).is_featured);
@@ -169,78 +164,11 @@ const Home: React.FC = () => {
         </div>
       </section>
  
-      {/* ── FEATURED PRODUCTS ── */}
+
+      {/* ── PDF Catalogs ── */}
       <section className="py-20 bg-bg transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          {/* Products Subsection */}
-          <div>
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <h2 className="text-3xl md:text-4xl font-heading font-black text-dark">
-                    Featured Products
-                  </h2>
-                  <div className="section-divider mt-2" />
-                </motion.div>
-              </div>
-              <Link
-                to="/products"
-                className="hidden md:flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all group font-bold"
-              >
-                View All
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="transition-transform group-hover:translate-x-1">
-                  <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-                </svg>
-              </Link>
-            </div>
-   
-            {productsLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-surface/50 rounded-2xl border border-border/40 w-full">
-                <div className="animate-spin h-10 w-10 border-4 border-[#C8962E] border-t-transparent rounded-full mb-4"></div>
-                <p className="text-text-sub text-sm font-semibold">Loading featured collections...</p>
-              </div>
-            ) : featuredProductsOnly.length === 0 ? (
-              <div className="text-center py-16 bg-surface rounded-2xl border border-border/40 px-6 w-full text-dark">
-                <span className="text-4xl mb-4 block">🏛️</span>
-                <h3 className="text-xl font-heading font-bold text-dark mb-2">Catalog Under Construction</h3>
-                <p className="text-text-sub text-sm max-w-md mx-auto mb-4">
-                  We are currently uploading our premium new products and collections. Contact us on WhatsApp or call today for live inventory, photos, and prices!
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full">
-                {featuredProductsOnly.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-30px' }}
-                    transition={{ duration: 0.5, delay: Math.min(i * 0.06, 0.4) }}
-                  >
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-
-            <div className="text-center mt-8">
-              <Link to="/products" className="btn-primary inline-flex px-8 py-3.5 text-base">
-                View All Products
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-
-          {/* PDF Catalogs Subsection - List View Layout */}
-          <div className="mt-20 border-t border-border/20 pt-16">
+          <div className="border-t border-border/20 pt-0">
             <div className="flex items-end justify-between mb-8">
               <div>
                 <motion.div
