@@ -14,6 +14,7 @@ import Catalog from './pages/Catalog';
 import Tiles from './pages/Tiles';
 import Gallery from './pages/Gallery';
 import DynamicCategoryPage from './pages/DynamicCategoryPage';
+import LocalLanding from './pages/LocalLanding';
 
 function App() {
   return (
@@ -45,6 +46,14 @@ function App() {
           <Route path="contact" element={<Contact />} />
           <Route path="granite/:stoneId" element={<Granite />} />
           <Route path="product/:productId" element={<ProductDetail />} />
+
+          {/* ── Local SEO landing pages ── */}
+          <Route path="marble-gujarat" element={<LocalLanding cityKey="gujarat" />} />
+          <Route path="marble-ahmedabad" element={<LocalLanding cityKey="ahmedabad" />} />
+          <Route path="marble-surat" element={<LocalLanding cityKey="surat" />} />
+          <Route path="marble-vadodara" element={<LocalLanding cityKey="vadodara" />} />
+          <Route path="marble-nadiad" element={<LocalLanding cityKey="nadiad" />} />
+
           <Route
             path="*"
             element={
