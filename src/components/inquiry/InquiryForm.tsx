@@ -184,7 +184,7 @@ ${form.message ? `• *Details:* ${form.message}` : ''}`;
   return (
     <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
       {/* Honeypot field — hidden from real users; bots fill it, triggering silent drop */}
-      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', tabIndex: -1 }}>
+      <div aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }}>
         <label htmlFor="nm_website">Leave this blank</label>
         <input
           type="text"
