@@ -1240,48 +1240,6 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
   );
 };
 
-              </div>
-            )}
-            <PdfUploader onUploaded={(url, thumb) => {
-              set('pdf_url', url);
-              if (thumb) set('thumbnail_url', thumb);
-            }} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-xl border border-[#2a2a3a]">
-            <div className="flex items-center gap-3">
-              <div onClick={() => set('is_active', !form.is_active)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_active ? 'bg-emerald-500' : 'bg-[#2a2a3a]'}`}>
-                <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_active ? 'left-5' : 'left-0.5'}`} />
-              </div>
-              <div>
-                <span className="text-[#e4e4ef] text-xs font-bold block">Publish immediately</span>
-                <span className="text-[#8888aa] text-[10px]">Visible on PDF catalogs page.</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div onClick={() => set('is_featured', !form.is_featured)} className={`w-10 h-5 rounded-full relative cursor-pointer transition-all ${form.is_featured ? 'bg-[#C8962E]' : 'bg-[#2a2a3a]'}`}>
-                <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_featured ? 'left-5' : 'left-0.5'}`} />
-              </div>
-              <div>
-                <span className="text-[#e4e4ef] text-xs font-bold block">★ Feature on Homepage</span>
-                <span className="text-[#8888aa] text-[10px]">Catalogue featured on Home.</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e2e]">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border border-[#2a2a3a] text-[#8888aa] text-sm font-semibold hover:border-stone-500 hover:text-white transition-all cursor-pointer bg-transparent">Cancel</button>
-            <button type="submit" disabled={saving} className="btn-accent px-7 py-2.5 text-sm disabled:opacity-60">
-              {saving ? 'Saving...' : isEdit ? 'Update Document' : 'Create & Publish Catalog'}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
-  );
-};
-
 /* ═══════════════════════════════════════════════════════════════
    CATEGORY COVER UPLOADER
 ────────────────────────────────────────────────────────────────── */
