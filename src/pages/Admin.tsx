@@ -1125,14 +1125,13 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
             {/* Specific sub-type */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="admin-label">Specific Sub-type Slug *</label>
+                <label className="admin-label">Specific Sub-type Slug <span className="text-[#4a4a6a] font-normal">(optional)</span></label>
                 <input
                   type="text"
-                  required
                   list="catalog-type-suggestions"
                   value={form.catalog_type}
                   onChange={e => set('catalog_type', e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                  placeholder="e.g. floor-tiles, wooden-tiles"
+                  placeholder="e.g. floor-tiles, wooden-tiles (optional)"
                   className="admin-input"
                 />
                 <datalist id="catalog-type-suggestions">
@@ -1140,7 +1139,7 @@ const CatalogModal: React.FC<CatalogModalProps> = ({ catalog, onClose, onSaved }
                     <option key={s} value={s} />
                   ))}
                 </datalist>
-                <p className="text-[#4a4a6a] text-[9px] mt-1">Use kebab-case: wooden-tiles, kota-stone</p>
+                <p className="text-[#4a4a6a] text-[9px] mt-1">Leave blank for combined catalogs (e.g. all sanitary in one PDF). Use kebab-case for specific types: wooden-tiles, kota-stone</p>
               </div>
               <div>
                 <label className="admin-label">Display Label (shown as sub-tab)</label>
