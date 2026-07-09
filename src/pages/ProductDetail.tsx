@@ -132,7 +132,7 @@ const ProductDetail: React.FC = () => {
         canonical.setAttribute('rel', 'canonical');
         document.head.appendChild(canonical);
       }
-      canonical.setAttribute('href', `https://nilkanthmarble.com/product/${product.slug}`);
+      canonical.setAttribute('href', `https://www.nilkanthmarble.com/product/${product.slug}`);
 
       // 4. Inject JSON-LD Rich Structured Data
       let schemaScript = document.getElementById('jsonld-product-schema');
@@ -148,8 +148,8 @@ const ProductDetail: React.FC = () => {
         "name": product.name,
         "description": product.description || `Premium stone collection.`,
         "brand": product.brand ? { "@type": "Brand", "name": product.brand } : undefined,
-        "image": product.images?.[0] || 'https://nilkanthmarble.com/og-image.jpg',
-        "url": `https://nilkanthmarble.com/product/${product.slug}`,
+        "image": product.images?.[0] || 'https://www.nilkanthmarble.com/og-image.jpg',
+        "url": `https://www.nilkanthmarble.com/product/${product.slug}`,
         "offers": {
           "@type": "Offer",
           "priceCurrency": "INR",
@@ -161,7 +161,7 @@ const ProductDetail: React.FC = () => {
           "seller": {
             "@type": "Organization",
             "name": "Nilkanth Marble",
-            "url": "https://nilkanthmarble.com"
+            "url": "https://www.nilkanthmarble.com"
           }
         }
       };

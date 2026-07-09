@@ -12,7 +12,7 @@ interface SEOProps {
 }
 
 const SITE = 'Nilkanth Marble';
-const BASE_URL = 'https://nilkanthmarble.com';
+const BASE_URL = 'https://www.nilkanthmarble.com';
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.jpg`;
 
 /**

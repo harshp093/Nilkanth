@@ -1,1 +1,323 @@
-[]
+[
+  {
+    "id": "prod-1783438334397",
+    "slug": "ncat01",
+    "name": "NCA/T01",
+    "description": "New Custruction Tile Adhesive.\nsuperior bound then cement\nSaves time and labour\nNo hollow sound\nNo tile cracking",
+    "category": "adhesives-chemicals",
+    "subcategory": null,
+    "priceRange": null,
+    "origin": "India",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [],
+    "colors": [
+      "#545454"
+    ],
+    "colorNames": [
+      "Grey"
+    ],
+    "application": [
+      "Flooring and walls",
+      "for internal applications",
+      "for external area\"",
+      "dry & wet area",
+      "domestic applications",
+      "commercial applications."
+    ],
+    "brand": "Roff",
+    "modelNumber": null,
+    "material": null,
+    "isFeatured": false,
+    "isActive": true,
+    "images": [
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783438233164_caqvh1nret5.jpg"
+    ],
+    "viewCount": 0
+  },
+  {
+    "id": "prod-1783437768921",
+    "slug": "nsat02grey--nsat09white",
+    "name": "NSA/T02(Grey) & NSA/T09(White)",
+    "description": "Tile & Stone Fixing",
+    "category": "adhesives-chemicals",
+    "subcategory": null,
+    "priceRange": null,
+    "origin": "India",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [],
+    "colors": [
+      "#FFFFFF",
+      "#575757"
+    ],
+    "colorNames": [
+      "White",
+      "Grey"
+    ],
+    "application": [
+      "Flooring and walls",
+      "for internal applications & external shaded area",
+      "external area",
+      "dry & wet area",
+      "new construction & renovation",
+      "domestic applications",
+      "commercial applications."
+    ],
+    "brand": "Roff",
+    "modelNumber": null,
+    "material": null,
+    "isFeatured": false,
+    "isActive": true,
+    "images": [
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783437814397_flqdrhva1xf.jpg",
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783438530446_2xc2eghvrno.jpg"
+    ],
+    "viewCount": 0
+  },
+  {
+    "id": "prod-1783438962509",
+    "slug": "extrofixt07--extrofixt08",
+    "name": "EXTROFIX/T07 & EXTROFIX/T08",
+    "description": "Roff Extrofix Adhesive is a highly polymer modified,\nthin-set tile adhesive for fixing for all type of tiles,\nmosaics and natural stones, on a variety of surfaces,\nfor both vertical and horizontal application, in dry\nas well as wet areas for indoor as well as outdoor\napplication. It can be used to fix regular size tile in\ncommercial area as it accommodates shocks due to\nheavy traffic.",
+    "category": "adhesives-chemicals",
+    "subcategory": null,
+    "priceRange": null,
+    "origin": "India",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [],
+    "colors": [
+      "#545454",
+      "#ffffff"
+    ],
+    "colorNames": [
+      "Grey",
+      "White"
+    ],
+    "application": [
+      "Floor and walls for internal area & external area*",
+      "dry & wet area like saunas",
+      "spa",
+      "fountains",
+      "swimming pools etc.",
+      "Terraces & balconies",
+      "domestic applications",
+      "commercial applications."
+    ],
+    "brand": "Roff",
+    "modelNumber": null,
+    "material": null,
+    "isFeatured": false,
+    "isActive": true,
+    "images": [
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783438831795_8caf0dhaozx.jpg",
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783438890810_hvzodk5ayql.jpg"
+    ],
+    "viewCount": 0
+  },
+  {
+    "id": "prod-1783439332420",
+    "slug": "materfixt29",
+    "name": "MASTERFIX/T29",
+    "description": "HIGHLY FLEXIBLE, 2K ADHESIVE\nFOR DIVERSE SURFACES LIKE\nMETAL, PLYWOOD & DRYWALLS",
+    "category": "adhesives-chemicals",
+    "subcategory": null,
+    "priceRange": null,
+    "origin": "INDIA",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [],
+    "colors": [
+      "#000000"
+    ],
+    "colorNames": [
+      "Gold Accent"
+    ],
+    "application": [
+      "Floor and walls",
+      "internal & external area",
+      "window/ door frame",
+      "vibrational area",
+      "kitchens",
+      "balconies",
+      "flat roofs",
+      "domes",
+      "terraces",
+      "domestic applications",
+      "commercial applications",
+      "industrial application."
+    ],
+    "brand": "Roff",
+    "modelNumber": null,
+    "material": null,
+    "isFeatured": false,
+    "isActive": true,
+    "images": [
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783439305935_c200c6le8q.jpg"
+    ],
+    "viewCount": 0
+  },
+  {
+    "id": "prod-1783439773742",
+    "slug": "vitrofix-ultrat05--vitrofix-ultrat06",
+    "name": "VITROFIX ULTRA/T05 & VITROFIX ULTRA/T06",
+    "description": "TILE & STONE FIXING.\nAll types of ceramic tile,\nterracotta, pavers, brick,\nvitrified tiles, large format tiles,\nprecast terrazzo, natural stones,\nlow thickness slabs.",
+    "category": "adhesives-chemicals",
+    "subcategory": null,
+    "priceRange": null,
+    "origin": "INDIA",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [],
+    "colors": [
+      "#545454",
+      "#ffffff"
+    ],
+    "colorNames": [
+      "Grey",
+      "White"
+    ],
+    "application": [
+      "Floor and walls",
+      "for internal area",
+      "for external area*",
+      "dry & wet area like swimming pool",
+      "saunas",
+      "spa",
+      "fountains",
+      "domestic applications",
+      "commercial applications."
+    ],
+    "brand": null,
+    "modelNumber": null,
+    "material": null,
+    "isFeatured": false,
+    "isActive": true,
+    "images": [
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783439695737_adoyhgzjf9.jpg",
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783439737816_m9sp5gomm5s.jpg"
+    ],
+    "viewCount": 0
+  },
+  {
+    "id": "prod-1783440119941",
+    "slug": "vitrofixt03--vitrofixt04",
+    "name": "VITROFIX/T03 & VITROFIX/T04",
+    "description": "Roff Vitrofix Adhesive is a highly polymer modified,\nthin-set tile adhesive for fixing all type of ceramic,\nlarge format semi-vitreous, vitrified tiles and natural stones,\non a variety of surfaces, for both vertical and horizontal\napplication, in dry as well as wet areas for indoor\nas well as outdoor application. It is also recommended\nfor Tile on Tile Application also.",
+    "category": "adhesives-chemicals",
+    "subcategory": null,
+    "priceRange": null,
+    "origin": "INDIA",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [],
+    "colors": [
+      "#5c5c5c",
+      "#ffffff"
+    ],
+    "colorNames": [
+      "Grey",
+      "White"
+    ],
+    "application": [
+      "All types of ceramic tile",
+      "terracotta",
+      "pavers",
+      "brick",
+      "vitrified tiles",
+      "large format tiles",
+      "precast terrazzo",
+      "natural stones",
+      "low thickness slabs."
+    ],
+    "brand": "Roff",
+    "modelNumber": null,
+    "material": null,
+    "isFeatured": false,
+    "isActive": true,
+    "images": [
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783439976531_3itstb1kizq.jpg",
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783440042919_3156w5itcsh.jpg",
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783440053417_469mgy8zpke.jpg"
+    ],
+    "viewCount": 0
+  },
+  {
+    "id": "prod-1783440415159",
+    "slug": "yogafixt25--yogafixt26",
+    "name": "YOGAFIX/T25 & YOGAFIX/T26",
+    "description": "off Yogafix Grey & White is a high polymer modified &\nhighly flexible adhesive with enhanced properties of slip\nresistant, extended open time & excellent bond strength\nwhich is necessary for fixing large format tiles/ natural\nstones & slim tiles on vertical & horizontal surface for\nindoor as well as outdoor application especially in external\nconditions, high footfall areas & on substrates subject to\nhigh deformations/ vibrations.",
+    "category": "adhesives-chemicals",
+    "subcategory": null,
+    "priceRange": null,
+    "origin": "INDIA",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [],
+    "colors": [
+      "#525252",
+      "#ffffff"
+    ],
+    "colorNames": [
+      "Grey",
+      "White"
+    ],
+    "application": [],
+    "brand": "ROFF",
+    "modelNumber": null,
+    "material": null,
+    "isFeatured": false,
+    "isActive": true,
+    "images": [
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783440364596_aurhi7crww.jpg",
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783440394216_b2h3r0qn4o.jpg"
+    ],
+    "viewCount": 0
+  },
+  {
+    "id": "prod-1783439117217",
+    "slug": "extrofix-ultrat20--rxtrofix-ulrat21",
+    "name": "EXTROFIX ULTRA/T20 & EXTROFIX ULRA/T21",
+    "description": "Roff Extrofix Ultra Adhesive is a high polymer modified\n& highly flexible adhesive with enhanced properties of\nslip resistant, extended open time & excellent bond\nstrength which is necessary for fixing large format tiles/\nnatural stones & slim tiles on vertical & horizontal surface\nfor indoor as well as outdoor application especially in\nexternal conditions & on substrates subject to\ndeformations/ vibrations.",
+    "category": "adhesives-chemicals",
+    "subcategory": null,
+    "priceRange": null,
+    "origin": "INDIA",
+    "thicknessOptions": [],
+    "sizeOptions": [],
+    "finishOptions": [],
+    "colors": [
+      "#545454",
+      "#ffffff"
+    ],
+    "colorNames": [
+      "Grey",
+      "White"
+    ],
+    "application": [
+      "Floor and walls",
+      "internal & external area",
+      "saunas",
+      "spa",
+      "fountains & swimming pools etc.",
+      "terraces & balconies",
+      "podium decks & facades",
+      "window/ door frame",
+      "vibrational area",
+      "domestic applications",
+      "commercial applications."
+    ],
+    "brand": "Roff",
+    "modelNumber": null,
+    "material": null,
+    "isFeatured": true,
+    "isActive": true,
+    "images": [
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783440660106_l1do4c63xb.jpg",
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783438982794_wx5mgai37hr.jpg",
+      "https://s3.gdx.datnass.com/nilkanthmarble/prod_1783440676386_q4en6l3wbqr.jpg"
+    ],
+    "viewCount": 0
+  }
+]

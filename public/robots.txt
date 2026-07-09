@@ -1,5 +1,5 @@
 # Nilkanth Marble — robots.txt
-# https://nilkanthmarble.com
+# https://www.nilkanthmarble.com
 
 User-agent: *
 Allow: /
@@ -9,4 +9,4 @@ Disallow: /admin/
 Disallow: /api/
 
 # XML Sitemap
-Sitemap: https://nilkanthmarble.com/sitemap.xml
+Sitemap: https://www.nilkanthmarble.com/sitemap.xml

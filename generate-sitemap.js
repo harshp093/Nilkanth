@@ -27,7 +27,7 @@ if (!supabaseUrl || !supabaseKey) {
   }
 }
 
-const SITE_URL = "https://nilkanthmarble.com";
+const SITE_URL = "https://www.nilkanthmarble.com";
 
 async function generate() {
   console.log('Generating dynamic sitemap...');

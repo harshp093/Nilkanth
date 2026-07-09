@@ -32,11 +32,11 @@
     "description": "Tile adhesives & construction chemicals",
     "longDescription": "High-performance polymer modified cement adhesives, white adhesives, epoxy grouts, and waterproofing chemicals by Roff (Pidilite), Laticrete, and Weber.",
     "emoji": "🧪",
-    "color": "emerald",
+    "color": "amber",
     "accentColor": "#059669",
-    "image": "/adhesives-hero.png",
+    "image": "https://s3.gdx.datnass.com/nilkanthmarble/cat_1783441891461.jpg",
     "productCount": 7,
-    "route": "/adhesives-chemicals"
+    "route": "/category/adhesives-chemicals"
   },
   {
     "id": "kota-stone",

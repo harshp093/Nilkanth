@@ -137,14 +137,14 @@ function buildCitySchema(cfg: CityConfig) {
     {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      '@id': `https://nilkanthmarble.com/${cfg.slug}`,
+      '@id': `https://www.nilkanthmarble.com/${cfg.slug}`,
       name: 'Nilkanth Marble',
       description: cfg.intro,
-      url: `https://nilkanthmarble.com/${cfg.slug}`,
+      url: `https://www.nilkanthmarble.com/${cfg.slug}`,
       telephone: ['+91-94084-61000', '+91-99741-42777'],
       email: 'nilkanth1marble@gmail.com',
-      logo: 'https://nilkanthmarble.com/logo-512.png',
-      image: 'https://nilkanthmarble.com/og-image.jpg',
+      logo: 'https://www.nilkanthmarble.com/logo-512.png',
+      image: 'https://www.nilkanthmarble.com/og-image.jpg',
       priceRange: '₹₹',
       address: {
         '@type': 'PostalAddress',
@@ -176,8 +176,8 @@ function buildCitySchema(cfg: CityConfig) {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://nilkanthmarble.com/' },
-        { '@type': 'ListItem', position: 2, name: `Marble in ${cfg.city}`, item: `https://nilkanthmarble.com/${cfg.slug}` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.nilkanthmarble.com/' },
+        { '@type': 'ListItem', position: 2, name: `Marble in ${cfg.city}`, item: `https://www.nilkanthmarble.com/${cfg.slug}` },
       ],
     },
   ];
@@ -196,7 +196,7 @@ export default function LocalLanding({ cityKey }: Props) {
     title: `Marble in ${cfg.city} | Premium Marble & Granite Supplier — Nilkanth Marble`,
     description: cfg.intro.slice(0, 160),
     keywords: `marble ${cfg.city.toLowerCase()}, granite ${cfg.city.toLowerCase()}, marble supplier ${cfg.city.toLowerCase()}, kota stone ${cfg.city.toLowerCase()}, tiles ${cfg.city.toLowerCase()}, natural stone ${cfg.city.toLowerCase()}, marble dealer Gujarat, Nilkanth Marble`,
-    canonical: `https://nilkanthmarble.com/${cfg.slug}`,
+    canonical: `https://www.nilkanthmarble.com/${cfg.slug}`,
     jsonLd: buildCitySchema(cfg),
   });
 

@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const WA_NUMBER = '919974142777'; // Hitesh Shah — +91 99741 42777
-const SITE_URL = 'https://nilkanthmarble.com';
+const SITE_URL = 'https://www.nilkanthmarble.com';
 const BUSINESS_NAME = 'Nilkanth Marble';
 
 export type ProductForWA = {

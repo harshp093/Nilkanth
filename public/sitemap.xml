@@ -1,118 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <!-- ── Core Pages ── -->
   <url>
-    <loc>https://nilkanthmarble.com/</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://www.nilkanthmarble.com/</loc>
+    <lastmod>2026-07-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/products</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://www.nilkanthmarble.com/products</loc>
+    <lastmod>2026-07-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/about</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://nilkanthmarble.com/contact</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nilkanthmarble.com/gallery</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- ── Product Categories ── -->
-  <url>
-    <loc>https://nilkanthmarble.com/marble</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nilkanthmarble.com/granite</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nilkanthmarble.com/kota-stone</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://nilkanthmarble.com/cladding-stone</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://nilkanthmarble.com/adhesives-chemicals</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://www.nilkanthmarble.com/catalogs</loc>
+    <lastmod>2026-07-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/tiles</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://www.nilkanthmarble.com/about</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.nilkanthmarble.com/contact</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.nilkanthmarble.com/products/granite</loc>
+    <lastmod>2026-07-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/catalogs</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://www.nilkanthmarble.com/products/kota-stone</loc>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.nilkanthmarble.com/products/cladding-stone</loc>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.nilkanthmarble.com/products/marble</loc>
+    <lastmod>2026-07-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.nilkanthmarble.com/products/adhesives-chemicals</loc>
+    <lastmod>2026-07-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.nilkanthmarble.com/product/ncat01</loc>
+    <lastmod>2026-07-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/brands</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- ── Local SEO Landing Pages ── -->
-  <url>
-    <loc>https://nilkanthmarble.com/marble-gujarat</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.95</priority>
+    <loc>https://www.nilkanthmarble.com/product/nsat02grey--nsat09white</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/marble-ahmedabad</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.95</priority>
+    <loc>https://www.nilkanthmarble.com/product/extrofixt07--extrofixt08</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/marble-surat</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.90</priority>
+    <loc>https://www.nilkanthmarble.com/product/materfixt29</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/marble-vadodara</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.90</priority>
+    <loc>https://www.nilkanthmarble.com/product/vitrofix-ultrat05--vitrofix-ultrat06</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nilkanthmarble.com/marble-nadiad</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.90</priority>
+    <loc>https://www.nilkanthmarble.com/product/vitrofixt03--vitrofixt04</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
-
+  <url>
+    <loc>https://www.nilkanthmarble.com/product/yogafixt25--yogafixt26</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.nilkanthmarble.com/product/extrofix-ultrat20--rxtrofix-ulrat21</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
