@@ -159,10 +159,11 @@ const Navbar: React.FC = () => {
               <img
                 src="/logo-full.png"
                 alt="Nilkanth Marble — The Quality Forever"
-                className="h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-                style={{ maxWidth: '200px' }}
+                className="h-14 md:h-16 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+                style={{ maxWidth: '240px' }}
               />
             </Link>
+
 
 
             {/* Desktop Nav */}
