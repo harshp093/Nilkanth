@@ -20,16 +20,15 @@ const Footer: React.FC = () => {
 
           {/* Brand column */}
           <div className="lg:col-span-1">
-            <Link to="/" className="inline-flex items-center gap-2.5 mb-4 group" aria-label="Nilkanth Marble">
-              <img src="/favicon.png" alt="Nilkanth Marble icon" className="w-9 h-9 object-contain" />
-              <div className="flex flex-col leading-none">
-                <span className="font-heading font-bold text-xl text-dark">Nilkanth</span>
-                <span className="text-accent text-xs tracking-widest uppercase font-semibold" style={{ letterSpacing: '0.15em' }}>
-                  Marble
-                </span>
-              </div>
+            <Link to="/" className="inline-flex items-center mb-4 group" aria-label="Nilkanth Marble">
+              <img
+                src="/logo-full.png"
+                alt="Nilkanth Marble — The Quality Forever"
+                className="h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+                style={{ maxWidth: '200px' }}
+              />
             </Link>
-            <p className="text-text-sub text-sm italic mb-3">"The Quality Forever"</p>
+
             <p className="text-text-sub text-sm leading-relaxed mb-5">
               Trusted dealer of premium marble, granite, kota stone, sanitary ware and tiles in Gujarat, India.
             </p>

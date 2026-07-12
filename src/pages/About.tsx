@@ -35,15 +35,10 @@ const About: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="flex items-center gap-4 mb-6">
-              <img src="/favicon.png" alt="Nilkanth Marble icon" className="w-14 h-14 object-contain" />
-              <div>
-                <h2 className="font-heading font-black text-gray-900 text-3xl">Nilkanth Marble</h2>
-                <p className="text-accent font-semibold text-sm tracking-widest uppercase" style={{ letterSpacing: '0.15em' }}>
-                  THE QUALITY FOREVER
-                </p>
-              </div>
+            <div className="mb-6">
+              <img src="/logo-full.png" alt="Nilkanth Marble — The Quality Forever" className="h-16 w-auto object-contain" />
             </div>
+
             <p className="text-gray-600 leading-relaxed mb-4 text-base">
               Nilkanth Marble is a trusted dealer of premium marble, granite, kota stone, sanitary ware and tiles,
               serving homes and businesses across Gujarat and beyond. We are located at Piplag Chokdi, Nadiad —

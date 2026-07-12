@@ -31,15 +31,12 @@ const HeroLoader: React.FC = () => {
             transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', repeatType: 'loop' }}
           >
             <img
-              src="/favicon.png"
-              alt="Nilkanth Marble"
-              className="w-16 h-16 object-contain"
+              src="/logo-full.png"
+              alt="Nilkanth Marble — The Quality Forever"
+              className="h-16 md:h-20 w-auto object-contain bg-white/95 px-5 py-3.5 rounded-2xl shadow-2xl"
             />
           </motion.div>
-          <div className="flex flex-col items-center">
-            <span className="font-heading font-bold text-3xl text-white tracking-widest">NILKANTH</span>
-            <span className="text-[#F7F5F2] text-xs tracking-[0.4em] uppercase mt-1 opacity-70">The Quality Forever</span>
-          </div>
+
         </motion.div>
 
         {/* Loading bar — linear ease avoids the visible snap at repeat boundaries */}
