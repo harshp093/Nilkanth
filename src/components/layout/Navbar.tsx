@@ -154,15 +154,16 @@ const Navbar: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-20">
 
-            {/* Logo — mix-blend-mode:multiply hides white/grey bg on white navbar */}
+            {/* Logo — brand image with transparent bg */}
             <Link to="/" className="flex items-center shrink-0 group" aria-label="Nilkanth Marble Home">
               <img
                 src="/logo-full.png"
                 alt="Nilkanth Marble — The Quality Forever"
                 className="h-16 md:h-20 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-                style={{ maxWidth: '280px', mixBlendMode: 'multiply' }}
+                style={{ maxWidth: '280px' }}
               />
             </Link>
+
 
 
 
