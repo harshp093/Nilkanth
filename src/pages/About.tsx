@@ -2,8 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Logo from '../components/Logo';
+import useSEO from '../hooks/useSEO';
 
 const About: React.FC = () => {
+  useSEO({
+    title: 'About Us | Nilkanth Marble — 20+ Years in Nadiad, Gujarat',
+    description: 'Learn about Nilkanth Marble — trusted dealer of premium marble, granite, kota stone & tiles in Nadiad, Gujarat since 20+ years. Located at NH-8, Piplag Chokdi. Call +91 94084 61000.',
+    url: '/about',
+    canonical: 'https://www.nilkanthmarble.com/about',
+    keywords: 'Nilkanth Marble about, marble dealer Nadiad, stone tiles Gujarat, about us marble shop',
+  });
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}

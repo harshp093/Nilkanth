@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Logo from '../Logo';
 import { useSupabaseCategories } from '../../hooks/useSupabaseProducts';
 
 const PHONE = '+91 94084 61000';
@@ -156,12 +155,32 @@ const Navbar: React.FC = () => {
           <div className="flex items-center justify-between h-16">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-              <Logo
-                size={44}
-                variant="full"
-                className="text-dark transition-transform duration-200 group-hover:scale-[1.02]"
-              />
+            <Link to="/" className="flex items-center gap-2.5 group shrink-0" aria-label="Nilkanth Marble Home">
+              {/* Gold brand icon */}
+              <div className="relative w-10 h-10 shrink-0">
+                <img
+                  src="/logo-icon.png"
+                  alt="Nilkanth Marble logo icon"
+                  className="w-full h-full object-contain drop-shadow-sm"
+                  style={{ mixBlendMode: 'multiply' }}
+                />
+              </div>
+              {/* Brand text */}
+              <div className="flex flex-col leading-none">
+                <span
+                  className="font-heading font-black text-dark text-[17px] tracking-[-0.02em] group-hover:text-primary transition-colors duration-200"
+                  style={{ letterSpacing: '-0.03em' }}
+                >
+                  Nilkanth
+                </span>
+                <div className="w-full h-[1px] bg-gradient-to-r from-accent/60 to-transparent my-[2px]" />
+                <span
+                  className="text-accent font-black text-[9px] tracking-[0.35em] uppercase"
+                  style={{ fontFamily: 'var(--font-heading)', letterSpacing: '0.35em' }}
+                >
+                  MARBLE
+                </span>
+              </div>
             </Link>
 
             {/* Desktop Nav */}

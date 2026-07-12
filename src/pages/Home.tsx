@@ -5,24 +5,47 @@ import { useSupabaseCategories, useSupabaseCatalogs } from '../hooks/useSupabase
 import ThreeHero from '../components/ThreeHero';
 
 // ─── Counter Component ───
-const Counter: React.FC<{ end: number; suffix?: string; label: string; prefix?: string }> = ({
-  end, suffix = '', prefix = '', label,
-}) => {
+const Counter: React.FC<{
+  end: number;
+  suffix?: string;
+  label: string;
+  prefix?: string;
+  icon: React.ReactNode;
+  delay?: number;
+}> = ({ end, suffix = '', prefix = '', label, icon, delay = 0 }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
   return (
-    <div ref={ref} className="text-center">
-      <div className="text-4xl md:text-5xl font-heading font-black mb-1 text-black">
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -5 }}
+      className="group relative flex flex-col items-center p-6 bg-gradient-to-b from-[#1c1c24] to-[#121218] rounded-2xl border border-white/5 shadow-2xl hover:border-accent/30 transition-all duration-300 overflow-hidden"
+    >
+      {/* Background soft glow on hover */}
+      <div className="absolute inset-0 bg-gradient-to-t from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      
+      {/* Icon with circular backing */}
+      <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:bg-accent/10 group-hover:border-accent/20 transition-all duration-300">
+        {icon}
+      </div>
+
+      <div className="text-3xl md:text-4xl font-heading font-black mb-1 text-white tracking-tight">
         <motion.span
           initial={{ opacity: 0, y: 15 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.7, delay: delay + 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           {prefix}{end}{suffix}
         </motion.span>
       </div>
-      <div className="text-black/85 text-xs uppercase tracking-widest font-black">{label}</div>
-    </div>
+
+      <div className="text-white/60 text-[10px] sm:text-xs uppercase tracking-widest font-black text-center mt-1 group-hover:text-accent/90 transition-colors">
+        {label}
+      </div>
+    </motion.div>
   );
 };
 
@@ -54,16 +77,67 @@ const Home: React.FC = () => {
       <ThreeHero />
 
       {/* ── STATS STRIP ── */}
-      <section className="bg-[#C8962E] py-10 border-y border-[#C8962E]">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
-          <Counter end={20} suffix="+" label="Years Experience" />
-          <Counter end={500} suffix="+" label="Products" />
-          <Counter end={5} label="Categories" />
-          <Counter end={0} suffix="" label="Online Payments" prefix="₹" />
+      <section className="relative bg-gradient-to-r from-[#111116] via-[#1a1a26] to-[#111116] py-16 border-y border-accent/20 overflow-hidden">
+        {/* Decorative background glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,150,46,0.08),transparent_50%)] pointer-events-none" />
+        
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            <Counter 
+              end={20} 
+              suffix="+" 
+              label="Years Experience" 
+              delay={0}
+              icon={
+                <svg className="w-6 h-6 text-accent group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              }
+            />
+            <Counter 
+              end={500} 
+              suffix="+" 
+              label="Premium Products" 
+              delay={0.1}
+              icon={
+                <svg className="w-6 h-6 text-accent group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              }
+            />
+            <Counter 
+              end={5} 
+              label="Categories" 
+              delay={0.2}
+              icon={
+                <svg className="w-6 h-6 text-accent group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              }
+            />
+            <Counter 
+              end={1000} 
+              suffix="+" 
+              label="Happy Customers" 
+              delay={0.3}
+              icon={
+                <svg className="w-6 h-6 text-accent group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              }
+            />
+          </div>
+          
+          <div className="mt-10 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+            <span className="text-white/40 text-xs sm:text-sm font-semibold tracking-wide flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              VISIT OUR EXPERIENCE SHOWROOM
+            </span>
+            <span className="text-accent font-heading font-black text-xs sm:text-sm tracking-widest uppercase">
+              N.H. No.8, Piplag Chokdi, Nadiad, Gujarat · +91 94084 61000
+            </span>
+          </div>
         </div>
-        <p className="text-center text-black/70 text-xs mt-4 tracking-widest uppercase font-bold">
-          N.H. No.8, Piplag Chokdi, Nadiad, Gujarat · +91 94084 61000
-        </p>
       </section>
 
       {/* ── CATEGORIES SHOWCASE ── */}
