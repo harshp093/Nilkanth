@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Logo from '../Logo';
+
 import AdminAuthModal from '../AdminAuthModal';
 
 const WA_NUMBER = '919974142777';
@@ -20,8 +20,8 @@ const Footer: React.FC = () => {
 
           {/* Brand column */}
           <div className="lg:col-span-1">
-            <Link to="/" className="inline-flex items-center gap-2.5 mb-4 group">
-              <Logo size={36} className="text-accent" />
+            <Link to="/" className="inline-flex items-center gap-2.5 mb-4 group" aria-label="Nilkanth Marble">
+              <img src="/favicon.png" alt="Nilkanth Marble icon" className="w-9 h-9 object-contain" />
               <div className="flex flex-col leading-none">
                 <span className="font-heading font-bold text-xl text-dark">Nilkanth</span>
                 <span className="text-accent text-xs tracking-widest uppercase font-semibold" style={{ letterSpacing: '0.15em' }}>

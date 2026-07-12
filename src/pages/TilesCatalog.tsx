@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSupabaseCatalogs } from '../hooks/useSupabaseProducts';
 import { catalogEnquiryWhatsApp } from '../utils/whatsapp';
 import OptimizedImage from '../components/OptimizedImage';
+import useSEO from '../hooks/useSEO';
+
 
 /* ─────────────────────────────────────────────────────────────
    PARENT TAB CONFIG — icons & labels for known parent sections.
@@ -34,6 +36,13 @@ const toLabel = (slug: string) =>
    MAIN COMPONENT
 ───────────────────────────────────────────────────────────────*/
 const TilesCatalog: React.FC = () => {
+  useSEO({
+    title: 'PDF Catalogs | Tiles, Sanitary Ware & Stone — Nilkanth Marble',
+    description: 'Browse 26+ PDF catalogs from Nilkanth Marble — tiles, sanitary ware, artificial stone & natural stone. Download or view ColorTiles, Kajaria & premium brand catalogs. Nadiad, Gujarat.',
+    url: '/catalogs',
+    canonical: 'https://www.nilkanthmarble.com/catalogs',
+    keywords: 'tiles catalog Gujarat, sanitary ware catalog Nadiad, PDF catalog marble tiles, ColorTiles catalog, Nilkanth Marble catalogs',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const { catalogs, loading } = useSupabaseCatalogs();
 

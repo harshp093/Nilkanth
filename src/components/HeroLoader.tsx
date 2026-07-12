@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import Logo from './Logo';
+
 
 const HeroLoader: React.FC = () => {
   return (
@@ -30,7 +30,11 @@ const HeroLoader: React.FC = () => {
             animate={{ rotate: [0, 4, -4, 2, -2, 0] }}
             transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', repeatType: 'loop' }}
           >
-            <Logo size={64} className="text-primary" />
+            <img
+              src="/favicon.png"
+              alt="Nilkanth Marble"
+              className="w-16 h-16 object-contain"
+            />
           </motion.div>
           <div className="flex flex-col items-center">
             <span className="font-heading font-bold text-3xl text-white tracking-widest">NILKANTH</span>

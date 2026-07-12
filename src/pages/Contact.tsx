@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import InquiryForm from '../components/inquiry/InquiryForm';
+import useSEO from '../hooks/useSEO';
+
 
 const PHONE1 = '+91 94084 61000';
 const PHONE2 = '+91 99741 42777';
@@ -9,6 +11,13 @@ const EMAIL = 'nilkanth1marble@gmail.com';
 const WA_NUMBER = '919974142777';
 
 const Contact: React.FC = () => {
+  useSEO({
+    title: 'Contact Nilkanth Marble | Call +91 94084 61000 — Nadiad, Gujarat',
+    description: 'Contact Nilkanth Marble in Nadiad, Gujarat. Call +91 94084 61000 or WhatsApp +91 99741 42777. Visit our showroom at NH-8, Piplag Chokdi. Get quotes for marble, granite & tiles.',
+    url: '/contact',
+    canonical: 'https://www.nilkanthmarble.com/contact',
+    keywords: 'contact Nilkanth Marble, marble dealer phone Nadiad, granite tiles enquiry Gujarat, marble showroom Nadiad address',
+  });
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Page Header */}

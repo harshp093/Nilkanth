@@ -154,34 +154,16 @@ const Navbar: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
 
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group shrink-0" aria-label="Nilkanth Marble Home">
-              {/* Gold brand icon */}
-              <div className="relative w-10 h-10 shrink-0">
-                <img
-                  src="/logo-icon.png"
-                  alt="Nilkanth Marble logo icon"
-                  className="w-full h-full object-contain drop-shadow-sm"
-                  style={{ mixBlendMode: 'multiply' }}
-                />
-              </div>
-              {/* Brand text */}
-              <div className="flex flex-col leading-none">
-                <span
-                  className="font-heading font-black text-dark text-[17px] tracking-[-0.02em] group-hover:text-primary transition-colors duration-200"
-                  style={{ letterSpacing: '-0.03em' }}
-                >
-                  Nilkanth
-                </span>
-                <div className="w-full h-[1px] bg-gradient-to-r from-accent/60 to-transparent my-[2px]" />
-                <span
-                  className="text-accent font-black text-[9px] tracking-[0.35em] uppercase"
-                  style={{ fontFamily: 'var(--font-heading)', letterSpacing: '0.35em' }}
-                >
-                  MARBLE
-                </span>
-              </div>
+            {/* Logo — full brand image with transparent bg */}
+            <Link to="/" className="flex items-center shrink-0 group" aria-label="Nilkanth Marble Home">
+              <img
+                src="/logo-full.png"
+                alt="Nilkanth Marble — The Quality Forever"
+                className="h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+                style={{ maxWidth: '200px' }}
+              />
             </Link>
+
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-1">

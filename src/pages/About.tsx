@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Logo from '../components/Logo';
 import useSEO from '../hooks/useSEO';
+
 
 const About: React.FC = () => {
   useSEO({
@@ -36,7 +36,7 @@ const About: React.FC = () => {
             transition={{ duration: 0.8 }}
           >
             <div className="flex items-center gap-4 mb-6">
-              <Logo size={56} className="text-primary" />
+              <img src="/favicon.png" alt="Nilkanth Marble icon" className="w-14 h-14 object-contain" />
               <div>
                 <h2 className="font-heading font-black text-gray-900 text-3xl">Nilkanth Marble</h2>
                 <p className="text-accent font-semibold text-sm tracking-widest uppercase" style={{ letterSpacing: '0.15em' }}>
