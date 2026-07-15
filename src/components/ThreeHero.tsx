@@ -180,7 +180,7 @@ const ThreeHero: React.FC = () => {
               <motion.h1
                 custom={1}
                 variants={textVariants}
-                className="text-5xl sm:text-6xl md:text-7xl font-luxury font-bold text-white leading-[1.05] tracking-tight mb-5"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-luxury font-bold text-white leading-[1.08] sm:leading-[1.05] tracking-tight mb-5"
               >
                 <span className="block">{activeSlide.heading1}</span>
                 <span className="block text-gradient-gold italic font-normal">{activeSlide.heading2}</span>

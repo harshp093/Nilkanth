@@ -4,12 +4,14 @@ import Navbar from './layout/Navbar';
 import Footer from './layout/Footer';
 import FloatingButtons from './layout/FloatingButtons';
 import ScrollToTop from './ScrollToTop';
+import BackButton from './BackButton';
 
 const Layout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-bg">
       <ScrollToTop />
       <Navbar />
+      <BackButton />
       <main className="flex-1">
         <Outlet />
       </main>

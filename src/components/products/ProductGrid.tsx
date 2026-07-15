@@ -540,7 +540,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="grid gap-3 transition-all duration-300 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            className="grid gap-3 transition-all duration-300 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6"
           >
             <AnimatePresence mode="popLayout">
               {paginatedProducts.map((product, i) => (

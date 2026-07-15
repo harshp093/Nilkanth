@@ -159,8 +159,8 @@ const Navbar: React.FC = () => {
               <img
                 src="/logo-full.png"
                 alt="Nilkanth Marble — The Quality Forever"
-                className="h-16 md:h-20 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-                style={{ maxWidth: '280px', mixBlendMode: 'multiply' }}
+                className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02] max-w-[150px] sm:max-w-[180px] md:max-w-[240px] lg:max-w-[280px]"
+                style={{ mixBlendMode: 'multiply' }}
               />
             </Link>
 

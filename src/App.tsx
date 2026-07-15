@@ -15,6 +15,7 @@ import Tiles from './pages/Tiles';
 import Gallery from './pages/Gallery';
 import DynamicCategoryPage from './pages/DynamicCategoryPage';
 import LocalLanding from './pages/LocalLanding';
+import Reviews from './pages/Reviews';
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="category/:categorySlug" element={<DynamicCategoryPage />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="reviews" element={<Reviews />} />
           <Route path="granite/:stoneId" element={<Granite />} />
           <Route path="product/:productId" element={<ProductDetail />} />
 

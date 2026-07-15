@@ -19,11 +19,11 @@
     "description": "Natural granite slabs",
     "longDescription": "Black Galaxy, Kashmir White, Tan Brown and other premium natural granites. Beautiful and durable natural stone slabs for kitchen countertops, flooring, and elevations.",
     "emoji": "⬛",
-    "color": "slate",
-    "accentColor": "#374151",
-    "image": "/natural-stone-hero.png",
+    "color": "amber",
+    "accentColor": "#C8962E",
+    "image": "https://s3.gdx.datnass.com/nilkanthmarble/cat_1784051956316.jpg",
     "productCount": 4,
-    "route": "/granite"
+    "route": "/category/granite"
   },
   {
     "id": "adhesives-chemicals",
@@ -60,7 +60,7 @@
     "emoji": "🧱",
     "color": "amber",
     "accentColor": "#C8962E",
-    "image": "/natural-stone-hero.png",
+    "image": "https://s3.gdx.datnass.com/nilkanthmarble/cat_1784052409385.jpg",
     "productCount": 0,
     "route": "/category/cladding-stone"
   }

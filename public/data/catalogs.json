@@ -343,34 +343,13 @@
     ]
   },
   {
-    "id": "cat-1783442673622",
-    "title": "MARFIL_SLAB_NEW_COLLECTION_BROCHURE_MARBLE",
-    "company": "Marfil",
-    "description": null,
-    "pdfUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_1783442474852_bub6ip_MARFIL_SLAB_NEW_COLLECTION_BROCHURE_MARBLE.pdf",
-    "thumbnailUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_cover_1783442474852_bub6ip.jpg",
-    "catalogType": "tiles, artificial-stone",
-    "tags": [],
-    "pageCount": null,
-    "viewCount": 0,
-    "downloadCount": 0,
-    "isActive": true,
-    "isFeatured": true,
-    "application": [
-      "indoor and outdoor floors",
-      "wall cladding",
-      "kitchen countertops",
-      "and heavy-duty commercial spaces."
-    ]
-  },
-  {
     "id": "cat-1783443299668",
     "title": "800x2400 15MM & 600X1200 9 MM CHROMATIC FULL BODY (New)",
     "company": "Marfil - chromatic",
     "description": "a premium tile collection featuring vibrant, saturated colors that run continuously through the entire thickness of the tile",
     "pdfUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_1783443317912_rf0xp2_800x2400_15MM__600X1200_9_MM_CHROMATIC_FULL_BODY_(New).pdf",
     "thumbnailUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_cover_1783443317912_rf0xp2.jpg",
-    "catalogType": "tiles, artificial-stone",
+    "catalogType": "artificial-stone",
     "tags": [],
     "pageCount": null,
     "viewCount": 0,
@@ -418,40 +397,6 @@
     "application": []
   },
   {
-    "id": "cat-1783444273752",
-    "title": "80x240300(15mm) Marfil(New)",
-    "company": "Marfil",
-    "description": null,
-    "pdfUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_1783444238336_lgbxs4_80x240300(15mm)_Marfil(New).pdf",
-    "thumbnailUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_cover_1783444238336_lgbxs4.jpg",
-    "catalogType": "tiles, artificial-stone",
-    "tags": [],
-    "pageCount": null,
-    "viewCount": 0,
-    "downloadCount": 0,
-    "isActive": true,
-    "isFeatured": false,
-    "application": []
-  },
-  {
-    "id": "cat-1783486808777",
-    "title": "SUBWAY_MASTER_CATALOGUE-1(New)",
-    "company": "SUBWAYTILES",
-    "description": null,
-    "pdfUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_1783486727069_max2sn_SUBWAY_MASTER_CATALOGUE-1(New).pdf",
-    "thumbnailUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_cover_1783486727069_max2sn.jpg",
-    "catalogType": "wall-tiles",
-    "tags": [
-      "Random structure"
-    ],
-    "pageCount": null,
-    "viewCount": 0,
-    "downloadCount": 0,
-    "isActive": true,
-    "isFeatured": true,
-    "application": []
-  },
-  {
     "id": "cat-1783488227241",
     "title": "2026-27 VOL-1 BAFIT SANITARYWARE CATALOGUE (2026-2027)_ (1)(New)",
     "company": "SUBWAYTILES",
@@ -490,7 +435,7 @@
     "description": "showcases premium, large-format Digital Full Body Slabs designed for seamless architectural finishes",
     "pdfUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_1783442921128_xqpeiz_MARFIL_SLAB_NEW_COLLECTION_BROCHURE_DIGITAL.pdf",
     "thumbnailUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_cover_1783442921128_xqpeiz.jpg",
-    "catalogType": "tiles, artificial-stone",
+    "catalogType": "artificial-stone",
     "tags": [],
     "pageCount": null,
     "viewCount": 0,
@@ -498,5 +443,60 @@
     "isActive": true,
     "isFeatured": true,
     "application": []
+  },
+  {
+    "id": "cat-1783486808777",
+    "title": "SUBWAY_MASTER_CATALOGUE-1(New)",
+    "company": "SUBWAYTILES",
+    "description": null,
+    "pdfUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_1783486727069_max2sn_SUBWAY_MASTER_CATALOGUE-1(New).pdf",
+    "thumbnailUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_cover_1783486727069_max2sn.jpg",
+    "catalogType": "tiles",
+    "tags": [
+      "Random structure"
+    ],
+    "pageCount": null,
+    "viewCount": 0,
+    "downloadCount": 0,
+    "isActive": true,
+    "isFeatured": true,
+    "application": []
+  },
+  {
+    "id": "cat-1783444273752",
+    "title": "80x240300(15mm) Marfil(New)",
+    "company": "Marfil",
+    "description": null,
+    "pdfUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_1783444238336_lgbxs4_80x240300(15mm)_Marfil(New).pdf",
+    "thumbnailUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_cover_1783444238336_lgbxs4.jpg",
+    "catalogType": "artificial-stone",
+    "tags": [],
+    "pageCount": null,
+    "viewCount": 0,
+    "downloadCount": 0,
+    "isActive": true,
+    "isFeatured": false,
+    "application": []
+  },
+  {
+    "id": "cat-1783442673622",
+    "title": "MARFIL_SLAB_NEW_COLLECTION_BROCHURE_MARBLE",
+    "company": "Marfil",
+    "description": null,
+    "pdfUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_1783442474852_bub6ip_MARFIL_SLAB_NEW_COLLECTION_BROCHURE_MARBLE.pdf",
+    "thumbnailUrl": "https://s3.gdx.datnass.com/nilkanthmarble/catalog_cover_1783442474852_bub6ip.jpg",
+    "catalogType": "artificial-stone",
+    "tags": [],
+    "pageCount": null,
+    "viewCount": 0,
+    "downloadCount": 0,
+    "isActive": true,
+    "isFeatured": true,
+    "application": [
+      "indoor and outdoor floors",
+      "wall cladding",
+      "kitchen countertops",
+      "and heavy-duty commercial spaces."
+    ]
   }
 ]

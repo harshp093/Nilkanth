@@ -24,7 +24,7 @@ const FloatingButtons: React.FC = () => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 80 }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="fixed bottom-6 right-4 z-50 flex flex-col items-end gap-3"
+          className="fixed bottom-5 right-3 sm:bottom-6 sm:right-4 z-50 flex flex-col items-end gap-3"
         >
           {/* WhatsApp Button */}
           <div className="flex items-center gap-2 group">
@@ -34,7 +34,7 @@ const FloatingButtons: React.FC = () => {
               rel="noopener noreferrer"
               whileHover={{ scale: 1.12 }}
               whileTap={{ scale: 0.93 }}
-              className="wa-pulse flex items-center justify-center w-14 h-14 rounded-full shadow-xl text-white"
+              className="wa-pulse flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-xl text-white"
               style={{ backgroundColor: '#25D366' }}
               aria-label="Chat on WhatsApp"
             >
@@ -50,7 +50,7 @@ const FloatingButtons: React.FC = () => {
               href={`tel:${PHONE_NUMBER}`}
               whileHover={{ scale: 1.12 }}
               whileTap={{ scale: 0.93 }}
-              className="flex items-center justify-center w-14 h-14 rounded-full shadow-xl text-white"
+              className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-xl text-white"
               style={{ backgroundColor: '#C8962E' }}
               aria-label="Call Nilkanth Marble"
             >

@@ -54,14 +54,6 @@ const Home: React.FC = () => {
   const { categories } = useSupabaseCategories();
   const { catalogs, loading: productsLoading } = useSupabaseCatalogs();
 
-  const getCount = (catId: string) => {
-    if (catId === 'tiles-catalog') {
-      return (catalogs || []).length;
-    }
-    return 0; // products count per category — visit Products page for details
-  };
-
-
   const featuredCatalogsOnly = useMemo(() => {
     const list = (catalogs || []).filter(c => (c as any).isFeatured || (c as any).is_featured);
     if (list.length > 0) return list.slice(0, 4);
@@ -162,7 +154,7 @@ const Home: React.FC = () => {
           </motion.div>
  
           {/* Category Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5">
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.id}
@@ -197,9 +189,6 @@ const Home: React.FC = () => {
                   <span className="text-2xl mb-2">{cat.emoji}</span>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-xl font-heading font-bold text-white">{cat.name}</h3>
-                    <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">
-                      {getCount(cat.id)} items
-                    </span>
                   </div>
                   <p className="text-white/70 text-sm">{cat.description}</p>
                   <div className="flex items-center gap-1.5 text-white/90 text-sm font-semibold mt-3 group-hover:gap-3 transition-all duration-200">

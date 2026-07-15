@@ -44,6 +44,9 @@
   --font-sans:    "Inter", sans-serif;
   --font-luxury:  "Playfair Display", serif;
   --font-outfit:  "Outfit", sans-serif;
+
+  /* ── Custom breakpoint for ultrawide / large monitors ── */
+  --breakpoint-3xl: 1920px;
 }
 
 :root {
@@ -874,3 +877,21 @@
   }
 }
 
+
+/* ═══════════════════════════════════════════════════
+   ULTRAWIDE / LARGE MONITOR RESPONSIVENESS
+   Widen the standard page container so content fills more
+   of the screen on large (>=1536px) and ultrawide (>=1920px)
+   displays instead of being pinned to 1280px with big margins.
+   These rules are intentionally unlayered so they override
+   Tailwind's generated `max-w-7xl` utility.
+═══════════════════════════════════════════════════ */
+@media (min-width: 1536px) {
+  .max-w-7xl { max-width: 1500px; }
+}
+@media (min-width: 1920px) {
+  .max-w-7xl { max-width: 1720px; }
+}
+@media (min-width: 2560px) {
+  .max-w-7xl { max-width: 2000px; }
+}

@@ -24,8 +24,8 @@ const Footer: React.FC = () => {
               <img
                 src="/logo-full.png"
                 alt="Nilkanth Marble — The Quality Forever"
-                className="h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-                style={{ maxWidth: '200px' }}
+                className="h-12 md:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02] max-w-[180px] md:max-w-[220px]"
+                style={{ mixBlendMode: 'multiply' }}
               />
             </Link>
 
@@ -140,7 +140,7 @@ const Footer: React.FC = () => {
               Built & SEO Optimized by <span className="text-primary font-bold">Harsh Prajapati</span>
             </p>
           </div>
-          <div className="flex gap-5 text-sm text-text-sub">
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-text-sub">
             <Link to="/marble" className="hover:text-accent transition-colors">Marble</Link>
             <Link to="/granite" className="hover:text-accent transition-colors">Granite</Link>
             <Link to="/sanitary-ware" className="hover:text-accent transition-colors">Sanitary</Link>
