@@ -361,19 +361,61 @@ const Home: React.FC = () => {
       </section>
 
       {/* ── WHY CHOOSE US ── */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 overflow-hidden" style={{ background: 'linear-gradient(135deg, #0c0a1a 0%, #111118 40%, #1a1508 100%)' }}>
+        {/* Radial gold glow behind logo */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 70% at 50% 50%, rgba(200,150,46,0.12) 0%, transparent 70%)' }} />
+
+        {/* Giant logo watermark background */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
+        >
+          <img
+            src="/nilkanth-logo-brand.png"
+            alt="Nilkanth Marble Brand"
+            className="w-[520px] md:w-[680px] lg:w-[820px] max-w-[90vw] object-contain"
+            style={{
+              opacity: 0.07,
+              filter: 'brightness(1.8) saturate(0.4) sepia(0.3)',
+              mixBlendMode: 'screen',
+            }}
+          />
+        </motion.div>
+
+        {/* Subtle animated shimmer ring */}
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+        >
+          <div className="w-[600px] h-[600px] rounded-full border border-[#C8962E]/8" />
+        </motion.div>
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+        >
+          <div className="w-[480px] h-[480px] rounded-full border border-[#C8962E]/5" />
+        </motion.div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="text-center mb-12"
+            className="text-center mb-14"
           >
-            <h2 className="text-3xl md:text-4xl font-heading font-black text-gray-900 mb-4">
-              Why Choose Nilkanth?
+            <span className="inline-flex items-center gap-2 bg-[#C8962E]/10 border border-[#C8962E]/20 rounded-full px-5 py-1.5 mb-4">
+              <span className="text-[#C8962E] text-xs font-bold tracking-widest uppercase">Our Promise</span>
+            </span>
+            <h2 className="text-3xl md:text-5xl font-heading font-black text-white mb-4">
+              Why Choose <span className="text-gradient-gold italic">Nilkanth?</span>
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
+            <p className="text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
               Decades of expertise delivering quality stone and tiles across Gujarat.
             </p>
           </motion.div>
@@ -407,12 +449,16 @@ const Home: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-30px' }}
                 transition={{ duration: 0.6, delay: i * 0.12 }}
-                whileHover={{ y: -4 }}
-                className="bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-lg border border-gray-100 transition-all duration-300"
+                whileHover={{ y: -6, scale: 1.02 }}
+                className="group relative rounded-2xl p-7 text-center border border-white/8 transition-all duration-300 overflow-hidden"
+                style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)', backdropFilter: 'blur(12px)' }}
               >
-                <div className="text-4xl mb-4">{item.icon}</div>
-                <h3 className="font-heading font-bold text-gray-900 text-lg mb-2">{item.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                {/* Gold glow on hover */}
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(145deg, rgba(200,150,46,0.12) 0%, transparent 70%)' }} />
+                <div className="absolute inset-0 rounded-2xl border border-[#C8962E]/0 group-hover:border-[#C8962E]/30 transition-all duration-500" />
+                <div className="text-4xl mb-4 filter drop-shadow-lg">{item.icon}</div>
+                <h3 className="font-heading font-bold text-white text-lg mb-2">{item.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -465,6 +511,18 @@ const Home: React.FC = () => {
           <div className="bg-gradient-to-r from-[#111118] to-[#1a1a26] border border-border/20 rounded-3xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full border border-white/5 -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-20 w-48 h-48 rounded-full border border-accent/10 translate-y-1/2" />
+            {/* Logo watermark on right side of CTA */}
+            <motion.img
+              src="/nilkanth-logo-brand.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-[320px] md:w-[400px] object-contain pointer-events-none select-none"
+              style={{ opacity: 0.06, filter: 'brightness(2) saturate(0.2)', mixBlendMode: 'screen' }}
+              initial={{ opacity: 0, x: 60 }}
+              whileInView={{ opacity: 0.06, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            />
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
