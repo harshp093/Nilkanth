@@ -57,7 +57,7 @@ const About: React.FC = () => {
                 { number: '20+', label: 'Years in Business' },
                 { number: '500+', label: 'Products' },
                 { number: '5', label: 'Product Categories' },
-                { number: '1000+', label: 'Happy Customers' },
+                { number: '50k+', label: 'Happy Customers' },
               ].map(stat => (
                 <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-4 text-center shadow-sm">
                   <div className="text-2xl font-heading font-black text-accent mb-0.5">{stat.number}</div>

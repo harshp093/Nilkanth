@@ -108,8 +108,8 @@ const Home: React.FC = () => {
               }
             />
             <Counter 
-              end={1000} 
-              suffix="+" 
+              end={50} 
+              suffix="k+" 
               label="Happy Customers" 
               delay={0.3}
               icon={
@@ -374,13 +374,15 @@ const Home: React.FC = () => {
           className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
         >
           <img
-            src="/nilkanth-logo-brand.png"
+            src="/nilkanth-logo-brand.jpg"
             alt="Nilkanth Marble Brand"
             className="w-[520px] md:w-[680px] lg:w-[820px] max-w-[90vw] object-contain"
             style={{
-              opacity: 0.07,
-              filter: 'brightness(1.8) saturate(0.4) sepia(0.3)',
+              opacity: 0.14,
+              filter: 'brightness(1.4) saturate(0.6) sepia(0.2)',
               mixBlendMode: 'screen',
+              maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 65%)',
+              WebkitMaskImage: 'radial-gradient(circle, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 65%)'
             }}
           />
         </motion.div>
@@ -513,13 +515,19 @@ const Home: React.FC = () => {
             <div className="absolute bottom-0 left-20 w-48 h-48 rounded-full border border-accent/10 translate-y-1/2" />
             {/* Logo watermark on right side of CTA */}
             <motion.img
-              src="/nilkanth-logo-brand.png"
+              src="/nilkanth-logo-brand.jpg"
               alt=""
               aria-hidden="true"
               className="absolute right-0 top-1/2 -translate-y-1/2 w-[320px] md:w-[400px] object-contain pointer-events-none select-none"
-              style={{ opacity: 0.06, filter: 'brightness(2) saturate(0.2)', mixBlendMode: 'screen' }}
+              style={{
+                opacity: 0.12,
+                filter: 'brightness(1.4) saturate(0.4)',
+                mixBlendMode: 'screen',
+                maskImage: 'radial-gradient(circle at 60% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 65%)',
+                WebkitMaskImage: 'radial-gradient(circle at 60% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 65%)'
+              }}
               initial={{ opacity: 0, x: 60 }}
-              whileInView={{ opacity: 0.06, x: 0 }}
+              whileInView={{ opacity: 0.12, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
             />
