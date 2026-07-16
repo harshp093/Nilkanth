@@ -374,7 +374,7 @@ const Home: React.FC = () => {
           className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
         >
           <img
-            src="/nilkanth-logo-brand.jpg"
+            src="/nilkanth-logo-brand.webp"
             alt="Nilkanth Marble Brand"
             className="w-[520px] md:w-[680px] lg:w-[820px] max-w-[90vw] object-contain"
             style={{
@@ -515,7 +515,7 @@ const Home: React.FC = () => {
             <div className="absolute bottom-0 left-20 w-48 h-48 rounded-full border border-accent/10 translate-y-1/2" />
             {/* Logo watermark on right side of CTA */}
             <motion.img
-              src="/nilkanth-logo-brand.jpg"
+              src="/nilkanth-logo-brand.webp"
               alt=""
               aria-hidden="true"
               className="absolute right-0 top-1/2 -translate-y-1/2 w-[320px] md:w-[400px] object-contain pointer-events-none select-none"

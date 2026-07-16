@@ -36,7 +36,7 @@ const About: React.FC = () => {
             transition={{ duration: 0.8 }}
           >
             <div className="mb-6">
-              <img src="/logo-full.png" alt="Nilkanth Marble — The Quality Forever" className="h-16 w-auto object-contain" />
+              <img src="/logo-full.webp" alt="Nilkanth Marble — The Quality Forever" className="h-16 w-auto object-contain" />
             </div>
 
             <p className="text-gray-600 leading-relaxed mb-4 text-base">

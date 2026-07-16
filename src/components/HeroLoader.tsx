@@ -31,7 +31,7 @@ const HeroLoader: React.FC = () => {
             transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', repeatType: 'loop' }}
           >
             <img
-              src="/logo-full.png"
+              src="/logo-full.webp"
               alt="Nilkanth Marble — The Quality Forever"
               className="h-16 md:h-20 w-auto object-contain bg-white/95 px-5 py-3.5 rounded-2xl shadow-2xl"
             />

@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
           <div className="lg:col-span-1">
             <Link to="/" className="inline-flex items-center mb-4 group" aria-label="Nilkanth Marble">
               <img
-                src="/logo-full.png"
+                src="/logo-full.webp"
                 alt="Nilkanth Marble — The Quality Forever"
                 className="h-12 md:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02] max-w-[180px] md:max-w-[220px]"
                 style={{ mixBlendMode: 'multiply' }}

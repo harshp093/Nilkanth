@@ -195,7 +195,7 @@ const Tiles: React.FC = () => {
       {/* ── Hero Banner ─────────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden bg-stone-950" style={{ minHeight: '440px' }}>
         <img
-          src="/tile-hero.png"
+          src="/tile-hero.webp"
           alt="Premium Tiles Collection"
           className="absolute inset-0 w-full h-full object-cover opacity-40"
         />

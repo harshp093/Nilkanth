@@ -470,7 +470,7 @@ const tileCollections: TileCollection[] = [
     size: '600x1200mm',
     thickness: '9mm',
     finish: ['High Gloss', 'High Gloss Sinker'],
-    coverImage: '/tile-hero.png',
+    coverImage: '/tile-hero.webp',
     tag: 'New Arrival',
     variants: [
       { id: 'patagonia-cool', name: 'Patagonia Cool', colorDescription: 'Cool Grey & White', swatchColor: '#E2E8F0', surfaces: ['High Gloss', 'High Gloss Sinker'], patterns: 'Random 8', priceLabel: 'Get Best Price', imageHighGloss: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80', isFeatured: true },

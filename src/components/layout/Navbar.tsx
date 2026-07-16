@@ -157,7 +157,7 @@ const Navbar: React.FC = () => {
             {/* Logo — brand image with transparent bg */}
             <Link to="/" className="flex items-center shrink-0 group" aria-label="Nilkanth Marble Home">
               <img
-                src="/logo-full.png"
+                src="/logo-full.webp"
                 alt="Nilkanth Marble — The Quality Forever"
                 className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02] max-w-[150px] sm:max-w-[180px] md:max-w-[240px] lg:max-w-[280px]"
                 style={{ mixBlendMode: 'multiply' }}
